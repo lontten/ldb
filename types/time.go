@@ -275,7 +275,12 @@ func NowDateTimeP() *DateTime {
 func (t DateTime) ToString() string {
 	return t.Format(`2006-01-02 15:04:05`)
 }
-
+func (t Time) ToDate() Date {
+	return Date{t.ToGoTime()}
+}
+func (t Time) ToDateP() *Date {
+	return &Date{t.ToGoTime()}
+}
 func (t DateTime) MarshalJSON() ([]byte, error) {
 	tune := t.Format(`"2006-01-02 15:04:05"`)
 	return []byte(tune), nil
