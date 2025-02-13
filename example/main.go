@@ -60,5 +60,6 @@ func main() {
 	//TableUpdate()
 	//GetOrInsert()
 	//InsertOrHas()
-	TableInsert3()
+	//TableInsert3()
+	QueryBuild()
 }

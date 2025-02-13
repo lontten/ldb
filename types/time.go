@@ -191,21 +191,32 @@ func (t Date) Value() (driver.Value, error) {
 
 // Scan valueof jstime.Time
 func (t *Date) Scan(v any) error {
-
-	value, ok := v.(time.Time)
-	if ok {
-		*t = Date{value}
+	if v == nil {
 		return nil
 	}
-
-	value2, ok2 := v.(Date)
-	if ok2 {
-		*t = value2
+	var s = ""
+	switch v := v.(type) {
+	case string:
+		s = v
+	case []byte:
+		s = string(v)
+	case time.Time:
+		*t = Date{v}
+	case Date:
+		*t = v
+		return nil
+	default:
+		return fmt.Errorf("can not convert %v to Date", v)
+	}
+	if len(s) < 8 {
 		return nil
 	}
-
-	return fmt.Errorf("can not convert %v to types.Date", v)
-
+	now, err := time.Parse(`2006-01-02`, s[:8])
+	if err != nil {
+		return err
+	}
+	*t = Date{Time: now}
+	return nil
 }
 
 type DateList []Date
@@ -290,20 +301,32 @@ func (t DateTime) Value() (driver.Value, error) {
 
 // Scan valueof jstime.Time
 func (t *DateTime) Scan(v any) error {
-	value, ok := v.(time.Time)
-	if ok {
-		*t = DateTime{value}
+	if v == nil {
 		return nil
 	}
-
-	value2, ok2 := v.(DateTime)
-	if ok2 {
-		*t = value2
+	var s = ""
+	switch v := v.(type) {
+	case string:
+		s = v
+	case []byte:
+		s = string(v)
+	case time.Time:
+		*t = DateTime{v}
+	case DateTime:
+		*t = v
+		return nil
+	default:
+		return fmt.Errorf("can not convert %v to DateTime", v)
+	}
+	if len(s) < 8 {
 		return nil
 	}
-
-	return fmt.Errorf("can not convert %v to types.DateTime", v)
-
+	now, err := time.Parse(`2006-01-02 15:04:05`, s[:8])
+	if err != nil {
+		return err
+	}
+	*t = DateTime{Time: now}
+	return nil
 }
 
 func (t DateTime) ToGoTime() time.Time {
