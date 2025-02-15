@@ -25,10 +25,11 @@ type PageConfig struct {
 }
 
 type PageResult struct {
-	List     any   `json:"list"`
-	PageSize int64 `json:"pageSize"`
-	Current  int64 `json:"current"`
-	Total    int64 `json:"total"`
+	List     any   `json:"list"`      // 结果
+	PageSize int64 `json:"pageSize"`  // 每页大小
+	Current  int64 `json:"current"`   // 当前页码
+	Total    int64 `json:"total"`     // 总数
+	PageNum  int64 `json:"totalPage"` // 总页数
 }
 
 // ScanPage 查询分页
@@ -73,6 +74,10 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 		}
 	}
 	// 计算总页数
+	var pageNum int64 = total / size
+	if total%size != 0 {
+		pageNum++
+	}
 
 	var selectSql = b.query + " limit ? offset ?"
 	var offset = (current - int64(1)) * size
@@ -97,6 +102,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	dto = PageResult{
 		List:     dest,
 		PageSize: size,
+		PageNum:  pageNum,
 		Current:  current,
 		Total:    total,
 	}
