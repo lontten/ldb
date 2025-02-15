@@ -244,7 +244,7 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 		return nil, err
 	}
 	if num == 0 {
-		return nil, nil
+		return make([]T, 0), nil
 	}
 	return *dest, nil
 }
@@ -295,7 +295,7 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 		return nil, err
 	}
 	if num == 0 {
-		return nil, nil
+		return make([]*T, 0), nil
 	}
 	return *dest, nil
 }

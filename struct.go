@@ -172,7 +172,11 @@ func _getStructC(t reflect.Type, ldbName string) (list []compC) {
 
 		structField := t.Field(i)
 		if structField.Anonymous {
-			data := _getStructC(structField.Type, structField.Tag.Get("db"))
+			tag := structField.Tag.Get("db")
+			if tag == "-" {
+				continue
+			}
+			data := _getStructC(structField.Type, tag)
 			list = append(list, data...)
 			continue
 		}
