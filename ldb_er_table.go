@@ -2,8 +2,8 @@ package ldb
 
 import (
 	"fmt"
+	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb/sqltype"
-	"github.com/lontten/ldb/types"
 	"github.com/pkg/errors"
 	"reflect"
 	"strings"

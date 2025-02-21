@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lontten/ldb/types"
+	"github.com/lontten/lcore/types"
 	"reflect"
 )
 

@@ -6,7 +6,7 @@ import (
 	"gorm.io/plugin/soft_delete"
 )
 import (
-	"github.com/lontten/ldb/types"
+	"github.com/lontten/lcore/types"
 	"reflect"
 )
 

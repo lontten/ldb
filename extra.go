@@ -1,10 +1,10 @@
 package ldb
 
 import (
+	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb/field"
 	"github.com/lontten/ldb/insert-type"
 	"github.com/lontten/ldb/return-type"
-	"github.com/lontten/ldb/types"
 )
 
 // ExtraContext 扩展参数

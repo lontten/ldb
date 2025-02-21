@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lontten/ldb/types"
+	"github.com/lontten/lcore/types"
 	"reflect"
 	"strconv"
 	"strings"
