@@ -1,9 +1,11 @@
 package ldb
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb/sqltype"
+	"github.com/lontten/ldb/utils"
 	"github.com/pkg/errors"
 	"reflect"
 	"strings"
@@ -32,23 +34,23 @@ func Insert(db Engine, v any, extra ...*ExtraContext) (num int64, err error) {
 		return 0, ctx.err
 	}
 
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return 0, nil
 	}
 
 	if ctx.sqlIsQuery {
-		rows, err := db.query(sql, ctx.args...)
+		rows, err := db.query(sqlStr, ctx.args...)
 		if err != nil {
 			return 0, err
 		}
 		return ctx.ScanLnT(rows)
 	}
 
-	exec, err := db.exec(sql, ctx.args...)
+	exec, err := db.exec(sqlStr, ctx.args...)
 	if err != nil {
 		return 0, err
 	}
@@ -93,14 +95,14 @@ func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, 
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return 0, nil
 	}
-	exec, err := db.exec(sql, ctx.args...)
+	exec, err := db.exec(sqlStr, ctx.args...)
 	if err != nil {
 		return 0, err
 	}
@@ -134,14 +136,14 @@ func Update(db Engine, wb *WhereBuilder, dest any, extra ...*ExtraContext) (int6
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return 0, nil
 	}
-	exec, err := db.exec(sql, ctx.args...)
+	exec, err := db.exec(sqlStr, ctx.args...)
 	if err != nil {
 		return 0, err
 	}
@@ -179,14 +181,14 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -228,14 +230,14 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -279,14 +281,14 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -324,17 +326,20 @@ func Has[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t bool, er
 	if ctx.hasErr() {
 		return false, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return false, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return false, err
 	}
+	defer func(rows *sql.Rows) {
+		utils.PanicErr(rows.Close())
+	}(rows)
 	return rows.Next(), nil
 }
 
@@ -362,18 +367,21 @@ func Count[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t int64,
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return 0, nil
 	}
 	var total int64
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return 0, err
 	}
+	defer func(rows *sql.Rows) {
+		utils.PanicErr(rows.Close())
+	}(rows)
 	for rows.Next() {
 		box := reflect.ValueOf(&total).Interface()
 		err = rows.Scan(box)
@@ -414,14 +422,14 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -451,16 +459,16 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		return nil, ctx.err
 	}
 
-	sql = dialect.getSql()
+	sqlStr = dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
 	}
 
 	if ctx.sqlIsQuery {
-		rows, err = db.query(sql, ctx.args...)
+		rows, err = db.query(sqlStr, ctx.args...)
 		if err != nil {
 			return nil, err
 		}
@@ -470,7 +478,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		}
 	}
 
-	exec, err := db.exec(sql, ctx.args...)
+	exec, err := db.exec(sqlStr, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -525,17 +533,20 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	if ctx.hasErr() {
 		return false, ctx.err
 	}
-	sql := dialect.getSql()
+	sqlStr := dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return false, nil
 	}
-	rows, err := db.query(sql, ctx.args...)
+	rows, err := db.query(sqlStr, ctx.args...)
 	if err != nil {
 		return false, err
 	}
+	defer func(rows *sql.Rows) {
+		utils.PanicErr(rows.Close())
+	}(rows)
 	if rows.Next() {
 		return true, nil
 	}
@@ -553,16 +564,16 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		return false, ctx.err
 	}
 
-	sql = dialect.getSql()
+	sqlStr = dialect.getSql()
 	if ctx.showSql {
-		fmt.Println(sql, ctx.args)
+		fmt.Println(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return false, nil
 	}
 
 	if ctx.sqlIsQuery {
-		rows, err = db.query(sql, ctx.args...)
+		rows, err = db.query(sqlStr, ctx.args...)
 		if err != nil {
 			return false, err
 		}
@@ -572,7 +583,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		}
 	}
 
-	exec, err := db.exec(sql, ctx.args...)
+	exec, err := db.exec(sqlStr, ctx.args...)
 	if err != nil {
 		return false, err
 	}
