@@ -513,6 +513,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...) // 表名，set，select配置
+	ctx.modelSelectFieldNames = []string{"1"}
 	ctx.sqlType = sqltype.Select
 	ctx.sqlIsQuery = true
 
