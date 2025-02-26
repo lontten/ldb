@@ -95,6 +95,8 @@ github.com/lontten/lcore v0.0.0-20250221032034-a7f3a8ab59b6 h1:wV4XVIqenTcVTGlGq
 github.com/lontten/lcore v0.0.0-20250221032034-a7f3a8ab59b6/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
 github.com/lontten/lcore v0.0.0-20250226081339-027449a0e4f9 h1:OTkxM6guBdupo2WeZ+QLRTHY5CRTzzUiKbINfSrk8EM=
 github.com/lontten/lcore v0.0.0-20250226081339-027449a0e4f9/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
+github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634 h1:Cp8+A+0wUf9qyZ54a3Jn3+9pAS8hwm9jqSJIoKQkdO0=
+github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-isatty v0.0.5/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
