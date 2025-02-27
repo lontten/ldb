@@ -304,9 +304,9 @@ func (ctx *ormContext) initColumnsValueExtra() {
 		find := utils.Find(ctx.columns, column)
 		if find == -1 {
 			ctx.columns = append(ctx.columns, column)
-			ctx.columnValues = append(ctx.columnValues, e.columnValues[i])
+			ctx.columnValues = append(ctx.columnValues, cv)
 		} else {
-			ctx.columnValues[i] = e.columnValues[i]
+			ctx.columnValues[find] = cv
 		}
 	}
 	return
