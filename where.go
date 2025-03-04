@@ -319,16 +319,26 @@ func (w *WhereBuilder) FilterPrimaryKey(v ...any) *WhereBuilder {
 //------------------model/map/id-end------------------
 //------------------eq------------------
 
+// 参数为nil，生成 is null
 func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilder {
 	for _, b := range condition {
 		if !b {
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
+		w.andWheres = append(w.andWheres, whereToken{
+			Type: native,
+			clause: Clause{
+				Type:  IsNull,
+				query: query,
+			},
+		})
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -385,16 +395,26 @@ func (w *WhereBuilder) NotIn(query string, args ArgArray, condition ...bool) *Wh
 	return w
 }
 
+// 参数为nil，生成 is not null
 func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBuilder {
 	for _, b := range condition {
 		if !b {
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
+		w.andWheres = append(w.andWheres, whereToken{
+			Type: native,
+			clause: Clause{
+				Type:  IsNotNull,
+				query: query,
+			},
+		})
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -412,10 +432,12 @@ func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *Where
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -434,10 +456,12 @@ func (w *WhereBuilder) Less(query string, arg any, condition ...bool) *WhereBuil
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -456,10 +480,12 @@ func (w *WhereBuilder) LessEq(query string, arg any, condition ...bool) *WhereBu
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -478,10 +504,12 @@ func (w *WhereBuilder) Greater(query string, arg any, condition ...bool) *WhereB
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{
@@ -500,8 +528,8 @@ func (w *WhereBuilder) GreaterEq(query string, arg any, condition ...bool) *Wher
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
 	w.andWheres = append(w.andWheres, whereToken{
@@ -624,10 +652,12 @@ func (w *WhereBuilder) Neq(query string, arg any, condition ...bool) *WhereBuild
 			return w
 		}
 	}
-	arg = getFieldInterZero(reflect.ValueOf(arg))
-	if arg == nil {
+
+	isNil := isFieldNil(arg)
+	if isNil {
 		return w
 	}
+
 	w.andWheres = append(w.andWheres, whereToken{
 		Type: native,
 		clause: Clause{

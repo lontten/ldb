@@ -96,3 +96,16 @@ func isFieldNull(v reflect.Value) bool {
 	}
 	return v.IsNil()
 }
+
+// nil 值在传到 interface{}、any 时，无法通过 == nil,来判断是否为nil
+// ptr nil 为 true
+// 非ptr，零值为 false
+func isFieldNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	if reflect.ValueOf(i).IsNil() {
+		return true
+	}
+	return false
+}

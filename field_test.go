@@ -54,4 +54,12 @@ func Test_isFieldNull(t *testing.T) {
 	v4 := reflect.ValueOf(a4)
 	is4 := isFieldNull(v4)
 	t.Log(is4)
+	t.Log(*a4)
+
+	var a5 *string = nil
+	var is5 = toNoNil(a5)
+	t.Log(is5)
+}
+func toNoNil(v any) bool {
+	return isFieldNil(v)
 }
