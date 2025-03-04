@@ -104,6 +104,9 @@ func isFieldNil(i any) bool {
 	if i == nil {
 		return true
 	}
+	if reflect.TypeOf(i).Kind() != reflect.Ptr {
+		return false
+	}
 	if reflect.ValueOf(i).IsNil() {
 		return true
 	}
