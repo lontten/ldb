@@ -1,13 +1,15 @@
 module github.com/lontten/ldb
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgtype v1.14.4
-	github.com/lontten/lcore v0.1.0-alpha.2
+	github.com/lontten/lcore v0.1.0-alpha.5
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
 	gorm.io/plugin/soft_delete v1.2.1
