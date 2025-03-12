@@ -319,7 +319,7 @@ func (w *WhereBuilder) FilterPrimaryKey(v ...any) *WhereBuilder {
 //------------------model/map/id-end------------------
 //------------------eq------------------
 
-// 参数为nil，生成 is null
+// 参数为nil，自动跳过条件
 func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilder {
 	for _, b := range condition {
 		if !b {
@@ -329,13 +329,6 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 
 	isNil := isFieldNil(arg)
 	if isNil {
-		w.andWheres = append(w.andWheres, whereToken{
-			Type: native,
-			clause: Clause{
-				Type:  IsNull,
-				query: query,
-			},
-		})
 		return w
 	}
 
@@ -395,7 +388,7 @@ func (w *WhereBuilder) NotIn(query string, args ArgArray, condition ...bool) *Wh
 	return w
 }
 
-// 参数为nil，生成 is not null
+// 参数为nil，不生成条件
 func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBuilder {
 	for _, b := range condition {
 		if !b {
@@ -405,13 +398,6 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 
 	isNil := isFieldNil(arg)
 	if isNil {
-		w.andWheres = append(w.andWheres, whereToken{
-			Type: native,
-			clause: Clause{
-				Type:  IsNotNull,
-				query: query,
-			},
-		})
 		return w
 	}
 
