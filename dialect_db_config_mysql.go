@@ -4,6 +4,14 @@ import (
 	"database/sql"
 )
 
+type MysqlVersion int
+
+const (
+	MysqlVersionLast MysqlVersion = iota
+	MysqlVersion5
+	MysqlVersion8
+)
+
 type MysqlConf struct {
 	Host     string
 	Port     string
@@ -11,11 +19,18 @@ type MysqlConf struct {
 	User     string
 	Password string
 	Other    string
+	Version  MysqlVersion
 }
 
 func (c MysqlConf) dialect(ctx *ormContext) Dialecter {
 	ctx.dialectNeedLastInsertId = true
-	return &MysqlDialect{ctx: ctx}
+	if c.Version == MysqlVersionLast {
+		c.Version = MysqlVersion8
+	}
+	return &MysqlDialect{
+		ctx:       ctx,
+		dbVersion: c.Version,
+	}
 }
 
 func (c MysqlConf) open() (*sql.DB, error) {

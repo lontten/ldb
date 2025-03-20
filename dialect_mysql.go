@@ -10,7 +10,8 @@ import (
 )
 
 type MysqlDialect struct {
-	ctx *ormContext
+	ctx       *ormContext
+	dbVersion MysqlVersion
 }
 
 // ===----------------------------------------------------------------------===//
@@ -21,13 +22,16 @@ func (d *MysqlDialect) getCtx() *ormContext {
 	return d.ctx
 }
 func (d *MysqlDialect) initContext() Dialecter {
-	return &MysqlDialect{ctx: &ormContext{
-		ormConf:                 d.ctx.ormConf,
-		query:                   &strings.Builder{},
-		wb:                      W(),
-		insertType:              insert_type.Err,
-		dialectNeedLastInsertId: d.ctx.dialectNeedLastInsertId,
-	}}
+	return &MysqlDialect{
+		ctx: &ormContext{
+			ormConf:                 d.ctx.ormConf,
+			query:                   &strings.Builder{},
+			wb:                      W(),
+			insertType:              insert_type.Err,
+			dialectNeedLastInsertId: d.ctx.dialectNeedLastInsertId,
+		},
+		dbVersion: d.dbVersion,
+	}
 }
 func (d *MysqlDialect) hasErr() bool {
 	return d.ctx.err != nil
