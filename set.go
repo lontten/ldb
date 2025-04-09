@@ -6,14 +6,14 @@ import (
 )
 
 type SetContext struct {
-	// 直接更新model中的字段
+	// model中需要直接更新的字段
 	fieldNames []string
 
-	// model 需要 ormContext 才能解析
+	// 附加的更新字段；model 需要通过 ormContext 解析，最后追加到 下面的 columns，columnValues
 	model    any
 	hasModel bool
 
-	// 其他可以直接解析
+	// 附加的更新字段；可以直接解析
 	columns      []string
 	columnValues []field.Value
 

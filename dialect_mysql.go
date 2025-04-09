@@ -146,14 +146,26 @@ func (d *MysqlDialect) tableInsertGen() {
 
 	switch ctx.insertType {
 	case insert_type.Update:
-		query.WriteString(" AS new ON DUPLICATE KEY UPDATE ")
-		// 当未设置更新字段时，默认为所有字段
+		//从 MySQL 8.0.19 开始 可以用 new 取代 VALUES
+		//从 MySQL 8.0.20 开始 VALUES 被弃用。
+		// INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6)
+		//  ON DUPLICATE KEY UPDATE c=VALUES(c);
+
+		// INSERT INTO t1 (a,b,c) VALUES (1,2,3),(4,5,6) AS new
+		//  ON DUPLICATE KEY UPDATE c = new.c;
+
+		if d.dbVersion >= MysqlVersion8_0_19 {
+			query.WriteString(" AS new ")
+		}
+
+		query.WriteString(" ON DUPLICATE KEY UPDATE ")
+		// 当未设置更新字段时，默认为所有效有字段（排除索引）
 		if len(set.columns) == 0 && len(set.fieldNames) == 0 {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
 				find := utils.Find(extra.duplicateKeyNames, name)
-				if find < 0 {
+				if find < 0 { // 排除 主键 字段
 					set.fieldNames = append(set.fieldNames, name)
 				}
 			}
@@ -184,7 +196,12 @@ func (d *MysqlDialect) tableInsertGen() {
 			if i > 0 {
 				query.WriteString(", ")
 			}
-			query.WriteString(name + " = new." + name)
+
+			if d.dbVersion >= MysqlVersion8_0_19 {
+				query.WriteString(name + " = new." + name)
+			} else {
+				query.WriteString(name + " = VALUES(" + name + ")")
+			}
 		}
 		for i, column := range set.columns {
 			query.WriteString(column + " = ? , ")

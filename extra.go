@@ -170,7 +170,8 @@ type DuplicateKey struct {
 //.do(update, all, .set(), select ("name", "age"))
 //.do(replace, all, .set(), select ("name", "age"))
 
-// 唯一索引冲突
+// WhenDuplicateKey
+// 唯一索引冲突,设置索引字段列表；Mysql可不设置，Postgresql 必须设置
 func (e *ExtraContext) WhenDuplicateKey(name ...string) *DuplicateKey {
 	e.duplicateKeyNames = name
 	return &DuplicateKey{
@@ -198,10 +199,14 @@ func (dk *DuplicateKey) update(insertType insert_type.InsertType, set ...*SetCon
 	return dk.e
 }
 
+// DoUpdate
+// 更新字段未设置时，默认更新所有 有值字段
 func (dk *DuplicateKey) DoUpdate(set ...*SetContext) *ExtraContext {
 	return dk.update(insert_type.Update, set...)
 }
 
+// DoReplace
+// 更新字段未设置时，默认更新所有 有值字段
 func (dk *DuplicateKey) DoReplace(set ...*SetContext) *ExtraContext {
 	return dk.update(insert_type.Replace, set...)
 }

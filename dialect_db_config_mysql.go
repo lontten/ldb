@@ -8,8 +8,11 @@ type MysqlVersion int
 
 const (
 	MysqlVersionLast MysqlVersion = iota
-	MysqlVersion5
-	MysqlVersion8
+	MysqlVersion5    MysqlVersion = iota
+
+	MysqlVersion8_0_19
+	MysqlVersion8_0_20
+	MysqlVersion8Last
 )
 
 type MysqlConf struct {
@@ -25,7 +28,7 @@ type MysqlConf struct {
 func (c MysqlConf) dialect(ctx *ormContext) Dialecter {
 	ctx.dialectNeedLastInsertId = true
 	if c.Version == MysqlVersionLast {
-		c.Version = MysqlVersion8
+		c.Version = MysqlVersion8Last
 	}
 	return &MysqlDialect{
 		ctx:       ctx,

@@ -113,7 +113,7 @@ func (d *PgDialect) tableInsertGen() {
 
 			for _, name := range list {
 				find := utils.Find(extra.duplicateKeyNames, name)
-				if find < 0 {
+				if find < 0 { // 排除 主键 字段
 					set.fieldNames = append(set.fieldNames, name)
 				}
 			}

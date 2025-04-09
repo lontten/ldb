@@ -8,18 +8,17 @@ import (
 	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb"
 	return_type "github.com/lontten/ldb/return-type"
-	"time"
 )
 
 func TableInsert() {
-	var user = User{
-		Name: types.NewString(time.Now().String()),
+	var user = Test{
+		Id:   types.NewInt(1),
+		Name: types.NewString("cc"),
 	}
 	num, err := ldb.Insert(dbinit.DB, &user, ldb.E().
-		SetNull("abc").
-		TableName("t_user").
+		TableName("t_test").
 		ReturnType(return_type.PrimaryKey).
-		WhenDuplicateKey("name").DoUpdate().
+		WhenDuplicateKey().DoUpdate().
 		ShowSql(),
 	)
 	if err != nil {

@@ -2,7 +2,9 @@ package dbinit
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/lontten/lcore/lcutils"
 	"github.com/lontten/ldb"
+	"os"
 )
 
 //import _ "github.com/jackc/pgx/v5/stdlib"
@@ -11,12 +13,14 @@ var DB ldb.Engine
 
 func init() {
 	conf := ldb.MysqlConf{
-		Host:     "127.0.0.1",
-		Port:     "3306",
-		DbName:   "test",
-		User:     "root",
-		Password: "123456",
+		Host:     os.Getenv("LDB_MYSQL_HOST"),
+		Port:     os.Getenv("LDB_MYSQL_PORT"),
+		DbName:   os.Getenv("LDB_MYSQL_DB"),
+		User:     os.Getenv("LDB_MYSQL_USER"),
+		Password: os.Getenv("LDB_MYSQL_PWD"),
+		Version:  ldb.MysqlVersion5,
 	}
+	lcutils.LogJson(conf)
 	db, err := ldb.Connect(conf, nil)
 	if err != nil {
 		panic(err)

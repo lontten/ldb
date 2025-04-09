@@ -84,7 +84,7 @@ type ormContext struct {
 	// ------------------字段名：字段值----------------------
 
 	columns      []string      // 有效字段列表
-	columnValues []field.Value // 有效字段值
+	columnValues []field.Value // 有效字段- 值
 
 	modelZeroFieldNames      []string       // model 零值字段列表
 	modelNoSoftDelFieldNames []string       // model 所有字段列表- 忽略软删除字段

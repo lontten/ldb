@@ -28,15 +28,25 @@ func (k Ka) TableConf() *ldb.TableConf {
 type Kaaa struct {
 }
 type User struct {
-	Id   *int
-	Name *string
-	Age  *int
-	Kaaa
-	softdelete.DeleteTimeNil
+	Id   *int    `db:"user_id"`
+	Name *string `db:"-"`
+	Age  *int    `db:"-"`
+	Kaaa `db:"-"`
 }
 
 func (u User) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("t_user").
+	return new(ldb.TableConf).Table("xjwy_user").
+		PrimaryKeys("user_id").
+		AutoIncrements("user_id")
+}
+
+type Test struct {
+	Id   *int    `db:"id"`
+	Name *string `db:"name"`
+}
+
+func (u Test) TableConf() *ldb.TableConf {
+	return new(ldb.TableConf).Table("t_test").
 		PrimaryKeys("id").
 		AutoIncrements("id")
 }
@@ -49,7 +59,7 @@ func main() {
 	//
 	//Prepare4()
 	//time.Sleep(1 * time.Hour)
-	//TableInsert()
+	TableInsert()
 	//Build1()
 	//Build2()
 	//Del()
@@ -57,9 +67,12 @@ func main() {
 	//First2()
 	//QueryOneT()
 	//List()
+	//Insertttt()
 	//TableUpdate()
 	//GetOrInsert()
 	//InsertOrHas()
 	//TableInsert3()
-	QueryBuild()
+	//QueryBuild()
+	//Has()
+	//TableUpdate2()
 }
