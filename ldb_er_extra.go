@@ -66,7 +66,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 		} else {
 			rows, err := db.query(countSql, b.otherSqlArgs...)
 			if err != nil {
-				return
+				return 0, dto, err
 			}
 			defer func(rows *sql.Rows) {
 				utils.PanicErr(rows.Close())
@@ -75,7 +75,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 				box := reflect.ValueOf(&total).Interface()
 				err = rows.Scan(box)
 				if err != nil {
-					return
+					return 0, dto, err
 				}
 			}
 		}
@@ -95,13 +95,6 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 		fmt.Println(selectSql, args)
 	}
 	if ctx.noRun {
-		dto = PageResult{
-			List:     dest,
-			PageSize: size,
-			PageNum:  pageNum,
-			Current:  current,
-			Total:    total,
-		}
 		return 0, dto, nil
 	}
 	listRows, err := db.query(selectSql, args...)
