@@ -76,6 +76,18 @@ func (b *SqlBuilder) ShowSql() *SqlBuilder {
 	return b
 }
 
+// 不执行
+func (b *SqlBuilder) NoRun() *SqlBuilder {
+	b.db.getCtx().noRun = true
+	return b
+}
+
+// 分页时，直接使用 fakeTotalNum，不再查询实际总数
+func (b *SqlBuilder) FakerTotalNum(num int64) *SqlBuilder {
+	b.db.getCtx().fakeTotalNum = num
+	return b
+}
+
 // 添加一个 arg，多个断言
 func (b *SqlBuilder) AppendArg(arg any, condition ...bool) *SqlBuilder {
 	if b.db.getCtx().hasErr() {
@@ -579,6 +591,9 @@ func (b *SqlBuilder) ScanOne(dest any) (rowsNum int64, err error) {
 	if ctx.showSql {
 		fmt.Println(query, args)
 	}
+	if ctx.noRun {
+		return 0, nil
+	}
 
 	rows, err := db.query(query, args...)
 	if err != nil {
@@ -608,6 +623,9 @@ func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
 	if ctx.showSql {
 		fmt.Println(query, args)
 	}
+	if ctx.noRun {
+		return 0, nil
+	}
 	rows, err := db.query(query, args...)
 	if err != nil {
 		return 0, err
@@ -626,6 +644,9 @@ func (b *SqlBuilder) Exec() (sql.Result, error) {
 	b.initSelectSql()
 	if ctx.showSql {
 		fmt.Println(b.query, b.args)
+	}
+	if ctx.noRun {
+		return nil, nil
 	}
 	return db.exec(b.query, b.args...)
 }

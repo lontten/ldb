@@ -59,20 +59,28 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	if ctx.showSql {
 		fmt.Println(countSql, b.otherSqlArgs)
 	}
-	rows, err := db.query(countSql, b.otherSqlArgs...)
-	if err != nil {
-		return
-	}
-	defer func(rows *sql.Rows) {
-		utils.PanicErr(rows.Close())
-	}(rows)
-	for rows.Next() {
-		box := reflect.ValueOf(&total).Interface()
-		err = rows.Scan(box)
-		if err != nil {
-			return
+
+	if !ctx.noRun {
+		if ctx.fakeTotalNum > 0 {
+			total = ctx.fakeTotalNum
+		} else {
+			rows, err := db.query(countSql, b.otherSqlArgs...)
+			if err != nil {
+				return
+			}
+			defer func(rows *sql.Rows) {
+				utils.PanicErr(rows.Close())
+			}(rows)
+			for rows.Next() {
+				box := reflect.ValueOf(&total).Interface()
+				err = rows.Scan(box)
+				if err != nil {
+					return
+				}
+			}
 		}
 	}
+
 	// 计算总页数
 	var pageNum int64 = total / size
 	if total%size != 0 {
@@ -85,6 +93,16 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 
 	if ctx.showSql {
 		fmt.Println(selectSql, args)
+	}
+	if ctx.noRun {
+		dto = PageResult{
+			List:     dest,
+			PageSize: size,
+			PageNum:  pageNum,
+			Current:  current,
+			Total:    total,
+		}
+		return 0, dto, nil
 	}
 	listRows, err := db.query(selectSql, args...)
 	if err != nil {

@@ -79,6 +79,7 @@ type ormContext struct {
 	checkParam     bool   // 是否检查参数
 	showSql        bool   // 打印sql
 	noRun          bool   // 不实际执行
+	fakeTotalNum   int64  // 分页-假数据总数，分页时，跳过查询，直接使用这个总数;默认-1，表示未设置
 	// ------------------conf-end----------------------
 
 	// ------------------字段名：字段值----------------------
