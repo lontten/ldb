@@ -88,6 +88,12 @@ func (b *SqlBuilder) FakerTotalNum(num int64) *SqlBuilder {
 	return b
 }
 
+// 分页时，只查询数量，不返回数据列表
+func (b *SqlBuilder) NoGetList() *SqlBuilder {
+	b.db.getCtx().noGetList = true
+	return b
+}
+
 // 添加一个 arg，多个断言
 func (b *SqlBuilder) AppendArg(arg any, condition ...bool) *SqlBuilder {
 	if b.db.getCtx().hasErr() {

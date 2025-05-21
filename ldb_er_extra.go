@@ -97,6 +97,17 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	if ctx.noRun {
 		return 0, dto, nil
 	}
+	if ctx.noGetList {
+		dto = PageResult{
+			List:     make([]any, 0),
+			PageSize: size,
+			PageNum:  pageNum,
+			Current:  current,
+			Total:    total,
+		}
+		return 0, dto, nil
+	}
+
 	listRows, err := db.query(selectSql, args...)
 	if err != nil {
 		return
