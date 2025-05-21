@@ -71,35 +71,55 @@ func (b *SqlBuilder) initSelectSql() {
 //}
 
 // 显示sql
-func (b *SqlBuilder) ShowSql() *SqlBuilder {
+func (b *SqlBuilder) ShowSql(conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
 	b.db.getCtx().showSql = true
 	return b
 }
 
 // 不执行
-func (b *SqlBuilder) NoRun() *SqlBuilder {
+func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
 	b.db.getCtx().noRun = true
 	return b
 }
 
 // 分页时，直接使用 fakeTotalNum，不再查询实际总数
-func (b *SqlBuilder) FakerTotalNum(num int64) *SqlBuilder {
+func (b *SqlBuilder) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
 	b.db.getCtx().fakeTotalNum = num
 	return b
 }
 
 // 分页时，只查询数量，不返回数据列表
-func (b *SqlBuilder) NoGetList() *SqlBuilder {
+func (b *SqlBuilder) NoGetList(conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
 	b.db.getCtx().noGetList = true
 	return b
 }
 
 // 添加一个 arg，多个断言
-func (b *SqlBuilder) AppendArg(arg any, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder) AppendArg(arg any, conditions ...bool) *SqlBuilder {
 	if b.db.getCtx().hasErr() {
 		return b
 	}
-	for _, c := range condition {
+	for _, c := range conditions {
 		if !c {
 			return b
 		}
