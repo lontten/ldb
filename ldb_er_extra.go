@@ -8,6 +8,39 @@ import (
 	"reflect"
 )
 
+// 自定义count字段
+func (b *SqlBuilder) CountField(field string, conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
+	b.countField = field
+	return b
+}
+
+// 分页时，直接使用 fakeTotalNum，不再查询实际总数
+func (b *SqlBuilder) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
+	b.fakeTotalNum = num
+	return b
+}
+
+// 分页时，只查询数量，不返回数据列表
+func (b *SqlBuilder) NoGetList(conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
+	b.noGetList = true
+	return b
+}
+
 func (b *SqlBuilder) Page(current int64, pageSize int64) *SqlBuilder {
 	if pageSize < 1 || current < 1 {
 		b.db.getCtx().err = errors.New("pageSize,current must be greater than 0")
@@ -66,8 +99,8 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	}
 
 	if !ctx.noRun {
-		if ctx.fakeTotalNum > 0 {
-			total = ctx.fakeTotalNum
+		if b.fakeTotalNum > 0 {
+			total = b.fakeTotalNum
 		} else {
 			rows, err := db.query(countSql, b.otherSqlArgs...)
 			if err != nil {
@@ -102,7 +135,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	if ctx.noRun {
 		return 0, dto, nil
 	}
-	if ctx.noGetList {
+	if b.noGetList {
 		dto = PageResult{
 			List:     make([]any, 0),
 			PageSize: size,

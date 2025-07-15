@@ -32,9 +32,14 @@ type SqlBuilder struct {
 	selectStatus int8
 
 	selectTokens []string
+	orderTokens  []string
 	selectQuery  *strings.Builder
 	selectArgs   []any
+
+	// 分页
 	countField   string // 分页时，用于查询总数的字段，默认为 *
+	fakeTotalNum int64  // 分页-假数据总数，分页时，跳过查询，直接使用这个总数;默认-1，表示未设置
+	noGetList    bool   // 分页-不返回数据，分页时，只查询数量，不返回数据列表;默认false，表示需要获取数据
 
 	// 其他部分
 	otherSqlBuilder *strings.Builder
@@ -62,14 +67,11 @@ func (b *SqlBuilder) initSelectSql() {
 	b.selectQuery.WriteString("SELECT ")
 	b.selectQuery.WriteString(strings.Join(b.selectTokens, ","))
 	b.query = b.selectQuery.String() + " " + b.otherSqlBuilder.String()
+	if len(b.orderTokens) > 0 {
+		b.query = b.query + " ORDER BY " + strings.Join(b.orderTokens, ",")
+	}
 	b.args = append(b.selectArgs, b.otherSqlArgs...)
 }
-
-//
-//func (b *SqlBuilder) initQuerySql() {
-//	b.query = b.otherSqlBuilder.String()
-//	b.args = b.otherSqlArgs
-//}
 
 // 显示sql
 func (b *SqlBuilder) ShowSql(conditions ...bool) *SqlBuilder {
@@ -90,39 +92,6 @@ func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
 		}
 	}
 	b.db.getCtx().noRun = true
-	return b
-}
-
-// 自定义count字段
-func (b *SqlBuilder) CountField(field string, conditions ...bool) *SqlBuilder {
-	for _, c := range conditions {
-		if !c {
-			return b
-		}
-	}
-	b.countField = field
-	return b
-}
-
-// 分页时，直接使用 fakeTotalNum，不再查询实际总数
-func (b *SqlBuilder) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder {
-	for _, c := range conditions {
-		if !c {
-			return b
-		}
-	}
-	b.db.getCtx().fakeTotalNum = num
-	return b
-}
-
-// 分页时，只查询数量，不返回数据列表
-func (b *SqlBuilder) NoGetList(conditions ...bool) *SqlBuilder {
-	for _, c := range conditions {
-		if !c {
-			return b
-		}
-	}
-	b.db.getCtx().noGetList = true
 	return b
 }
 
@@ -291,24 +260,7 @@ func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
 			return b
 		}
 	}
-	b.otherSqlBuilder.WriteString(" ORDER BY " + name)
-	return b
-}
-
-func (b *SqlBuilder) Native(sql string, condition ...bool) *SqlBuilder {
-	ctx := b.db.getCtx()
-	if ctx.hasErr() {
-		return b
-	}
-	b.SelectEnd()
-	for _, c := range condition {
-		if !c {
-			return b
-		}
-	}
-	b.otherSqlBuilder.WriteString(" ")
-	b.otherSqlBuilder.WriteString(sql)
-	b.otherSqlBuilder.WriteString(" ")
+	b.orderTokens = append(b.orderTokens, name)
 	return b
 }
 
@@ -322,7 +274,22 @@ func (b *SqlBuilder) OrderDescBy(name string, condition ...bool) *SqlBuilder {
 			return b
 		}
 	}
-	b.otherSqlBuilder.WriteString(" ORDER BY " + name + " DESC")
+	b.orderTokens = append(b.orderTokens, name+" DESC")
+	return b
+}
+func (b *SqlBuilder) Native(sql string, condition ...bool) *SqlBuilder {
+	ctx := b.db.getCtx()
+	if ctx.hasErr() {
+		return b
+	}
+	for _, c := range condition {
+		if !c {
+			return b
+		}
+	}
+	b.otherSqlBuilder.WriteString(" ")
+	b.otherSqlBuilder.WriteString(sql)
+	b.otherSqlBuilder.WriteString(" ")
 	return b
 }
 
@@ -397,10 +364,7 @@ func (b *SqlBuilder) LinkWhere() *SqlBuilder {
 	b.whereStatus = whereSet
 	return b
 }
-func (b *SqlBuilder) SelectEnd() *SqlBuilder {
-	b.selectStatus = selectDone
-	return b
-}
+
 func (b *SqlBuilder) Where(whereStr string, condition ...bool) *SqlBuilder {
 	for _, c := range condition {
 		if !c {
@@ -417,10 +381,7 @@ func (b *SqlBuilder) _whereArg(whereStr string, args ...any) *SqlBuilder {
 	if ctx.hasErr() {
 		return b
 	}
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("Where 设置异常：" + whereStr)
-		return b
-	}
+	b.selectStatus = selectDone
 
 	b.AppendArgs(args...)
 	switch b.whereStatus {
