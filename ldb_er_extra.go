@@ -54,7 +54,12 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 
 	b.initSelectSql()
 
-	var countSql = "select count(*) " + b.otherSqlBuilder.String()
+	var countSql = b.countField
+	if countSql == "" {
+		countSql = "*"
+	}
+
+	countSql = "select count(" + countSql + ") " + b.otherSqlBuilder.String()
 
 	if ctx.showSql {
 		fmt.Println(countSql, b.otherSqlArgs)

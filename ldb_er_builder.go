@@ -34,6 +34,7 @@ type SqlBuilder struct {
 	selectTokens []string
 	selectQuery  *strings.Builder
 	selectArgs   []any
+	countField   string // 分页时，用于查询总数的字段，默认为 *
 
 	// 其他部分
 	otherSqlBuilder *strings.Builder
@@ -89,6 +90,17 @@ func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
 		}
 	}
 	b.db.getCtx().noRun = true
+	return b
+}
+
+// 自定义count字段
+func (b *SqlBuilder) CountField(field string, conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
+	b.countField = field
 	return b
 }
 
