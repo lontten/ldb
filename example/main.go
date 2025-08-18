@@ -22,7 +22,7 @@ type Ka struct {
 func (k Ka) TableConf() *ldb.TableConf {
 	return new(ldb.TableConf).
 		Table("t_ka").
-		AutoIncrements("id")
+		AutoPrimaryKey("id")
 }
 
 type Kaaa struct {
@@ -37,19 +37,9 @@ type User struct {
 func (u User) TableConf() *ldb.TableConf {
 	return new(ldb.TableConf).Table("xjwy_user").
 		PrimaryKeys("user_id").
-		AutoIncrements("user_id")
+		AutoPrimaryKey("user_id")
 }
 
-type Test struct {
-	Id   *int    `db:"id"`
-	Name *string `db:"name"`
-}
-
-func (u Test) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("t_test").
-		PrimaryKeys("id").
-		AutoIncrements("id")
-}
 func main() {
 	//QueryOneT2()
 	//QueryListT2()
@@ -59,11 +49,11 @@ func main() {
 	//
 	//Prepare4()
 	//time.Sleep(1 * time.Hour)
-	TableInsert()
+	//TableInsert()
 	//Build1()
 	//Build2()
 	//Del()
-	//First()
+	First()
 	//First2()
 	//QueryOneT()
 	//List()

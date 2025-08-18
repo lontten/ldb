@@ -73,7 +73,7 @@ func (c OrmConf) tableName(v reflect.Value, dest any) string {
 	}
 
 	// tableName
-	n := GetTableName(v)
+	n := getTableName(v)
 	if n != nil {
 		return *n
 	}
@@ -85,9 +85,8 @@ func (c OrmConf) tableName(v reflect.Value, dest any) string {
 }
 
 // 不可缓存
-// 1.默认主键为id，
-// 2.可以PrimaryKeyNames设置主键字段名
-// 3.通过表名动态设置主键字段名-fn
+// 1.可以PrimaryKeyNames设置主键字段名
+// 2.通过表名动态设置主键字段名-fn
 func (c OrmConf) primaryKeys(v reflect.Value, dest any) []string {
 	//fun
 	primaryKeyNameFun := c.PrimaryKeyNameFun
@@ -95,18 +94,7 @@ func (c OrmConf) primaryKeys(v reflect.Value, dest any) []string {
 		return primaryKeyNameFun(v, dest)
 	}
 
-	list := GetPrimaryKeyNames(v)
-	if len(list) > 0 {
-		return list
-	}
-
-	// id
-	return []string{"id"}
-}
-
-// 可缓存
-func (c OrmConf) autoIncrements(v reflect.Value) []string {
-	return GetAutoIncrements(v)
+	return getPrimaryKeyNames(v)
 }
 
 // 获取 rows 返回数据，每个字段index 对应 struct 的字段 名字

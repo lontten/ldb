@@ -138,20 +138,23 @@ func (d *PgDialect) tableInsertGen() {
 		break
 	}
 
-	if ctx.scanIsPtr {
+	// 当scan为指针类型时，返回字段。
+	if ctx.returnAutoPrimaryKey != pkNoReturn {
 		switch expr := ctx.returnType; expr {
 		case return_type.None:
-			ctx.sqlIsQuery = false
 			break
-		case return_type.PrimaryKey:
-			query.WriteString(" RETURNING " + strings.Join(ctx.primaryKeyNames, ","))
+		case return_type.Auto:
+			var list []string
+			for _, s := range ctx.otherAutoFieldNames {
+				list = append(list, s)
+			}
+			list = append(list, *ctx.autoPrimaryKeyFieldName)
+			query.WriteString(" RETURNING " + strings.Join(list, ","))
 		case return_type.ZeroField:
 			query.WriteString(" RETURNING " + strings.Join(ctx.modelZeroFieldNames, ","))
 		case return_type.AllField:
 			query.WriteString(" RETURNING " + strings.Join(ctx.modelAllFieldNames, ","))
 		}
-	} else {
-		ctx.sqlIsQuery = false
 	}
 	query.WriteString(";")
 }

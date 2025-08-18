@@ -7,24 +7,6 @@ import (
 	"github.com/lontten/ldb"
 )
 
-func First() {
-	var u = User{
-		Id:   nil,
-		Name: types.NewString("xxx"),
-	}
-	fmt.Println(u)
-	var m = make(map[string]any)
-	m["a"] = 1
-	m["b"] = "bb"
-	m["c"] = nil
-	eq := ldb.W().Eq("abc", "xxx")
-
-	num, err := ldb.First[User](dbinit.DB, ldb.W().Or(eq).
-		Model(u), ldb.E().ShowSql().SkipSoftDelete())
-	fmt.Println(num)
-	fmt.Println(err)
-}
-
 func First2() {
 	one, err := ldb.First[User](dbinit.DB, ldb.W().Eq("name", "fjakdsf").
 		IsNotNull("name"), ldb.E().ShowSql())

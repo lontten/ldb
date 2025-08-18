@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/lontten/lcore/lcutils"
 	"github.com/lontten/lcore/types"
 	"reflect"
 	"strconv"
@@ -528,6 +529,60 @@ func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool)
 		b._whereArg(whereStr+" <= ?", end)
 		return b
 	}
+	return b
+}
+
+func (b *SqlBuilder) Like(key *string, fields ...string) *SqlBuilder {
+	b._like(key, 1, fields...)
+	return b
+}
+func (b *SqlBuilder) LikeLeft(key *string, fields ...string) *SqlBuilder {
+	b._like(key, 2, fields...)
+	return b
+}
+func (b *SqlBuilder) LikeRight(key *string, fields ...string) *SqlBuilder {
+	b._like(key, 3, fields...)
+	return b
+}
+
+// likeType
+// 1 表示 like '%key%';
+// 2 表示 like '%key';
+// 3 表示 like 'key%';
+func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuilder {
+	db := b.db
+	ctx := db.getCtx()
+	if ctx.hasErr() {
+		return b
+	}
+	if b.selectStatus != selectDone {
+		ctx.err = errors.New("Where 设置异常：like ")
+		return b
+	}
+
+	if lcutils.NilToZero(key) == "" {
+		return b
+	}
+	if len(fields) == 0 {
+		return b
+	}
+	var args []any
+	var k = ""
+	if likeType == 1 {
+		k = "%" + *key + "%"
+	} else if likeType == 2 {
+		k = "%" + *key
+	} else if likeType == 3 {
+		k = *key + "%"
+	}
+
+	var tokens []string
+	for _, field := range fields {
+		tokens = append(tokens, field+" LIKE ? ")
+		args = append(args, k)
+	}
+	var whereStr = "(" + strings.Join(tokens, " OR ") + ")"
+	b._whereArg(whereStr, args...)
 	return b
 }
 

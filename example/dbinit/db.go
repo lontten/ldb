@@ -12,6 +12,9 @@ import (
 var DB ldb.Engine
 
 func init() {
+	initMysql()
+}
+func initMysql() {
 	conf := ldb.MysqlConf{
 		Host:     os.Getenv("LDB_MYSQL_HOST"),
 		Port:     os.Getenv("LDB_MYSQL_PORT"),
@@ -28,13 +31,13 @@ func init() {
 	DB = db
 }
 
-func init2() {
+func initPg() {
 	conf := ldb.PgConf{
-		Host:     "127.0.0.1",
-		Port:     "5432",
-		DbName:   "test",
-		User:     "postgres",
-		Password: "123456",
+		Host:     os.Getenv("LDB_PG_HOST"),
+		Port:     os.Getenv("LDB_PG_PORT"),
+		DbName:   os.Getenv("LDB_PG_DB"),
+		User:     os.Getenv("LDB_PG_USER"),
+		Password: os.Getenv("LDB_PG_PWD"),
 	}
 	db, err := ldb.Connect(conf, nil)
 	if err != nil {

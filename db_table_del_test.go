@@ -1,5 +1,7 @@
 package ldb
 
+import "github.com/lontten/lcore/types"
+
 // import (
 //
 //	"github.com/DATA-DOG/go-sqlmock"
@@ -13,48 +15,54 @@ type User struct {
 	Name string
 }
 
+func (User) TableConf() *TableConf {
+	return new(TableConf).
+		Table("t_user").
+		PrimaryKeys("id").
+		AutoPrimaryKey("id")
+}
+
+//	func TestDeleteByPrimaryKey(t *testing.T) {
+//		as := assert.New(t)
+//		ldb, mock, err := sqlmock.New()
+//		as.Nil(err, "new sqlmock error")
+//		engine := MustConnectMock(ldb, &PgConf{})
 //
-//func TestDeleteByPrimaryKey(t *testing.T) {
-//	as := assert.New(t)
-//	ldb, mock, err := sqlmock.New()
-//	as.Nil(err, "new sqlmock error")
-//	engine := MustConnectMock(ldb, &PgConf{})
+//		mock.ExpectExec("DELETE FROM *").
+//			WithArgs(1).
+//			WillReturnError(nil).
+//			WillReturnResult(sqlmock.NewResult(0, 1))
 //
-//	mock.ExpectExec("DELETE FROM *").
-//		WithArgs(1).
-//		WillReturnError(nil).
-//		WillReturnResult(sqlmock.NewResult(0, 1))
+//		num, err := engine.Delete(User{}).ByPrimaryKey(1).Result()
+//		as.Nil(err)
+//		as.Equal(int64(1), num)
 //
-//	num, err := engine.Delete(User{}).ByPrimaryKey(1).Result()
-//	as.Nil(err)
-//	as.Equal(int64(1), num)
+//		as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
+//	}
 //
-//	as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
-//}
+//	func TestDeleteByPrimaryKeys(t *testing.T) {
+//		as := assert.New(t)
+//		ldb, mock, err := sqlmock.New()
+//		as.Nil(err, "new sqlmock error")
+//		engine := MustConnectMock(ldb, &PgConf{})
 //
-//func TestDeleteByPrimaryKeys(t *testing.T) {
-//	as := assert.New(t)
-//	ldb, mock, err := sqlmock.New()
-//	as.Nil(err, "new sqlmock error")
-//	engine := MustConnectMock(ldb, &PgConf{})
+//		mock.ExpectExec("DELETE FROM *").
+//			WithArgs(1, 2, 3).
+//			WillReturnError(nil).
+//			WillReturnResult(sqlmock.NewResult(0, 3))
 //
-//	mock.ExpectExec("DELETE FROM *").
-//		WithArgs(1, 2, 3).
-//		WillReturnError(nil).
-//		WillReturnResult(sqlmock.NewResult(0, 3))
+//		num, err := engine.Delete(User{}).ByPrimaryKey(1, 2, 3).Result()
+//		as.Nil(err)
+//		as.Equal(int64(3), num, "num error")
 //
-//	num, err := engine.Delete(User{}).ByPrimaryKey(1, 2, 3).Result()
-//	as.Nil(err)
-//	as.Equal(int64(3), num, "num error")
-//
-//	as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
-//}
-//
-//type Whe struct {
-//	Name *string
-//	Age  *int
-//	Uid  *types.UUID
-//}
+//		as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
+//	}
+type Whe struct {
+	Name *string
+	Age  *int
+	Uid  *types.UUID
+}
+
 //
 //func TestDeleteByModel(t *testing.T) {
 //	as := assert.New(t)

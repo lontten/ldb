@@ -8,12 +8,12 @@ type LdbTabler interface {
 	TableConf() *TableConf
 }
 
-// 表配置,会缓存，不可设置动态属性
 type TableConf struct {
-	tableName       *string  // 表名
-	primaryKeyNames []string // 主键字段列表
-	indexs          []Index  // 索引列表
-	autoIncrements  []string // 自增字段列表
+	tableName                *string  // 表名
+	primaryKeyColumnNames    []string // 主键字段名列表
+	autoPrimaryKeyColumnName *string  // 自增主键字段名
+	otherAutoColumnName      []string // 其他自动生成字段名列表
+	indexs                   []Index  // 数据库索引列表
 }
 type Index struct {
 	Name      string   // 索引名称
@@ -23,24 +23,37 @@ type Index struct {
 	Comment   string   // 索引注释
 }
 
+// api
 func (c *TableConf) Table(name string) *TableConf {
 	c.tableName = &name
 	return c
 }
 
+// api
 func (c *TableConf) PrimaryKeys(name ...string) *TableConf {
-	c.primaryKeyNames = name
+	c.primaryKeyColumnNames = name
 	return c
 }
 
-func (c *TableConf) AutoIncrements(name ...string) *TableConf {
-	c.autoIncrements = name
+// api
+func (c *TableConf) AutoPrimaryKey(name string) *TableConf {
+	c.autoPrimaryKeyColumnName = &name
+	return c
+}
+
+// api
+// OtherAutoField 其他自动生成字段
+// 例如：
+// 自增字段、虚拟列、计算列、默认值，等
+// 在insert时，可以设置返回这些字段
+func (c *TableConf) OtherAutoColumn(name ...string) *TableConf {
+	c.otherAutoColumnName = name
 	return c
 }
 
 var TableConfCache = map[reflect.Type]TableConf{}
 
-func GetTableConf(v reflect.Value) *TableConf {
+func getTableConf(v reflect.Value) *TableConf {
 	n, has := TableConfCache[v.Type()]
 	if has {
 		return &n
@@ -66,26 +79,18 @@ func GetTableConf(v reflect.Value) *TableConf {
 	return tc
 }
 
-func GetTableName(v reflect.Value) *string {
-	tc := GetTableConf(v)
+func getTableName(v reflect.Value) *string {
+	tc := getTableConf(v)
 	if tc == nil {
 		return nil
 	}
 	return tc.tableName
 }
 
-func GetPrimaryKeyNames(v reflect.Value) []string {
-	tc := GetTableConf(v)
+func getPrimaryKeyNames(v reflect.Value) []string {
+	tc := getTableConf(v)
 	if tc == nil {
 		return nil
 	}
-	return tc.primaryKeyNames
-}
-
-func GetAutoIncrements(v reflect.Value) []string {
-	tc := GetTableConf(v)
-	if tc == nil {
-		return nil
-	}
-	return tc.autoIncrements
+	return tc.primaryKeyColumnNames
 }

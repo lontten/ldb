@@ -33,8 +33,8 @@ type Clause struct {
 }
 
 type WhereBuilder struct {
-	primaryKeyValue       []any // 主键值列表
-	filterPrimaryKeyValue []any // 主键值列表,过滤
+	primaryKeyValue       []any // 主键值列表（any可能是一个复合主键，后面需要，解析出来）
+	filterPrimaryKeyValue []any // 主键值列表,过滤（any可能是一个复合主键，后面需要，解析出来）
 
 	// 所有的and 组合成一个or放在 andWheres
 	// 原因：当 and or 组合时，每条or都是独立的，and是组合使用的，有些反逻辑，为了使最后组成的sql更加已读，
@@ -305,14 +305,13 @@ func (w *WhereBuilder) Map(v any, condition ...bool) *WhereBuilder {
 	}
 	return w
 }
-
 func (w *WhereBuilder) PrimaryKey(v ...any) *WhereBuilder {
-	w.primaryKeyValue = v
+	w.primaryKeyValue = append(w.primaryKeyValue, v)
 	return w
 }
 
 func (w *WhereBuilder) FilterPrimaryKey(v ...any) *WhereBuilder {
-	w.filterPrimaryKeyValue = v
+	w.filterPrimaryKeyValue = append(w.filterPrimaryKeyValue, v)
 	return w
 }
 

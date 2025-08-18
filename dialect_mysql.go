@@ -24,11 +24,10 @@ func (d *MysqlDialect) getCtx() *ormContext {
 func (d *MysqlDialect) initContext() Dialecter {
 	return &MysqlDialect{
 		ctx: &ormContext{
-			ormConf:                 d.ctx.ormConf,
-			query:                   &strings.Builder{},
-			wb:                      W(),
-			insertType:              insert_type.Err,
-			dialectNeedLastInsertId: d.ctx.dialectNeedLastInsertId,
+			ormConf:    d.ctx.ormConf,
+			query:      &strings.Builder{},
+			wb:         W(),
+			insertType: insert_type.Err,
 		},
 		dbVersion: d.dbVersion,
 	}
@@ -91,15 +90,7 @@ func (d *MysqlDialect) execBatch(query string, args [][]any) (string, [][]any) {
 // ===----------------------------------------------------------------------===//
 // 中间服务
 // ===----------------------------------------------------------------------===//
-// 初始化主键
-func (d *MysqlDialect) initPrimaryKeyName() {
-	if d.ctx.err != nil {
-		return
-	}
-	v := d.ctx.destBaseValue
-	dest := d.ctx.scanDest
-	d.ctx.primaryKeyNames = d.ctx.ormConf.primaryKeys(v, dest)
-}
+
 func (d *MysqlDialect) getSql() string {
 	s := d.ctx.query.String()
 	return s
@@ -111,8 +102,6 @@ func (d *MysqlDialect) tableInsertGen() {
 	if ctx.hasErr() {
 		return
 	}
-	// mysql insert 时，无法直接返回数据，只能借助 last_insert_id
-	ctx.sqlIsQuery = false
 
 	extra := ctx.extra
 	set := extra.set

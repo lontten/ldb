@@ -11,64 +11,6 @@ import (
 	"strings"
 )
 
-// ------------------------------------Insert--------------------------------------------
-
-// Insert 插入或者根据主键冲突更新
-func Insert(db Engine, v any, extra ...*ExtraContext) (num int64, err error) {
-	db = db.init()
-	dialect := db.getDialect()
-	ctx := dialect.getCtx()
-	ctx.initExtra(extra...)
-	ctx.sqlType = sqltype.Insert
-	ctx.sqlIsQuery = true
-
-	ctx.initModelDest(v) //初始化参数
-	ctx.initConf()       //初始化表名，主键，自增id
-
-	ctx.initColumnsValue() //初始化cv
-	ctx.initColumnsValueExtra()
-	ctx.initColumnsValueSoftDel() // 软删除
-
-	dialect.tableInsertGen()
-	if ctx.hasErr() {
-		return 0, ctx.err
-	}
-
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
-	if ctx.noRun {
-		return 0, nil
-	}
-
-	if ctx.sqlIsQuery {
-		rows, err := db.query(sqlStr, ctx.args...)
-		if err != nil {
-			return 0, err
-		}
-		return ctx.ScanLnT(rows)
-	}
-
-	exec, err := db.exec(sqlStr, ctx.args...)
-	if err != nil {
-		return 0, err
-	}
-	if ctx.needLastInsertId {
-		id, err := exec.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		if id > 0 {
-			ctx.setLastInsertId(id)
-			if ctx.hasErr() {
-				return 0, ctx.err
-			}
-		}
-	}
-	return exec.RowsAffected()
-}
-
 //------------------------------------Delete--------------------------------------------
 
 func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, error) {
@@ -77,7 +19,6 @@ func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, 
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
 	ctx.sqlType = sqltype.Delete
-	ctx.sqlIsQuery = false
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
@@ -117,7 +58,6 @@ func Update(db Engine, wb *WhereBuilder, dest any, extra ...*ExtraContext) (int6
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
 	ctx.sqlType = sqltype.Update
-	ctx.sqlIsQuery = false
 
 	ctx.initModelDest(dest)
 	ctx.initConf() //初始化表名，主键，自增id
@@ -184,6 +124,7 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	sqlStr := dialect.getSql()
 	if ctx.showSql {
 		fmt.Println(sqlStr, ctx.args)
+		utils.PrintSql(sqlStr, ctx.args)
 	}
 	if ctx.noRun {
 		return nil, nil
@@ -402,7 +343,6 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...) // 表名，set，select配置
 	ctx.sqlType = sqltype.Select
-	ctx.sqlIsQuery = true
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
@@ -446,7 +386,6 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	ctx.query.Reset()
 	ctx.args = []any{}
 	ctx.sqlType = sqltype.Insert
-	ctx.sqlIsQuery = true
 
 	ctx.initModelDest(d) //初始化参数
 
@@ -467,7 +406,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		return nil, nil
 	}
 
-	if ctx.sqlIsQuery {
+	if ctx.returnAutoPrimaryKey == pkQueryReturn {
 		rows, err = db.query(sqlStr, ctx.args...)
 		if err != nil {
 			return nil, err
@@ -482,7 +421,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	if err != nil {
 		return nil, err
 	}
-	if ctx.needLastInsertId {
+	if ctx.returnAutoPrimaryKey == pkFetchReturn {
 		id, err := exec.LastInsertId()
 		if err != nil {
 			return nil, err
@@ -515,7 +454,6 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	ctx.initExtra(extra...) // 表名，set，select配置
 	ctx.modelSelectFieldNames = []string{"1"}
 	ctx.sqlType = sqltype.Select
-	ctx.sqlIsQuery = true
 
 	ctx.initModelDest(d) //初始化参数
 	ctx.initConf()       //初始化表名，主键，自增id
@@ -557,7 +495,6 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	ctx.query.Reset()
 	ctx.args = []any{}
 	ctx.sqlType = sqltype.Insert
-	ctx.sqlIsQuery = true
 	ctx.initColumnsValueSoftDel() // 软删除
 
 	dialect.tableInsertGen()
@@ -573,7 +510,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		return false, nil
 	}
 
-	if ctx.sqlIsQuery {
+	if ctx.returnAutoPrimaryKey == pkQueryReturn {
 		rows, err = db.query(sqlStr, ctx.args...)
 		if err != nil {
 			return false, err
@@ -588,7 +525,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	if err != nil {
 		return false, err
 	}
-	if ctx.needLastInsertId {
+	if ctx.returnAutoPrimaryKey == pkFetchReturn {
 		id, err := exec.LastInsertId()
 		if err != nil {
 			return false, err

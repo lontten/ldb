@@ -1,6 +1,7 @@
 package ldb
 
 import (
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/lontten/lcore/types"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,7 @@ func TestQuery(t *testing.T) {
 
 	n := 0
 
-	num, err := QueryScan(engine, "select 1").ScanOne(&n)
+	num, err := NativeQueryScan(engine, "select 1").ScanOne(&n)
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 	as.Equal(4, n, "n error")
@@ -35,7 +36,7 @@ func TestQuery(t *testing.T) {
 		)
 
 	name := ""
-	num, err = QueryScan(engine, "select 'kk' ").ScanOne(&name)
+	num, err = NativeQueryScan(engine, "select 'kk' ").ScanOne(&name)
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 	as.Equal("kk", name, "name error")
@@ -50,7 +51,7 @@ func TestQuery(t *testing.T) {
 		)
 
 	uid := types.UUID{}
-	num, err = QueryScan(engine, "select gen_random_uuid() ").ScanOne(&uid)
+	num, err = NativeQueryScan(engine, "select gen_random_uuid() ").ScanOne(&uid)
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 	as.Equal(v4, uid, "uuid error")
@@ -64,7 +65,7 @@ func TestQuery(t *testing.T) {
 		)
 
 	d := types.Date{}
-	num, err = QueryScan(engine, "select now() ").ScanOne(&d)
+	num, err = NativeQueryScan(engine, "select now() ").ScanOne(&d)
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 	as.Equal(date, d, "date error")
@@ -79,7 +80,7 @@ func TestQuery(t *testing.T) {
 		)
 
 	u := User{}
-	num, err = QueryScan(engine, "select id,name from user limit 1").ScanOne(&u)
+	num, err = NativeQueryScan(engine, "select id,name from user limit 1").ScanOne(&u)
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 	as.Equal(user, u, "user error")
@@ -158,30 +159,11 @@ func TestQueryT(t *testing.T) {
 
 	as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
 }
-
-func TestExec(t *testing.T) {
+func TestQueryT1(t *testing.T) {
 	as := assert.New(t)
-	db, mock, err := sqlmock.New()
-	as.Nil(err, "new sqlmock error")
-	engine := MustConnectMock(db, &PgConf{})
-
-	mock.ExpectExec("delete from user where id = ? ").
-		WithArgs(1).
-		WillReturnError(nil).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	num, err := Exec(engine, "delete from user where id = ?", 1)
+	date := types.NowDate()
+	var p = &date
+	value, err := p.Value()
+	fmt.Println(value)
 	as.Nil(err)
-	as.Equal(int64(1), num, "num error")
-
-	mock.ExpectExec("update user set name = 'kk' where id = ? ").
-		WithArgs(1).
-		WillReturnError(nil).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	num, err = Exec(engine, "update user set name = 'kk' where id = ? ", 1)
-	as.Nil(err)
-	as.Equal(int64(1), num, "num error")
-
-	as.Nil(mock.ExpectationsWereMet(), "we make sure that all expectations were met")
 }

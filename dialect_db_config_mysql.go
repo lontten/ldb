@@ -26,7 +26,7 @@ type MysqlConf struct {
 }
 
 func (c MysqlConf) dialect(ctx *ormContext) Dialecter {
-	ctx.dialectNeedLastInsertId = true
+	ctx.insertCanReturn = false
 	if c.Version == MysqlVersionLast {
 		c.Version = MysqlVersion8Last
 	}

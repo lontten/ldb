@@ -11,13 +11,13 @@ import (
 )
 
 func TableInsert() {
-	var user = Test{
+	var user = dbinit.TestModel{
 		Id:   types.NewInt(1),
 		Name: types.NewString("cc"),
 	}
 	num, err := ldb.Insert(dbinit.DB, &user, ldb.E().
 		TableName("t_test").
-		ReturnType(return_type.PrimaryKey).
+		ReturnType(return_type.Auto).
 		WhenDuplicateKey().DoUpdate().
 		ShowSql(),
 	)

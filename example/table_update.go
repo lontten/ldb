@@ -16,7 +16,7 @@ func TableUpdate() {
 	num, err := ldb.Update(dbinit.DB, ldb.W(), &user, ldb.E().
 		SetNull("abc").
 		TableName("t_user").
-		ReturnType(return_type.PrimaryKey).
+		ReturnType(return_type.Auto).
 		WhenDuplicateKey("name").DoUpdate().
 		ShowSql().NoRun(),
 	)

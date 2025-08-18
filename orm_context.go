@@ -26,6 +26,15 @@ const (
 	dCount
 )
 
+type returnAutoPrimaryKeyType int
+
+// pk前缀是主键的意思
+const (
+	pkNoReturn    returnAutoPrimaryKeyType = iota
+	pkQueryReturn                          // insert 时，可以直接 query 返回
+	pkFetchReturn                          // insert 时，不能直接返回，需要手动获取
+)
+
 type ormContext struct {
 	ormConf *OrmConf
 	extra   *ExtraContext
@@ -54,8 +63,20 @@ type ormContext struct {
 	isTen   bool //是否启用了多租户
 
 	// ------------------主键----------------------
-	indexs         []Index  // 索引列表
-	autoIncrements []string // 自增字段列表
+	indexs []Index // 索引列表
+
+	insertCanReturn      bool                     // 数据库是否支持 insert时直接返回字段
+	returnAutoPrimaryKey returnAutoPrimaryKeyType // 自增主键返回类型
+
+	// 在不支持 insertCanReturn 的数据库中，使用 LastInsertId 返回 自增主键
+	autoPrimaryKeyFieldName     *string      // 自增主键字段名
+	autoPrimaryKeyFieldIsPtr    bool         // id 对应的model字段 是否是 ptr
+	autoPrimaryKeyFieldBaseType reflect.Type // id 对应的model字段 type
+
+	// 只能在 insert时，返回字段，只能支持 insertCanReturn 的数据库，可以返回
+	otherAutoFieldNames []string // 其他自动生成字段名列表
+
+	allAutoFieldNames []string // 所有自动生成字段名列表
 
 	// id = 1
 	//主键名-列表,这里考虑到多主键
@@ -96,13 +117,7 @@ type ormContext struct {
 
 	//------------------scan----------------------
 	//true query,false exec
-	sqlIsQuery                bool
-	sqlType                   sqltype.SqlType
-	dialectNeedLastInsertId   bool         // 数据库是否需要 last_insert_id。例如：mysql等数据库insert无法直接数据需要 last_insert_id
-	needLastInsertId          bool         // 最终执行，是否需要 last_insert_id
-	lastInsertIdFieldName     string       // last_insert_id 对应的model字段的 名字
-	lastInsertIdFieldIsPtr    bool         // last_insert_id 对应的model字段 是否是 ptr
-	lastInsertIdFieldBaseType reflect.Type // last_insert_id 对应的model字段 type
+	sqlType sqltype.SqlType
 
 	//要执行的sql语句
 	query *strings.Builder
@@ -120,7 +135,7 @@ type ormContext struct {
 
 func (ctx *ormContext) setLastInsertId(lastInsertId int64) {
 	var vp reflect.Value
-	switch ctx.lastInsertIdFieldBaseType.Kind() {
+	switch ctx.autoPrimaryKeyFieldBaseType.Kind() {
 	case reflect.Int8:
 		id := int8(lastInsertId)
 		vp = reflect.ValueOf(&id)
@@ -165,8 +180,8 @@ func (ctx *ormContext) setLastInsertId(lastInsertId int64) {
 		ctx.err = errors.New("last_insert_id field type error")
 		return
 	}
-	f := ctx.destBaseValue.FieldByName(ctx.lastInsertIdFieldName)
-	if ctx.lastInsertIdFieldIsPtr {
+	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyFieldName)
+	if ctx.autoPrimaryKeyFieldIsPtr {
 		f.Set(vp)
 	} else {
 		f.Set(reflect.Indirect(vp))
@@ -223,7 +238,11 @@ func (ctx *ormContext) initConf() {
 	primaryKeys := ctx.ormConf.primaryKeys(v, dest)
 	ctx.primaryKeyNames = primaryKeys
 
-	ctx.autoIncrements = ctx.ormConf.autoIncrements(v)
+	tc := getTableConf(v)
+	if tc != nil {
+		ctx.autoPrimaryKeyFieldName = tc.autoPrimaryKeyColumnName
+		ctx.otherAutoFieldNames = tc.otherAutoColumnName
+	}
 }
 
 // 获取struct对应的字段名 和 其值，
@@ -241,28 +260,26 @@ func (ctx *ormContext) initColumnsValue() {
 	ctx.modelNoSoftDelFieldNames = cv.modelAllFieldNames
 	ctx.modelAllFieldNames = cv.modelAllFieldNames
 
-	// 自增主键
-	// 用于 mysql sqlite 等无法直接返回的数据库
-	// 需要返回值，scan可以接收数据，设置为 true
-	if ctx.dialectNeedLastInsertId {
-		if len(ctx.autoIncrements) != 1 {
-			ctx.err = errors.New("only one auto_increment field is allowed")
-			return
+	if ctx.scanIsPtr && ctx.returnType != return_type.None {
+		if ctx.insertCanReturn {
+			ctx.returnAutoPrimaryKey = pkQueryReturn
+		} else if ctx.autoPrimaryKeyFieldName != nil {
+			ctx.returnAutoPrimaryKey = pkFetchReturn
 		}
 	}
-	ctx.needLastInsertId = ctx.dialectNeedLastInsertId && ctx.scanIsPtr && ctx.returnType != return_type.None
-	if ctx.needLastInsertId {
-		fieldName, ok := cv.modelAllFieldNameMap[ctx.autoIncrements[0]]
+
+	if ctx.returnAutoPrimaryKey == pkFetchReturn {
+		fieldName, ok := cv.modelAllFieldNameMap[*ctx.autoPrimaryKeyFieldName]
 		if !ok {
 			ctx.err = errors.New("auto_increment field not found")
 			return
 		}
-		ctx.lastInsertIdFieldName = fieldName
+		ctx.autoPrimaryKeyFieldName = &fieldName
 
 		structField, _ := ctx.destBaseType.FieldByName(fieldName)
 		isPtr, baseT := basePtrType(structField.Type)
-		ctx.lastInsertIdFieldIsPtr = isPtr
-		ctx.lastInsertIdFieldBaseType = baseT
+		ctx.autoPrimaryKeyFieldIsPtr = isPtr
+		ctx.autoPrimaryKeyFieldBaseType = baseT
 	}
 	return
 }
