@@ -2,11 +2,12 @@ package ldb
 
 import (
 	"errors"
+	"strconv"
+	"strings"
+
 	"github.com/lontten/ldb/insert-type"
 	"github.com/lontten/ldb/softdelete"
 	"github.com/lontten/ldb/utils"
-	"strconv"
-	"strings"
 )
 
 type MysqlDialect struct {
@@ -126,12 +127,10 @@ func (d *MysqlDialect) tableInsertGen() {
 	query.WriteString(ctx.tableName + " ")
 
 	query.WriteString("(")
-	query.WriteString(strings.Join(columns, ","))
-	query.WriteString(") ")
-	query.WriteString("VALUES")
-	query.WriteString("(")
+	query.WriteString(strings.Join(columns, ", "))
+	query.WriteString(") VALUES (")
 	ctx.genInsertValuesSqlBycolumnValues()
-	query.WriteString(" ) ")
+	query.WriteString(")")
 
 	switch ctx.insertType {
 	case insert_type.Update:
@@ -147,9 +146,10 @@ func (d *MysqlDialect) tableInsertGen() {
 			query.WriteString(" AS new ")
 		}
 
-		query.WriteString(" ON DUPLICATE KEY UPDATE ")
+		query.WriteString("ON DUPLICATE KEY UPDATE ")
 		// 当未设置更新字段时，默认为所有效有字段（排除索引）
-		if len(set.columns) == 0 && len(set.fieldNames) == 0 {
+		columnLen := len(set.columns)
+		if columnLen == 0 && len(set.fieldNames) == 0 {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
@@ -193,7 +193,10 @@ func (d *MysqlDialect) tableInsertGen() {
 			}
 		}
 		for i, column := range set.columns {
-			query.WriteString(column + " = ? , ")
+			query.WriteString(column + " = ?")
+			if i < columnLen-1 {
+				query.WriteString(", ")
+			}
 			ctx.args = append(ctx.args, set.columnValues[i].Value)
 		}
 		break
@@ -318,11 +321,11 @@ func (d *MysqlDialect) parse(c Clause) (string, error) {
 		sb.WriteString(c.query + " NOT LIKE ?")
 	case In:
 		sb.WriteString(c.query + " IN (")
-		sb.WriteString(gen(c.argsNum))
+		sb.WriteString(gen(len(c.args)))
 		sb.WriteString(")")
 	case NotIn:
 		sb.WriteString(c.query + " NOT IN (")
-		sb.WriteString(gen(c.argsNum))
+		sb.WriteString(gen(len(c.args)))
 		sb.WriteString(")")
 	case Between:
 		sb.WriteString(c.query + " BETWEEN ? AND ?")

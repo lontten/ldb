@@ -2,12 +2,13 @@ package ldb
 
 import (
 	"errors"
-	"github.com/lontten/ldb/field"
-	"github.com/lontten/ldb/softdelete"
-	"github.com/lontten/ldb/utils"
 	"reflect"
 	"sync"
 	"unicode"
+
+	"github.com/lontten/ldb/field"
+	"github.com/lontten/ldb/softdelete"
+	"github.com/lontten/ldb/utils"
 )
 
 type StructValidFieldValueMap map[string]any

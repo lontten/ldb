@@ -10,17 +10,6 @@ import "github.com/lontten/lcore/types"
 //	"testing"
 //
 // )
-type User struct {
-	Id   int64
-	Name string
-}
-
-func (User) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
-		PrimaryKeys("id").
-		AutoPrimaryKey("id")
-}
 
 //	func TestDeleteByPrimaryKey(t *testing.T) {
 //		as := assert.New(t)

@@ -20,6 +20,9 @@ const (
 	IsNotNull
 	IsFalse
 
+	PrimaryKeys       // 主键
+	FilterPrimaryKeys // 过滤主键
+
 	// Contains 包含
 	// pg 独有
 	// [1] @< [1,2]

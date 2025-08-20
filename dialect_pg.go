@@ -2,11 +2,12 @@ package ldb
 
 import (
 	"errors"
+	"strconv"
+	"strings"
+
 	"github.com/lontten/ldb/insert-type"
 	"github.com/lontten/ldb/return-type"
 	"github.com/lontten/ldb/utils"
-	"strconv"
-	"strings"
 )
 
 type PgDialect struct {
@@ -87,22 +88,20 @@ func (d *PgDialect) tableInsertGen() {
 	query.WriteString(ctx.tableName + " ")
 
 	query.WriteString("(")
-	query.WriteString(strings.Join(columns, ","))
-	query.WriteString(") ")
-	query.WriteString("VALUES")
-	query.WriteString("(")
+	query.WriteString(strings.Join(columns, ", "))
+	query.WriteString(") VALUES (")
 	ctx.genInsertValuesSqlBycolumnValues()
-	query.WriteString(") ")
+	query.WriteString(")")
 
 	if ctx.insertType == insert_type.Ignore || ctx.insertType == insert_type.Update {
-		query.WriteString("ON CONFLICT (")
+		query.WriteString(" ON CONFLICT (")
 		query.WriteString(strings.Join(extra.duplicateKeyNames, ","))
 		query.WriteString(") DO ")
 	}
 
 	switch ctx.insertType {
 	case insert_type.Ignore:
-		query.WriteString("NOTHING ")
+		query.WriteString("NOTHING")
 		break
 	case insert_type.Update:
 		query.WriteString("UPDATE SET ")
@@ -120,9 +119,9 @@ func (d *PgDialect) tableInsertGen() {
 		}
 
 		for i, name := range set.fieldNames {
-			query.WriteString(name + "= EXCLUDED." + name)
+			query.WriteString(name + " = EXCLUDED." + name)
 			if i < len(set.fieldNames)-1 {
-				query.WriteString(",")
+				query.WriteString(", ")
 			}
 		}
 
@@ -130,7 +129,7 @@ func (d *PgDialect) tableInsertGen() {
 			if i > 0 {
 				query.WriteString(", ")
 			}
-			query.WriteString(column + "= ? ")
+			query.WriteString(column + " = ?")
 			ctx.args = append(ctx.args, set.columnValues[i].Value)
 		}
 		break
@@ -244,11 +243,11 @@ func (d *PgDialect) parse(c Clause) (string, error) {
 		sb.WriteString(c.query + " NOT LIKE ?")
 	case In:
 		sb.WriteString(c.query + " IN (")
-		sb.WriteString(gen(c.argsNum))
+		sb.WriteString(gen(len(c.args)))
 		sb.WriteString(")")
 	case NotIn:
 		sb.WriteString(c.query + " NOT IN (")
-		sb.WriteString(gen(c.argsNum))
+		sb.WriteString(gen(len(c.args)))
 		sb.WriteString(")")
 	case Between:
 		sb.WriteString(c.query + " BETWEEN ? AND ?")

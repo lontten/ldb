@@ -520,32 +520,32 @@ func (ctx *ormContext) tableUpdateArgs2SqlStr(args []string) string {
 }
 
 func (ctx *ormContext) initPrimaryKeyByWhere(wb *WhereBuilder) {
-	ctx.primaryKeyValues = ctx.initPrimaryKeyValues(wb.primaryKeyValue)
-	if ctx.hasErr() {
-		return
-	}
-	builderAnd := W()
-	for _, value := range ctx.primaryKeyValues {
-		builder := W()
-		for i, name := range ctx.primaryKeyNames {
-			builder.Eq(name, value[i].Value)
-		}
-		builderAnd.Or(builder)
-	}
-	wb.And(builderAnd)
-	ctx.filterPrimaryKeyValues = ctx.initPrimaryKeyValues(wb.filterPrimaryKeyValue)
-	if ctx.hasErr() {
-		return
-	}
-	builderAnd = W()
-	for _, value := range ctx.filterPrimaryKeyValues {
-		builder := W()
-		for i, name := range ctx.primaryKeyNames {
-			builder.Neq(name, value[i].Value)
-		}
-		builderAnd.Or(builder)
-	}
-	wb.And(builderAnd)
+	//ctx.primaryKeyValues = ctx.initPrimaryKeyValues(wb.primaryKeyValue)
+	//if ctx.hasErr() {
+	//	return
+	//}
+	//builderAnd := W()
+	//for _, value := range ctx.primaryKeyValues {
+	//	builder := W()
+	//	for i, name := range ctx.primaryKeyNames {
+	//		builder.Eq(name, value[i].Value)
+	//	}
+	//	builderAnd.Or(builder)
+	//}
+	//wb.And(builderAnd)
+	//ctx.filterPrimaryKeyValues = ctx.initPrimaryKeyValues(wb.filterPrimaryKeyValue)
+	//if ctx.hasErr() {
+	//	return
+	//}
+	//builderAnd = W()
+	//for _, value := range ctx.filterPrimaryKeyValues {
+	//	builder := W()
+	//	for i, name := range ctx.primaryKeyNames {
+	//		builder.Neq(name, value[i].Value)
+	//	}
+	//	builderAnd.Or(builder)
+	//}
+	//wb.And(builderAnd)
 }
 func (ctx *ormContext) initPrimaryKeyValues(v []any) (idValuess [][]field.Value) {
 	if ctx.hasErr() {

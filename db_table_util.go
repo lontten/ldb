@@ -110,7 +110,7 @@ func (ctx *ormContext) genInsertValuesSqlBycolumnValues() {
 
 	for i, v := range values {
 		if i > 0 {
-			query.WriteString(" , ")
+			query.WriteString(", ")
 		}
 		switch v.Type {
 		case field.None:
@@ -131,11 +131,11 @@ func (ctx *ormContext) genInsertValuesSqlBycolumnValues() {
 			query.WriteString(strconv.FormatInt(time.Now().UnixNano(), 10))
 			break
 		case field.Val:
-			query.WriteString(" ? ")
+			query.WriteString("?")
 			ctx.args = append(ctx.args, v.Value)
 			break
 		case field.Increment:
-			query.WriteString(columns[i] + " + ? ")
+			query.WriteString(columns[i] + "+ ?")
 			ctx.args = append(ctx.args, v.Value)
 			break
 		case field.Expression:
