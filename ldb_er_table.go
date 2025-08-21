@@ -3,54 +3,14 @@ package ldb
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb/sqltype"
 	"github.com/lontten/ldb/utils"
 	"github.com/pkg/errors"
-	"reflect"
-	"strings"
 )
-
-//------------------------------------Delete--------------------------------------------
-
-func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, error) {
-	db = db.init()
-	dialect := db.getDialect()
-	ctx := dialect.getCtx()
-	ctx.initExtra(extra...)
-	ctx.sqlType = sqltype.Delete
-
-	dest := new(T)
-	ctx.initScanDestOneT(dest)
-	if ctx.err != nil {
-		return 0, ctx.err
-	}
-	ctx.initConf() //初始化表名，主键，自增id
-
-	ctx.initColumnsValueSoftDel()
-
-	ctx.initPrimaryKeyByWhere(wb)
-	ctx.wb.And(wb)
-
-	dialect.tableDelGen()
-	if ctx.hasErr() {
-		return 0, ctx.err
-	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
-	if ctx.noRun {
-		return 0, nil
-	}
-	exec, err := db.exec(sqlStr, ctx.args...)
-	if err != nil {
-		return 0, err
-	}
-	return exec.RowsAffected()
-}
-
-//------------------------------------Update--------------------------------------------
 
 func Update(db Engine, wb *WhereBuilder, dest any, extra ...*ExtraContext) (int64, error) {
 	db = db.init()

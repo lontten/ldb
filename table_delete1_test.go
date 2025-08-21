@@ -9,42 +9,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInsert3_mysql(t *testing.T) {
+func TestDelete_mysql(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
 	engine := MustConnectMock(db, &MysqlConf{})
 
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (id, name, birthday) VALUES (?, ?, NOW());")).
-		WithArgs(1, "tom").
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM t_user WHERE name = ?;")).
+		WithArgs("tom").
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	var u = User{
-		Id:   1,
-		Name: "tom",
-	}
-	num, err := Insert(engine, u, E().ShowSql().SetNow("birthday"))
+	num, err := Delete[User](engine, W().Eq("name", "tom"), E().ShowSql())
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 }
 
-func TestInsert3_pg(t *testing.T) {
+func TestDelete_pg(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
 	engine := MustConnectMock(db, &PgConf{})
 
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (id, name, birthday) VALUES ($1, $2, NOW());")).
-		WithArgs(1, "tom").
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM t_user WHERE name = ?;")).
+		WithArgs("tom").
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	var u = User{
-		Id:   1,
-		Name: "tom",
-	}
-	num, err := Insert(engine, u, E().ShowSql().SetNow("birthday"))
+	num, err := Delete[User](engine, W().Eq("name", "tom"), E().ShowSql())
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 }

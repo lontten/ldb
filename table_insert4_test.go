@@ -2,10 +2,11 @@ package ldb
 
 import (
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"regexp"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 )
 
 // 插入时，唯一索引冲突，处理策略-忽略
@@ -13,7 +14,6 @@ func TestInsert4_mysql(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT IGNORE t_user (id, name) VALUES (?, ?);")).
@@ -34,7 +34,6 @@ func TestInsert4_pg(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (id, name) VALUES ($1, $2) ON CONFLICT () DO NOTHING;")).

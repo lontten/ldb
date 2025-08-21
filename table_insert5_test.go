@@ -2,10 +2,11 @@ package ldb
 
 import (
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/assert"
 	"regexp"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 )
 
 // 插入时，唯一索引冲突，处理策略-更新
@@ -14,7 +15,6 @@ func TestInsert5_mysql(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (id, name) VALUES (?, ?) AS new ON DUPLICATE KEY UPDATE id = new.id, name = new.name;")).
@@ -35,7 +35,6 @@ func TestInsert5_mysql2(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta(
@@ -61,7 +60,6 @@ func TestInsert5_mysql3(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta(
@@ -87,7 +85,6 @@ func TestInsert5_pg(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (id, name) VALUES ($1, $2) ON CONFLICT () DO UPDATE SET id = EXCLUDED.id, name = EXCLUDED.name;")).
@@ -108,7 +105,6 @@ func TestInsert5_pg2(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta(
@@ -134,7 +130,6 @@ func TestInsert5_pg3(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta(

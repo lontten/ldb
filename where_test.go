@@ -1,8 +1,6 @@
 package ldb
 
 import (
-	"database/sql"
-
 	"github.com/DATA-DOG/go-sqlmock"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
@@ -12,9 +10,6 @@ import (
 
 func getMockDB(c DbConfig) Engine {
 	db, _, _ := sqlmock.New()
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
 	return MustConnectMock(db, c)
 }
 

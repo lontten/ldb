@@ -2,11 +2,12 @@ package ldb
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/lontten/lcore/types"
 	"github.com/stretchr/testify/assert"
-	"regexp"
-	"testing"
 )
 
 type User struct {
@@ -29,7 +30,6 @@ func TestInsert_mysql(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name) VALUES (?);")).
@@ -50,7 +50,6 @@ func TestInsert_pg(t *testing.T) {
 	as := assert.New(t)
 	db, mock, err := sqlmock.New()
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
-	defer db.Close()
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name) VALUES ($1);")).
