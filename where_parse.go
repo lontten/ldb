@@ -19,7 +19,7 @@ primaryKeyFieldNames 主键字段名称列表
 */
 
 func (w WhereBuilder) toSql(f parseFun, primaryKeyColumnNames ...string) (string, []any, error) {
-	_, sql, args, err := w.parse(f, primaryKeyColumnNames...)
+	_, _, sql, args, err := w.parse(f, primaryKeyColumnNames...)
 	if err != nil {
 		return "", nil, err
 	}
@@ -102,7 +102,7 @@ func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
 	w.And(nw)
 	return nil
 }
-func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr bool, sql string, args []any, err error) {
+func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr bool, hasAnd bool, sql string, args []any, err error) {
 	sb := strings.Builder{}
 	var ors = w.wheres
 	var ands = w.andWheres
@@ -111,10 +111,12 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 	var orLen = len(ors)
 	var andLen = len(ands)
 
-	var logicOrLen = orLen
-	if len(ands) > 0 {
-		logicOrLen++
+	var orNum = orLen - 1
+	if andLen > 0 {
+		orNum++
 	}
+	var localHasOr = orNum > 0
+	var localHasAnd = andLen > 1
 
 	if w.clause != nil {
 		var c = *w.clause
@@ -132,7 +134,7 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 				return
 			}
 			sb.WriteString(result)
-			return false, sb.String(), c.args, nil
+			return false, false, sb.String(), c.args, nil
 		}
 	}
 
@@ -140,38 +142,13 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 		return
 	}
 
-	for i, wt := range ors {
-		var _hasOr, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
-		if _err != nil {
-			err = errors.Wrap(_err, "parse WhereBuilder")
-			return
-		}
-		if _hasOr {
-			hasOr = true
-		}
-		allArgs = append(allArgs, _args...)
-		if logicOrLen > 1 {
-			sb.WriteString("(")
-		}
-		sb.WriteString(_sql)
-		if logicOrLen > 1 {
-			sb.WriteString(")")
-		}
-		if i < orLen-1 {
-			sb.WriteString(" OR ")
-		}
-	}
-
-	var needOr = orLen > 0 && andLen > 0
-
-	if needOr {
-		sb.WriteString(" OR ")
+	var needS = orLen > 0 && andLen > 1
+	if needS {
 		sb.WriteString("(")
-		hasOr = true
 	}
 
 	for i, wt := range ands {
-		var _hasOr, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
+		var _hasOr, _hasAnd, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
 		if _err != nil {
 			err = errors.Wrap(_err, "parse WhereBuilder")
 			return
@@ -179,21 +156,56 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 		if _hasOr {
 			hasOr = true
 		}
+		if _hasAnd {
+			hasAnd = true
+		}
 		allArgs = append(allArgs, _args...)
-		if andLen > 1 && hasOr {
+		if localHasAnd && _hasOr {
 			sb.WriteString("(")
 		}
 		sb.WriteString(_sql)
-		if andLen > 1 && hasOr {
+		if localHasAnd && _hasOr {
 			sb.WriteString(")")
 		}
 		if i < andLen-1 {
 			sb.WriteString(" AND ")
+			hasAnd = true
 		}
 	}
 
-	if needOr {
+	if needS {
 		sb.WriteString(")")
 	}
-	return hasOr, sb.String(), allArgs, nil
+	if andLen > 0 && orLen > 0 {
+		sb.WriteString(" OR ")
+		hasOr = true
+	}
+
+	for i, wt := range ors {
+		var _hasOr, _hasAnd, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
+		if _err != nil {
+			err = errors.Wrap(_err, "parse WhereBuilder")
+			return
+		}
+		if _hasOr {
+			hasOr = true
+		}
+		if _hasAnd {
+			hasAnd = true
+		}
+		allArgs = append(allArgs, _args...)
+		if localHasOr && _hasAnd {
+			sb.WriteString("(")
+		}
+		sb.WriteString(_sql)
+		if localHasOr && _hasAnd {
+			sb.WriteString(")")
+		}
+		if i < orLen-1 {
+			sb.WriteString(" OR ")
+			hasOr = true
+		}
+	}
+
+	return hasOr, hasAnd, sb.String(), allArgs, nil
 }
