@@ -150,3 +150,163 @@ func TestWhereBuilder8(t *testing.T) {
 	as.Equal("", sql)
 	as.Nil(args)
 }
+
+func TestWhereBuilder9(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(1, 2)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse)
+	as.ErrorIs(err, ErrNoPk)
+	as.Equal("", sql)
+	as.Nil(args)
+}
+
+func TestWhereBuilder10(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(1, 2)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "id")
+	as.Nil(err)
+	as.Equal("id IN (?,?)", sql)
+	as.Equal([]any{1, 2}, args)
+}
+
+func TestWhereBuilder11(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(1)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "id")
+	as.Nil(err)
+	as.Equal("id IN (?)", sql)
+	as.Equal([]any{1}, args)
+}
+
+func TestWhereBuilder12(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(1, struct {
+	}{})
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "id")
+	as.ErrorIs(err, ErrTypePkArgs)
+	as.Equal("", sql)
+	as.Nil(args)
+}
+
+func TestWhereBuilder13(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(1, 2)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "id", "name")
+	as.ErrorIs(err, ErrNeedMultiPk)
+	as.Equal("", sql)
+	as.Nil(args)
+}
+
+func TestWhereBuilder14(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(struct {
+		Id   int
+		Name string
+	}{
+		Id:   1,
+		Name: "name",
+	})
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "id", "name")
+	as.Nil(err)
+	as.Equal("id = ? AND name = ?", sql)
+	as.Equal([]any{1, "name"}, args)
+}
+
+func TestWhereBuilder15(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	w1 := W().PrimaryKey(struct {
+		DocId   int
+		DocName string
+	}{
+		DocId:   1,
+		DocName: "name",
+	})
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "doc_id", "doc_name")
+	as.Nil(err)
+	as.Equal("doc_id = ? AND doc_name = ?", sql)
+	as.Equal([]any{1, "name"}, args)
+}
+
+func TestWhereBuilder16(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	var m = make(map[string]any)
+	m["doc_id"] = 1
+	m["doc_name"] = "name"
+
+	w1 := W().PrimaryKey(m)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "doc_id", "doc_name")
+	as.Nil(err)
+	as.Equal("doc_id = ? AND doc_name = ?", sql)
+	as.Equal([]any{1, "name"}, args)
+}
+
+func TestWhereBuilder17(t *testing.T) {
+	as := assert.New(t)
+	db, _, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	defer db.Close()
+	engine := MustConnectMock(db, &PgConf{})
+
+	var m = make(map[string]any)
+	m["doc_id"] = 1
+	m["doc_name"] = "name"
+
+	var m2 = make(map[string]any)
+	m2["doc_id"] = 2
+	m2["doc_name"] = "name2"
+
+	w1 := W().PrimaryKey(m, m2)
+
+	sql, args, err := w1.toSql(engine.getDialect().parse, "doc_id", "doc_name")
+	as.Nil(err)
+	as.Equal("(doc_id = ? AND doc_name = ?) OR (doc_id = ? AND doc_name = ?)", sql)
+	as.Equal([]any{1, "name", 2, "name2"}, args)
+}

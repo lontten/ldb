@@ -3,6 +3,7 @@ package ldb
 import (
 	"errors"
 	"reflect"
+	"sort"
 	"sync"
 	"unicode"
 
@@ -317,16 +318,20 @@ func getStructCVMap(v reflect.Value) (m compCVMap) {
 // 获取map[string]any
 // 返回值类型有 None,Null,Val,三种
 func getMapCV(v reflect.Value) (list []compCV) {
-	for _, k := range v.MapKeys() {
-		inter := getFieldInter(v.MapIndex(k))
+	keys := v.MapKeys()
 
-		cv := compCV{
+	// 按键名字典序排序
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].String() < keys[j].String()
+	})
+
+	for _, k := range keys {
+		list = append(list, compCV{
 			columnName: k.String(),
-			value:      inter,
-		}
-		list = append(list, cv)
+			value:      getFieldInter(v.MapIndex(k)),
+		})
 	}
-	return list
+	return
 }
 
 // 获取map[string]any

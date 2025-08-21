@@ -20,11 +20,14 @@ primaryKeyFieldNames 主键字段名称列表
 
 func (w WhereBuilder) toSql(f parseFun, primaryKeyColumnNames ...string) (string, []any, error) {
 	_, sql, args, err := w.parse(f, primaryKeyColumnNames...)
+	if err != nil {
+		return "", nil, err
+	}
 	return sql, args, err
 }
 func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
 	if len(primaryKeyColumnNames) == 0 {
-		return errors.New("未设置主键")
+		return ErrNoPk
 	}
 	var args = w.clause.args
 	argsLen := len(args)
@@ -32,7 +35,8 @@ func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
 		return nil
 	}
 
-	var baseKind = reflect.Invalid
+	// 0未设置；1struct复合主键;2map复合主键;3单主键
+	var kindType = 0
 
 	var nw = W()
 	for _, arg := range args {
@@ -44,44 +48,56 @@ func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
 			return err
 		}
 		kind := v.Kind()
-		if baseKind == reflect.Invalid {
-			baseKind = kind
-		} else {
-			if baseKind != kind {
-				return errors.New("参数类型不一致")
-			}
-		}
 
 		if kind == reflect.Struct {
-			list := getStructCV(reflect.ValueOf(v))
+			if kindType == 0 {
+				kindType = 1
+			} else {
+				if kindType != 1 {
+					return ErrTypePkArgs
+				}
+			}
+			list := getStructCV(v)
 			for _, cv := range list {
 				if cv.isSoftDel || cv.isZero {
 					continue
 				}
 				if lcutils.StrContainsAny(cv.columnName, primaryKeyColumnNames...) {
-					nw2.Eq(cv.columnName, cv.value)
+					nw2.fieldValue(cv.columnName, cv.value)
 				}
 			}
 
 		} else if kind == reflect.Map {
-			list := getMapCV(reflect.ValueOf(v))
+			if kindType == 0 {
+				kindType = 2
+			} else {
+				if kindType != 2 {
+					return ErrTypePkArgs
+				}
+			}
+			list := getMapCV(v)
 			for _, cv := range list {
 				if cv.isSoftDel || cv.isZero {
 					continue
 				}
 				if lcutils.StrContainsAny(cv.columnName, primaryKeyColumnNames...) {
-					nw2.Eq(cv.columnName, cv.value)
+					nw2.fieldValue(cv.columnName, cv.value)
 				}
 			}
 		} else {
-			if len(primaryKeyColumnNames) != 1 {
-				return errors.New("主键参数应该为复合主键参数")
-			}
-			nw2.Eq(primaryKeyColumnNames[0], arg)
+			kindType = 3
 		}
 
 		nw.Or(nw2)
 	}
+
+	if kindType == 3 {
+		if len(primaryKeyColumnNames) != 1 {
+			return ErrNeedMultiPk
+		}
+		nw.In(primaryKeyColumnNames[0], args)
+	}
+
 	w.clause = nil
 	w.And(nw)
 	return nil
@@ -105,14 +121,14 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 		if c.Type == PrimaryKeys || c.Type == FilterPrimaryKeys {
 			var _err = w.parsePkClause(primaryKeyFieldNames...)
 			if _err != nil {
-				err = errors.Wrap(_err, "parse native where")
+				err = _err
 				return
 			}
 			return w.parse(f, primaryKeyFieldNames...)
 		} else {
 			result, _err := f(c)
 			if _err != nil {
-				err = errors.Wrap(_err, "parse native where")
+				err = errors.Wrap(_err, "parse WhereBuilder")
 				return
 			}
 			sb.WriteString(result)
@@ -127,7 +143,7 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 	for i, wt := range ors {
 		var _hasOr, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
 		if _err != nil {
-			err = errors.Wrap(_err, "parse native where")
+			err = errors.Wrap(_err, "parse WhereBuilder")
 			return
 		}
 		if _hasOr {
@@ -157,7 +173,7 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 	for i, wt := range ands {
 		var _hasOr, _sql, _args, _err = wt.parse(f, primaryKeyFieldNames...)
 		if _err != nil {
-			err = errors.Wrap(_err, "parse native where")
+			err = errors.Wrap(_err, "parse WhereBuilder")
 			return
 		}
 		if _hasOr {

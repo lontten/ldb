@@ -42,45 +42,12 @@ func (w *WhereBuilder) PrimaryKey(args ...any) *WhereBuilder {
 	if argsLen == 0 {
 		return w
 	}
-	var nw = W()
-	var baseKind = reflect.Invalid
-
-	for _, arg := range args {
-		var nw2 = W()
-
-		var v = reflect.ValueOf(arg)
-		_, v, err := basePtrValue(v)
-		if err != nil {
-			return w
-		}
-		kind := v.Kind()
-		if baseKind == reflect.Invalid {
-			baseKind = kind
-		} else {
-			if baseKind != kind {
-				return w
-			}
-		}
-
-		if kind == reflect.Struct {
-			list := getStructCV(reflect.ValueOf(v))
-			for _, cv := range list {
-				if cv.isSoftDel || cv.isZero {
-					continue
-				}
-				if true {
-					nw2.Eq(cv.columnName, cv.value)
-				}
-			}
-
-		} else if kind == reflect.Map {
-
-		} else {
-		}
-
-		nw.Or(nw2)
-	}
-
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type: PrimaryKeys,
+			args: args,
+		},
+	})
 	return w
 }
 
