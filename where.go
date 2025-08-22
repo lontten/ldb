@@ -17,6 +17,7 @@ type Clause struct {
 }
 
 type WhereBuilder struct {
+	not bool
 
 	// 所有的and 组合成一个or放在 andWheres
 	// 原因：当 and or 组合时，每条or都是独立的，and是组合使用的，有些反逻辑，为了使最后组成的sql更加易读，

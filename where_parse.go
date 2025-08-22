@@ -25,7 +25,7 @@ func (w WhereBuilder) toSql(f parseFun, primaryKeyColumnNames ...string) (string
 	}
 	return sql, args, err
 }
-func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
+func (w *WhereBuilder) parsePkClause(not bool, primaryKeyColumnNames ...string) error {
 	if len(primaryKeyColumnNames) == 0 {
 		return ErrNoPk
 	}
@@ -33,6 +33,10 @@ func (w *WhereBuilder) parsePkClause(primaryKeyColumnNames ...string) error {
 	argsLen := len(args)
 	if argsLen == 0 {
 		return nil
+	}
+
+	if not {
+		w.not = !w.not
 	}
 
 	// 0未设置；1struct复合主键;2map复合主键;3单主键
@@ -121,7 +125,7 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 	if w.clause != nil {
 		var c = *w.clause
 		if c.Type == PrimaryKeys || c.Type == FilterPrimaryKeys {
-			var _err = w.parsePkClause(primaryKeyFieldNames...)
+			var _err = w.parsePkClause(c.Type == FilterPrimaryKeys, primaryKeyFieldNames...)
 			if _err != nil {
 				err = _err
 				return
@@ -133,13 +137,23 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 				err = errors.Wrap(_err, "parse WhereBuilder")
 				return
 			}
+			if w.not {
+				sb.WriteString("NOT (")
+			}
 			sb.WriteString(result)
+			if w.not {
+				sb.WriteString(")")
+			}
 			return false, false, sb.String(), c.args, nil
 		}
 	}
 
 	if !w.has() {
 		return
+	}
+
+	if w.not {
+		sb.WriteString("NOT (")
 	}
 
 	var needS = orLen > 0 && andLen > 1
@@ -205,6 +219,9 @@ func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr b
 			sb.WriteString(" OR ")
 			hasOr = true
 		}
+	}
+	if w.not {
+		sb.WriteString(")")
 	}
 
 	return hasOr, hasAnd, sb.String(), allArgs, nil
