@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"github.com/lontten/ldb/softdelete"
 	"reflect"
 	"testing"
+
+	"github.com/lontten/ldb/softdelete"
 )
 
 type TestSoftDel1 struct {
@@ -20,22 +21,6 @@ func TestCheckSoftDelType(t *testing.T) {
 
 	delType := GetSoftDelType(reflect.TypeOf(TestSoftDel2{}))
 	t.Log(delType)
-}
-
-func TestErr(t *testing.T) {
-	var kb = &TestSoftDel2{} // 使用指针
-	v := reflect.ValueOf(kb)
-
-	f := v.Field(0)
-
-	var num = 10
-
-	f.Set(reflect.ValueOf(&num))
-
-}
-
-type Kb struct {
-	Id *int
 }
 
 func TestIsSoftDelFieldType(t *testing.T) {
