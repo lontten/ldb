@@ -7,6 +7,7 @@ import (
 
 	"github.com/lontten/ldb/insert-type"
 	"github.com/lontten/ldb/return-type"
+	"github.com/lontten/ldb/softdelete"
 	"github.com/lontten/ldb/utils"
 )
 
@@ -160,7 +161,35 @@ func (d *PgDialect) tableInsertGen() {
 
 // del 生成
 func (d *PgDialect) tableDelGen() {
+	ctx := d.ctx
+	if ctx.hasErr() {
+		return
+	}
+	var query = d.ctx.query
+	tableName := ctx.tableName
 
+	whereStr, args, err := ctx.wb.toSql(d.parse)
+	if err != nil {
+		ctx.err = err
+		return
+	}
+
+	//  没有软删除 或者 跳过软删除 ，执行物理删除
+	if ctx.softDeleteType == softdelete.None || ctx.skipSoftDelete {
+		query.WriteString("DELETE FROM ")
+		query.WriteString(tableName)
+	} else {
+		query.WriteString("UPDATE ")
+		query.WriteString(tableName)
+
+		query.WriteString(" SET ")
+		ctx.genSetSqlBycolumnValues()
+	}
+	query.WriteString(" WHERE ")
+	query.WriteString(whereStr)
+	ctx.args = append(ctx.args, args...)
+
+	query.WriteString(";")
 }
 
 // update 生成

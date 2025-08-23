@@ -31,7 +31,7 @@ func TestDelete_pg(t *testing.T) {
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
 	engine := MustConnectMock(db, &PgConf{})
 
-	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM t_user WHERE name = ?;")).
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM t_user WHERE name = $1;")).
 		WithArgs("tom").
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(0, 1))
