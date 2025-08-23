@@ -144,10 +144,10 @@ func (d *PgDialect) tableInsertGen() {
 			break
 		case return_type.Auto:
 			var list []string
-			for _, s := range ctx.otherAutoFieldNames {
+			for _, s := range ctx.otherAutoColumnNames {
 				list = append(list, s)
 			}
-			list = append(list, *ctx.autoPrimaryKeyFieldName)
+			list = append(list, *ctx.autoPrimaryKeyColumnName)
 			query.WriteString(" RETURNING " + strings.Join(list, ","))
 		case return_type.ZeroField:
 			query.WriteString(" RETURNING " + strings.Join(ctx.modelZeroFieldNames, ","))

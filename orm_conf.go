@@ -1,10 +1,11 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/utils"
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/lontten/ldb/utils"
 )
 
 type OrmConf struct {
@@ -87,14 +88,14 @@ func (c OrmConf) tableName(v reflect.Value, dest any) string {
 // 不可缓存
 // 1.可以PrimaryKeyNames设置主键字段名
 // 2.通过表名动态设置主键字段名-fn
-func (c OrmConf) primaryKeys(v reflect.Value, dest any) []string {
+func (c OrmConf) primaryKeyColumnNames(v reflect.Value, dest any) []string {
 	//fun
-	primaryKeyNameFun := c.PrimaryKeyNameFun
-	if primaryKeyNameFun != nil {
-		return primaryKeyNameFun(v, dest)
+	primaryKeyColumnNameFun := c.PrimaryKeyNameFun
+	if primaryKeyColumnNameFun != nil {
+		return primaryKeyColumnNameFun(v, dest)
 	}
 
-	return getPrimaryKeyNames(v)
+	return getPrimaryKeyColumnNames(v)
 }
 
 // 获取 rows 返回数据，每个字段index 对应 struct 的字段 名字

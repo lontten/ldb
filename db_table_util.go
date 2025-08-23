@@ -1,11 +1,12 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/field"
-	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/lontten/ldb/field"
+	"github.com/pkg/errors"
 )
 
 // has
@@ -142,11 +143,11 @@ func (ctx *ormContext) genInsertValuesSqlBycolumnValues() {
 			query.WriteString(v.Value.(string))
 			break
 		case field.ID:
-			if len(ctx.primaryKeyNames) > 0 {
+			if len(ctx.primaryKeyColumnNames) != 1 {
 				ctx.err = errors.New("软删除标记为主键id，需要单主键")
 				return
 			}
-			query.WriteString(ctx.primaryKeyNames[0])
+			query.WriteString(ctx.primaryKeyColumnNames[0])
 			break
 		}
 	}
@@ -207,13 +208,13 @@ func (ctx *ormContext) genSetSqlBycolumnValues() {
 			query.WriteString(v.Value.(string))
 			break
 		case field.ID:
-			if len(ctx.primaryKeyNames) > 0 {
+			if len(ctx.primaryKeyColumnNames) != 1 {
 				ctx.err = errors.New("软删除标记为主键id，需要单主键")
 				return
 			}
 			query.WriteString(columns[i])
 			query.WriteString(" = ")
-			query.WriteString(ctx.primaryKeyNames[0])
+			query.WriteString(ctx.primaryKeyColumnNames[0])
 			break
 		}
 	}

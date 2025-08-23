@@ -65,3 +65,24 @@ func TestInsert_pg(t *testing.T) {
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 }
+
+func TestInsert_2(t *testing.T) {
+	as := assert.New(t)
+	db, mock, err := sqlmock.New()
+	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
+	engine := MustConnectMock(db, &MysqlConf{})
+
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name) VALUES (?);")).
+		WithArgs("tom").
+		WillReturnError(nil).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	var u = struct {
+		Id int64
+	}{
+		Id: 1,
+	}
+	num, err := Insert(engine, u, E().ShowSql())
+	as.Nil(err)
+	as.Equal(int64(1), num, "num error")
+}

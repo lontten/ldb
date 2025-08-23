@@ -1,6 +1,9 @@
 package ldb
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/lontten/ldb/field"
 	"github.com/lontten/ldb/insert-type"
 	"github.com/lontten/ldb/return-type"
@@ -8,8 +11,6 @@ import (
 	"github.com/lontten/ldb/sqltype"
 	"github.com/lontten/ldb/utils"
 	"github.com/pkg/errors"
-	"reflect"
-	"strings"
 )
 
 type tableSqlType int
@@ -69,26 +70,17 @@ type ormContext struct {
 	returnAutoPrimaryKey returnAutoPrimaryKeyType // 自增主键返回类型
 
 	// 在不支持 insertCanReturn 的数据库中，使用 LastInsertId 返回 自增主键
-	autoPrimaryKeyFieldName     *string      // 自增主键字段名
+	autoPrimaryKeyColumnName *string // 自增主键字段名
+	// 只能在 insert时，返回字段，只能支持 insertCanReturn 的数据库，可以返回
+	otherAutoColumnNames []string // 其他自动生成字段名列表
+	allAutoColumnNames   []string // 所有自动生成字段名列表
+
 	autoPrimaryKeyFieldIsPtr    bool         // id 对应的model字段 是否是 ptr
 	autoPrimaryKeyFieldBaseType reflect.Type // id 对应的model字段 type
 
-	// 只能在 insert时，返回字段，只能支持 insertCanReturn 的数据库，可以返回
-	otherAutoFieldNames []string // 其他自动生成字段名列表
-
-	allAutoFieldNames []string // 所有自动生成字段名列表
-
 	// id = 1
 	//主键名-列表,这里考虑到多主键
-	primaryKeyNames []string
-	//主键值-列表
-	primaryKeyValues [][]field.Value
-
-	// id != 1 ,使用场景 更新名字时，检查名字重复，排除自己
-	//主键名-列表,这里考虑到多主键-排除
-	filterPrimaryKeyNames []string
-	//主键值-列表-排除
-	filterPrimaryKeyValues [][]field.Value
+	primaryKeyColumnNames []string
 
 	// ------------------conf----------------------
 
@@ -180,7 +172,7 @@ func (ctx *ormContext) setLastInsertId(lastInsertId int64) {
 		ctx.err = errors.New("last_insert_id field type error")
 		return
 	}
-	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyFieldName)
+	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyColumnName)
 	if ctx.autoPrimaryKeyFieldIsPtr {
 		f.Set(vp)
 	} else {
@@ -231,17 +223,15 @@ func (ctx *ormContext) initConf() {
 	ctx.softDeleteType = utils.GetSoftDelType(t)
 
 	if ctx.tableName == "" {
-		tableName := ctx.ormConf.tableName(v, dest)
-		ctx.tableName = tableName
+		ctx.tableName = ctx.ormConf.tableName(v, dest)
 	}
 
-	primaryKeys := ctx.ormConf.primaryKeys(v, dest)
-	ctx.primaryKeyNames = primaryKeys
+	ctx.primaryKeyColumnNames = ctx.ormConf.primaryKeyColumnNames(v, dest)
 
 	tc := getTableConf(v)
 	if tc != nil {
-		ctx.autoPrimaryKeyFieldName = tc.autoPrimaryKeyColumnName
-		ctx.otherAutoFieldNames = tc.otherAutoColumnName
+		ctx.autoPrimaryKeyColumnName = tc.autoPrimaryKeyColumnName
+		ctx.otherAutoColumnNames = tc.otherAutoColumnName
 	}
 }
 
@@ -263,18 +253,18 @@ func (ctx *ormContext) initColumnsValue() {
 	if ctx.scanIsPtr && ctx.returnType != return_type.None {
 		if ctx.insertCanReturn {
 			ctx.returnAutoPrimaryKey = pkQueryReturn
-		} else if ctx.autoPrimaryKeyFieldName != nil {
+		} else if ctx.autoPrimaryKeyColumnName != nil {
 			ctx.returnAutoPrimaryKey = pkFetchReturn
 		}
 	}
 
 	if ctx.returnAutoPrimaryKey == pkFetchReturn {
-		fieldName, ok := cv.modelAllFieldNameMap[*ctx.autoPrimaryKeyFieldName]
+		fieldName, ok := cv.modelAllFieldNameMap[*ctx.autoPrimaryKeyColumnName]
 		if !ok {
 			ctx.err = errors.New("auto_increment field not found")
 			return
 		}
-		ctx.autoPrimaryKeyFieldName = &fieldName
+		ctx.autoPrimaryKeyColumnName = &fieldName
 
 		structField, _ := ctx.destBaseType.FieldByName(fieldName)
 		isPtr, baseT := basePtrType(structField.Type)
@@ -527,7 +517,7 @@ func (ctx *ormContext) initPrimaryKeyByWhere(wb *WhereBuilder) {
 	//builderAnd := W()
 	//for _, value := range ctx.primaryKeyValues {
 	//	builder := W()
-	//	for i, name := range ctx.primaryKeyNames {
+	//	for i, name := range ctx.primaryKeyColumnNames {
 	//		builder.Eq(name, value[i].Value)
 	//	}
 	//	builderAnd.Or(builder)
@@ -540,88 +530,89 @@ func (ctx *ormContext) initPrimaryKeyByWhere(wb *WhereBuilder) {
 	//builderAnd = W()
 	//for _, value := range ctx.filterPrimaryKeyValues {
 	//	builder := W()
-	//	for i, name := range ctx.primaryKeyNames {
+	//	for i, name := range ctx.primaryKeyColumnNames {
 	//		builder.Neq(name, value[i].Value)
 	//	}
 	//	builderAnd.Or(builder)
 	//}
 	//wb.And(builderAnd)
 }
-func (ctx *ormContext) initPrimaryKeyValues(v []any) (idValuess [][]field.Value) {
-	if ctx.hasErr() {
-		return
-	}
-	if len(v) == 0 {
-		return
-	}
 
-	idLen := len(v)
-	if idLen == 0 {
-		ctx.err = errors.New("ByPrimaryKey arg len num 0")
-		return
-	}
-	pkLen := len(ctx.primaryKeyNames)
-
-	if pkLen == 1 { //单主键
-		for _, i := range v {
-			value := reflect.ValueOf(i)
-			_, value, err := basePtrDeepValue(value)
-			if err != nil {
-				ctx.err = err
-				return
-			}
-
-			if ctx.checkParam {
-				if !isValuerType(value.Type()) {
-					ctx.err = errors.New("ByPrimaryKey typ err,not single")
-					return
-				}
-			}
-
-			idValues := make([]field.Value, 1)
-			idValues[0] = field.Value{
-				Type:  field.Val,
-				Value: value.Interface(),
-			}
-			idValuess = append(idValuess, idValues)
-		}
-
-	} else {
-		for _, i := range v {
-			value := reflect.ValueOf(i)
-			_, value, err := basePtrDeepValue(value)
-			if err != nil {
-				ctx.err = err
-				return
-			}
-
-			if ctx.checkParam {
-				if !isCompType(value.Type()) {
-					ctx.err = errors.New("ByPrimaryKey typ err,not comp")
-					return
-				}
-			}
-
-			columns, values, err := getCompValueCV(value)
-			if err != nil {
-				ctx.err = err
-				return
-			}
-
-			if ctx.checkParam {
-				if len(columns) != pkLen {
-					ctx.err = errors.New("复合主键，filed数量 len err")
-					return
-				}
-			}
-
-			idValues := make([]field.Value, 0)
-			idValues = append(idValues, values...)
-			idValuess = append(idValuess, idValues)
-		}
-	}
-	return
-}
+//func (ctx *ormContext) initPrimaryKeyValues(v []any) (idValuess [][]field.Value) {
+//	if ctx.hasErr() {
+//		return
+//	}
+//	if len(v) == 0 {
+//		return
+//	}
+//
+//	idLen := len(v)
+//	if idLen == 0 {
+//		ctx.err = errors.New("ByPrimaryKey arg len num 0")
+//		return
+//	}
+//	pkLen := len(ctx.primaryKeyColumnNames)
+//
+//	if pkLen == 1 { //单主键
+//		for _, i := range v {
+//			value := reflect.ValueOf(i)
+//			_, value, err := basePtrDeepValue(value)
+//			if err != nil {
+//				ctx.err = err
+//				return
+//			}
+//
+//			if ctx.checkParam {
+//				if !isValuerType(value.Type()) {
+//					ctx.err = errors.New("ByPrimaryKey typ err,not single")
+//					return
+//				}
+//			}
+//
+//			idValues := make([]field.Value, 1)
+//			idValues[0] = field.Value{
+//				Type:  field.Val,
+//				Value: value.Interface(),
+//			}
+//			idValuess = append(idValuess, idValues)
+//		}
+//
+//	} else {
+//		for _, i := range v {
+//			value := reflect.ValueOf(i)
+//			_, value, err := basePtrDeepValue(value)
+//			if err != nil {
+//				ctx.err = err
+//				return
+//			}
+//
+//			if ctx.checkParam {
+//				if !isCompType(value.Type()) {
+//					ctx.err = errors.New("ByPrimaryKey typ err,not comp")
+//					return
+//				}
+//			}
+//
+//			columns, values, err := getCompValueCV(value)
+//			if err != nil {
+//				ctx.err = err
+//				return
+//			}
+//
+//			if ctx.checkParam {
+//				if len(columns) != pkLen {
+//					ctx.err = errors.New("复合主键，filed数量 len err")
+//					return
+//				}
+//			}
+//
+//			idValues := make([]field.Value, 0)
+//			idValues = append(idValues, values...)
+//			idValuess = append(idValuess, idValues)
+//		}
+//	}
+//	return
+//}
 
 func (ctx *ormContext) hasErr() bool {
 	return ctx.err != nil

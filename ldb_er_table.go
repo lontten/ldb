@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/lontten/lcore/types"
 	"github.com/lontten/ldb/sqltype"
@@ -68,7 +67,9 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 
 	ctx.initConf() //初始化表名，主键，自增id
 	if ctx.lastSql == "" {
-		ctx.lastSql = " ORDER BY " + strings.Join(ctx.primaryKeyNames, ",")
+		if ctx.autoPrimaryKeyColumnName != nil {
+			ctx.lastSql = " ORDER BY " + *ctx.autoPrimaryKeyColumnName + " DESC"
+		}
 	}
 
 	ctx.initColumns()

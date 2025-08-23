@@ -87,7 +87,7 @@ func getTableName(v reflect.Value) *string {
 	return tc.tableName
 }
 
-func getPrimaryKeyNames(v reflect.Value) []string {
+func getPrimaryKeyColumnNames(v reflect.Value) []string {
 	tc := getTableConf(v)
 	if tc == nil {
 		return nil
