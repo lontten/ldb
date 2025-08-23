@@ -284,6 +284,19 @@ func (ctx *ormContext) initColumns() {
 	return
 }
 
+func (ctx *ormContext) initTableNameExtra() {
+	if ctx.hasErr() {
+		return
+	}
+	e := ctx.extra
+	if e.tableName != "" {
+		ctx.tableName = e.tableName
+	}
+	if ctx.tableName == "" {
+		ctx.err = ErrNoTableName
+		return
+	}
+}
 func (ctx *ormContext) initColumnsValueExtra() {
 	if ctx.hasErr() {
 		return

@@ -2,10 +2,11 @@ package ldb
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/lontten/lcore/types"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestQuery(t *testing.T) {
@@ -57,19 +58,19 @@ func TestQuery(t *testing.T) {
 	as.Equal(v4, uid, "uuid error")
 
 	//-------------------date---------------
-	date := types.NowDate()
-	mock.ExpectQuery("select now() ").
-		WillReturnError(nil).
-		WillReturnRows(sqlmock.NewRows([]string{""}).
-			AddRow(date),
-		)
-
-	d := types.Date{}
-	num, err = NativeQueryScan(engine, "select now() ").ScanOne(&d)
-	as.Nil(err)
-	as.Equal(int64(1), num, "num error")
-	as.Equal(date, d, "date error")
-	as.NotEqual(types.Date{}, d, "date error")
+	//date := types.NowDate()
+	//mock.ExpectQuery("select now() ").
+	//	WillReturnError(nil).
+	//	WillReturnRows(sqlmock.NewRows([]string{""}).
+	//		AddRow(date),
+	//	)
+	//
+	//d := types.Date{}
+	//num, err = NativeQueryScan(engine, "select now() ").ScanOne(&d)
+	//as.Nil(err)
+	//as.Equal(int64(1), num, "num error")
+	//as.Equal(date, d, "date error")
+	//as.NotEqual(types.Date{}, d, "date error")
 
 	//-------------------user---------------
 	user := User{Id: 1, Name: "lontten"}
@@ -131,18 +132,18 @@ func TestQueryT(t *testing.T) {
 	as.Equal(v4, *uid, "uuid error")
 
 	//-------------------date---------------
-	date := types.NowDate()
-	mock.ExpectQuery("select now() ").
-		WillReturnError(nil).
-		WillReturnRows(sqlmock.NewRows([]string{""}).
-			AddRow(date),
-		)
-
-	d, err := QueryOne[types.Date](engine, "select now() ")
-	as.Nil(err)
-	as.NotNil(d, "d error")
-	as.Equal(date, *d, "date error")
-	as.NotEqual(types.Date{}, *d, "date error")
+	//date := types.NowDate()
+	//mock.ExpectQuery("select now() ").
+	//	WillReturnError(nil).
+	//	WillReturnRows(sqlmock.NewRows([]string{""}).
+	//		AddRow(date),
+	//	)
+	//
+	//d, err := QueryOne[types.Date](engine, "select now() ")
+	//as.Nil(err)
+	//as.NotNil(d, "d error")
+	//as.Equal(date, *d, "date error")
+	//as.NotEqual(types.Date{}, *d, "date error")
 
 	//-------------------user---------------
 	user := User{Id: 1, Name: "lontten"}

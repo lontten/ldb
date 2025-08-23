@@ -87,6 +87,14 @@ func (d *MysqlDialect) execBatch(query string, args [][]any) (string, [][]any) {
 // ===----------------------------------------------------------------------===//
 // 工具
 // ===----------------------------------------------------------------------===//
+// 转义 危险标识符
+func (d MysqlDialect) escapeIdentifier(s string) string {
+	_, ok := dangNamesMap[s]
+	if ok {
+		return "`" + s + "`"
+	}
+	return s
+}
 
 // ===----------------------------------------------------------------------===//
 // 中间服务
@@ -124,10 +132,10 @@ func (d *MysqlDialect) tableInsertGen() {
 		query.WriteString("REPLACE INTO ")
 		break
 	}
-	query.WriteString(ctx.tableName + " ")
+	query.WriteString(d.escapeIdentifier(ctx.tableName))
 
-	query.WriteString("(")
-	query.WriteString(strings.Join(columns, ", "))
+	query.WriteString(" (")
+	query.WriteString(escapeJoin(d.escapeIdentifier, columns, ", "))
 	query.WriteString(") VALUES (")
 	ctx.genInsertValuesSqlBycolumnValues()
 	query.WriteString(")")
@@ -185,6 +193,7 @@ func (d *MysqlDialect) tableInsertGen() {
 			if i > 0 {
 				query.WriteString(", ")
 			}
+			name = d.escapeIdentifier(name)
 
 			if d.dbVersion >= MysqlVersion8_0_19 {
 				query.WriteString(name + " = new." + name)
@@ -192,8 +201,9 @@ func (d *MysqlDialect) tableInsertGen() {
 				query.WriteString(name + " = VALUES(" + name + ")")
 			}
 		}
+
 		for i, column := range set.columns {
-			query.WriteString(column + " = ?")
+			query.WriteString(d.escapeIdentifier(column) + " = ?")
 			if i < columnLen-1 {
 				query.WriteString(", ")
 			}
@@ -280,7 +290,7 @@ func (d *MysqlDialect) tableSelectGen() {
 	}
 
 	query.WriteString("SELECT ")
-	query.WriteString(genSelectCols(ctx.modelSelectFieldNames))
+	query.WriteString(escapeJoin(d.escapeIdentifier, ctx.modelSelectFieldNames, " ,"))
 	query.WriteString(" FROM ")
 	query.WriteString(tableName)
 

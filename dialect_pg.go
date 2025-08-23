@@ -63,6 +63,17 @@ func (d *PgDialect) queryBatch(query string) string {
 	return query
 }
 
+// ===----------------------------------------------------------------------===//
+// 工具
+// ===----------------------------------------------------------------------===//
+// 转义 危险标识符
+func (d PgDialect) escapeIdentifier(s string) string {
+	_, ok := dangNamesMap[s]
+	if ok {
+		return "\"" + s + "\""
+	}
+	return s
+}
 func (d *PgDialect) getSql() string {
 	s := d.ctx.query.String()
 	return toPgSql(s)
@@ -84,19 +95,20 @@ func (d *PgDialect) tableInsertGen() {
 	columns := ctx.columns
 	var query = d.ctx.query
 
-	query.WriteString("INSERT INTO ")
+	query.WriteString("INSERT INTO")
+	query.WriteString(" ")
 
-	query.WriteString(ctx.tableName + " ")
+	query.WriteString(d.escapeIdentifier(ctx.tableName))
 
-	query.WriteString("(")
-	query.WriteString(strings.Join(columns, ", "))
+	query.WriteString(" (")
+	query.WriteString(escapeJoin(d.escapeIdentifier, columns, ", "))
 	query.WriteString(") VALUES (")
 	ctx.genInsertValuesSqlBycolumnValues()
 	query.WriteString(")")
 
 	if ctx.insertType == insert_type.Ignore || ctx.insertType == insert_type.Update {
 		query.WriteString(" ON CONFLICT (")
-		query.WriteString(strings.Join(extra.duplicateKeyNames, ","))
+		query.WriteString(escapeJoin(d.escapeIdentifier, extra.duplicateKeyNames, ","))
 		query.WriteString(") DO ")
 	}
 
@@ -105,7 +117,8 @@ func (d *PgDialect) tableInsertGen() {
 		query.WriteString("NOTHING")
 		break
 	case insert_type.Update:
-		query.WriteString("UPDATE SET ")
+		query.WriteString("UPDATE SET")
+		query.WriteString(" ")
 
 		// 当未设置更新字段时，默认为所有字段
 		if len(set.columns) == 0 && len(set.fieldNames) == 0 {
@@ -120,6 +133,7 @@ func (d *PgDialect) tableInsertGen() {
 		}
 
 		for i, name := range set.fieldNames {
+			name = d.escapeIdentifier(name)
 			query.WriteString(name + " = EXCLUDED." + name)
 			if i < len(set.fieldNames)-1 {
 				query.WriteString(", ")
@@ -130,7 +144,7 @@ func (d *PgDialect) tableInsertGen() {
 			if i > 0 {
 				query.WriteString(", ")
 			}
-			query.WriteString(column + " = ?")
+			query.WriteString(d.escapeIdentifier(column) + " = ?")
 			ctx.args = append(ctx.args, set.columnValues[i].Value)
 		}
 		break
@@ -149,11 +163,11 @@ func (d *PgDialect) tableInsertGen() {
 				list = append(list, s)
 			}
 			list = append(list, *ctx.autoPrimaryKeyColumnName)
-			query.WriteString(" RETURNING " + strings.Join(list, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, list, ","))
 		case return_type.ZeroField:
-			query.WriteString(" RETURNING " + strings.Join(ctx.modelZeroFieldNames, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelZeroFieldNames, ","))
 		case return_type.AllField:
-			query.WriteString(" RETURNING " + strings.Join(ctx.modelAllFieldNames, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelAllFieldNames, ","))
 		}
 	}
 	query.WriteString(";")

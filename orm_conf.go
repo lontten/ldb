@@ -2,7 +2,6 @@ package ldb
 
 import (
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/lontten/ldb/utils"
@@ -51,11 +50,11 @@ func getTypeTableName(t reflect.Type, tableNamePrefix string) string {
 		return s
 	}
 
-	name := t.String()
-	index := strings.LastIndex(name, ".")
-	if index > 0 {
-		name = name[index+1:]
+	name := t.Name()
+	if name == "" {
+		return ""
 	}
+
 	name = utils.Camel2Case(name)
 	if tableNamePrefix != "" {
 		name = tableNamePrefix + name

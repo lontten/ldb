@@ -2,14 +2,6 @@ package ldb
 
 import "strings"
 
-func gen(num int) string {
-	var queryArr []string
-	for i := 0; i < num; i++ {
-		queryArr = append(queryArr, "?")
-	}
-	return strings.Join(queryArr, ",")
-}
-
 var dangNamesMap = map[string]bool{
 	"accessible":                    true,
 	"add":                           true,
@@ -249,15 +241,30 @@ var dangNamesMap = map[string]bool{
 	"zerofill":                      true,
 }
 
-func genSelectCols(list []string) string {
-	var list2 []string
-	for _, s := range list {
-		_, has := dangNamesMap[s]
-		if has {
-			list2 = append(list2, "`"+s+"`")
-		} else {
-			list2 = append(list2, s)
-		}
+func gen(num int) string {
+	var queryArr []string
+	for i := 0; i < num; i++ {
+		queryArr = append(queryArr, "?")
 	}
-	return strings.Join(list2, ",")
+	return strings.Join(queryArr, ",")
+}
+
+type escapeFun func(string) string
+
+func escapeJoin(fun escapeFun, list []string, s string) string {
+	// 直接在拼接前处理每个字段
+	escapedColumns := make([]string, len(list))
+	for i, col := range list {
+		escapedColumns[i] = fun(col)
+	}
+	return strings.Join(escapedColumns, s)
+}
+
+func escapeJoinExtra(fun escapeFun, list []string, s string, extra string) string {
+	// 直接在拼接前处理每个字段
+	escapedColumns := make([]string, len(list))
+	for i, col := range list {
+		escapedColumns[i] = fun(col) + extra
+	}
+	return strings.Join(escapedColumns, s)
 }

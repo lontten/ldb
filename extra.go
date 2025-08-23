@@ -171,7 +171,9 @@ type DuplicateKey struct {
 //.do(replace, all, .set(), select ("name", "age"))
 
 // WhenDuplicateKey
-// 唯一索引冲突,设置索引字段列表；Mysql可不设置，Postgresql 必须设置
+// 唯一索引冲突,设置索引字段列表；
+// Mysql可不设置
+// Postgresql 必须设置
 func (e *ExtraContext) WhenDuplicateKey(name ...string) *DuplicateKey {
 	e.duplicateKeyNames = name
 	return &DuplicateKey{

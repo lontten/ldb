@@ -83,6 +83,6 @@ func TestInsert_2(t *testing.T) {
 		Id: 1,
 	}
 	num, err := Insert(engine, u, E().ShowSql())
-	as.Nil(err)
-	as.Equal(int64(1), num, "num error")
+	as.ErrorIs(err, ErrNoTableName)
+	as.Equal(int64(0), num, "num error")
 }

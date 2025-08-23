@@ -140,4 +140,6 @@ type Dialecter interface {
 	tableUpdateGen()
 	tableSelectGen()
 	getSql() string
+
+	escapeIdentifier(s string) string // 转义 数据库保留字
 }
