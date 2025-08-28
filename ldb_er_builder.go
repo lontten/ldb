@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lontten/lcore/lcutils"
-	"github.com/lontten/lcore/types"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/lontten/lcore/lcutils"
+	"github.com/lontten/lcore/types"
 )
 
 func QueryBuild(db Engine) *SqlBuilder {
@@ -25,9 +26,6 @@ type SqlBuilder struct {
 	query string
 	// 最终参数列表
 	args []any
-
-	// set 部分
-	setTokens []string
 
 	// select部分
 	selectStatus int8

@@ -18,7 +18,7 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
-	ctx.initExtra(extra...) // 表名，set，select配置
+	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
 	ctx.limit = types.NewInt64(1)
 
 	dest := new(T)
@@ -70,7 +70,7 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
-	ctx.initExtra(extra...) // 表名，set，select配置
+	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
 
 	var dest = &[]T{}
 	v := reflect.ValueOf(dest).Elem()
@@ -264,7 +264,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
-	ctx.initExtra(extra...) // 表名，set，select配置
+	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
 	ctx.sqlType = sqltype.Select
 
 	dest := new(T)
@@ -374,7 +374,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
-	ctx.initExtra(extra...) // 表名，set，select配置
+	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
 	ctx.modelSelectFieldNames = []string{"1"}
 	ctx.sqlType = sqltype.Select
 

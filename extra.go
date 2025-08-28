@@ -26,18 +26,18 @@ type ExtraContext struct {
 	// 唯一索引字段名列表
 	duplicateKeyNames []string
 
-	set *SetContext
+	whenUpdateSet *SetContext
 
 	err error
 }
 
 func E() *ExtraContext {
 	return &ExtraContext{
-		set: Set(),
+		whenUpdateSet: Set(),
 	}
 }
 
-// set 中的错误已经被上抛到 ExtraContext，所以只用判断 ExtraContext 的 err
+// whenUpdateSet 中的错误已经被上抛到 ExtraContext，所以只用判断 ExtraContext 的 err
 func (e *ExtraContext) GetErr() error {
 	if e.err != nil {
 		return e.err
@@ -192,7 +192,7 @@ func (dk *DuplicateKey) update(insertType insert_type.InsertType, set ...*SetCon
 		return dk.e
 	}
 	if sc := set[0]; sc != nil {
-		dk.e.set = sc
+		dk.e.whenUpdateSet = sc
 		// err上抛到 ExtraContext
 		if sc.err != nil {
 			dk.e.err = sc.err

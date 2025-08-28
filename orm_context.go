@@ -293,17 +293,17 @@ func (ctx *ormContext) initColumnsValueExtra() {
 		return
 	}
 	e := ctx.extra
-	set := e.set
-	if set.hasModel {
+	whenUpdateSet := e.whenUpdateSet
+	if whenUpdateSet.hasModel {
 		oc := &ormContext{
 			ormConf:        ctx.ormConf,
 			skipSoftDelete: true,
 		}
-		oc.initTargetDestOne(set.model) //初始化参数
-		oc.initColumnsValue()           //初始化cv
+		oc.initTargetDestOne(whenUpdateSet.model) //初始化参数
+		oc.initColumnsValue()                     //初始化cv
 
-		set.columns = append(set.columns, oc.columns...)
-		set.columnValues = append(set.columnValues, oc.columnValues...)
+		whenUpdateSet.columns = append(whenUpdateSet.columns, oc.columns...)
+		whenUpdateSet.columnValues = append(whenUpdateSet.columnValues, oc.columnValues...)
 	}
 	if ctx.hasErr() {
 		return

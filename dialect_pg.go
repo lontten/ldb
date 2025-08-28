@@ -90,7 +90,7 @@ func (d *PgDialect) tableInsertGen() {
 		return
 	}
 	extra := ctx.extra
-	set := extra.set
+	whenUpdateSet := extra.whenUpdateSet
 
 	columns := ctx.columns
 	var query = d.ctx.query
@@ -121,31 +121,31 @@ func (d *PgDialect) tableInsertGen() {
 		query.WriteString(" ")
 
 		// 当未设置更新字段时，默认为所有字段
-		if len(set.columns) == 0 && len(set.fieldNames) == 0 {
+		if len(whenUpdateSet.columns) == 0 && len(whenUpdateSet.fieldNames) == 0 {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
 				find := utils.Find(extra.duplicateKeyNames, name)
 				if find < 0 { // 排除 主键 字段
-					set.fieldNames = append(set.fieldNames, name)
+					whenUpdateSet.fieldNames = append(whenUpdateSet.fieldNames, name)
 				}
 			}
 		}
 
-		for i, name := range set.fieldNames {
+		for i, name := range whenUpdateSet.fieldNames {
 			name = d.escapeIdentifier(name)
 			query.WriteString(name + " = EXCLUDED." + name)
-			if i < len(set.fieldNames)-1 {
+			if i < len(whenUpdateSet.fieldNames)-1 {
 				query.WriteString(", ")
 			}
 		}
 
-		for i, column := range set.columns {
+		for i, column := range whenUpdateSet.columns {
 			if i > 0 {
 				query.WriteString(", ")
 			}
 			query.WriteString(d.escapeIdentifier(column) + " = ?")
-			ctx.args = append(ctx.args, set.columnValues[i].Value)
+			ctx.args = append(ctx.args, whenUpdateSet.columnValues[i].Value)
 		}
 		break
 	default:
