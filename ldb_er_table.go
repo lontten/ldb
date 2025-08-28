@@ -37,7 +37,6 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	ctx.initColumns()
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -87,7 +86,6 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -138,7 +136,6 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 	}
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -183,7 +180,6 @@ func Has[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t bool, er
 	ctx.initConf() //初始化表名，主键，自增id
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -224,7 +220,6 @@ func Count[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t int64,
 	ctx.initConf() //初始化表名，主键，自增id
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -278,7 +273,6 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	ctx.initColumns()
 	ctx.initColumnsValueSoftDel()
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
@@ -388,7 +382,6 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		return false, ctx.err
 	}
 
-	ctx.initPrimaryKeyByWhere(wb)
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
