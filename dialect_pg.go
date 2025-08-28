@@ -182,7 +182,7 @@ func (d *PgDialect) tableDelGen() {
 	var query = d.ctx.query
 	tableName := ctx.tableName
 
-	whereStr, args, err := ctx.wb.toSql(d.parse)
+	whereStr, args, err := ctx.wb.toSql(d.parse, ctx.primaryKeyColumnNames...)
 	if err != nil {
 		ctx.err = err
 		return

@@ -224,6 +224,10 @@ func (ctx *ormContext) initConf() {
 
 	if ctx.tableName == "" {
 		ctx.tableName = ctx.ormConf.tableName(v, dest)
+		if ctx.tableName == "" {
+			ctx.err = ErrNoTableName
+			return
+		}
 	}
 
 	ctx.primaryKeyColumnNames = ctx.ormConf.primaryKeyColumnNames(v, dest)
@@ -284,19 +288,6 @@ func (ctx *ormContext) initColumns() {
 	return
 }
 
-func (ctx *ormContext) initTableNameExtra() {
-	if ctx.hasErr() {
-		return
-	}
-	e := ctx.extra
-	if e.tableName != "" {
-		ctx.tableName = e.tableName
-	}
-	if ctx.tableName == "" {
-		ctx.err = ErrNoTableName
-		return
-	}
-}
 func (ctx *ormContext) initColumnsValueExtra() {
 	if ctx.hasErr() {
 		return
@@ -521,111 +512,6 @@ func (ctx *ormContext) tableUpdateArgs2SqlStr(args []string) string {
 	}
 	return sb.String()
 }
-
-func (ctx *ormContext) initPrimaryKeyByWhere(wb *WhereBuilder) {
-	//ctx.primaryKeyValues = ctx.initPrimaryKeyValues(wb.primaryKeyValue)
-	//if ctx.hasErr() {
-	//	return
-	//}
-	//builderAnd := W()
-	//for _, value := range ctx.primaryKeyValues {
-	//	builder := W()
-	//	for i, name := range ctx.primaryKeyColumnNames {
-	//		builder.Eq(name, value[i].Value)
-	//	}
-	//	builderAnd.Or(builder)
-	//}
-	//wb.And(builderAnd)
-	//ctx.filterPrimaryKeyValues = ctx.initPrimaryKeyValues(wb.filterPrimaryKeyValue)
-	//if ctx.hasErr() {
-	//	return
-	//}
-	//builderAnd = W()
-	//for _, value := range ctx.filterPrimaryKeyValues {
-	//	builder := W()
-	//	for i, name := range ctx.primaryKeyColumnNames {
-	//		builder.Neq(name, value[i].Value)
-	//	}
-	//	builderAnd.Or(builder)
-	//}
-	//wb.And(builderAnd)
-}
-
-//func (ctx *ormContext) initPrimaryKeyValues(v []any) (idValuess [][]field.Value) {
-//	if ctx.hasErr() {
-//		return
-//	}
-//	if len(v) == 0 {
-//		return
-//	}
-//
-//	idLen := len(v)
-//	if idLen == 0 {
-//		ctx.err = errors.New("ByPrimaryKey arg len num 0")
-//		return
-//	}
-//	pkLen := len(ctx.primaryKeyColumnNames)
-//
-//	if pkLen == 1 { //单主键
-//		for _, i := range v {
-//			value := reflect.ValueOf(i)
-//			_, value, err := basePtrDeepValue(value)
-//			if err != nil {
-//				ctx.err = err
-//				return
-//			}
-//
-//			if ctx.checkParam {
-//				if !isValuerType(value.Type()) {
-//					ctx.err = errors.New("ByPrimaryKey typ err,not single")
-//					return
-//				}
-//			}
-//
-//			idValues := make([]field.Value, 1)
-//			idValues[0] = field.Value{
-//				Type:  field.Val,
-//				Value: value.Interface(),
-//			}
-//			idValuess = append(idValuess, idValues)
-//		}
-//
-//	} else {
-//		for _, i := range v {
-//			value := reflect.ValueOf(i)
-//			_, value, err := basePtrDeepValue(value)
-//			if err != nil {
-//				ctx.err = err
-//				return
-//			}
-//
-//			if ctx.checkParam {
-//				if !isCompType(value.Type()) {
-//					ctx.err = errors.New("ByPrimaryKey typ err,not comp")
-//					return
-//				}
-//			}
-//
-//			columns, values, err := getCompValueCV(value)
-//			if err != nil {
-//				ctx.err = err
-//				return
-//			}
-//
-//			if ctx.checkParam {
-//				if len(columns) != pkLen {
-//					ctx.err = errors.New("复合主键，filed数量 len err")
-//					return
-//				}
-//			}
-//
-//			idValues := make([]field.Value, 0)
-//			idValues = append(idValues, values...)
-//			idValuess = append(idValuess, idValues)
-//		}
-//	}
-//	return
-//}
 
 func (ctx *ormContext) hasErr() bool {
 	return ctx.err != nil

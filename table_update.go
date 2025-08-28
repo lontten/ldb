@@ -5,22 +5,27 @@ import (
 	"github.com/lontten/ldb/utils"
 )
 
-func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, error) {
+func Update(db Engine, wb *WhereBuilder, dest any, extra ...*ExtraContext) (int64, error) {
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
-	ctx.sqlType = sqltype.Delete
+	ctx.sqlType = sqltype.Update
 
-	dest := new(T)
-	ctx.initScanDestOneT(dest)
+	ctx.initModelDest(dest)
 	ctx.initConf() //初始化表名，主键，自增id
 
-	ctx.initColumnsValueSoftDel()
+	ctx.initColumnsValue() //初始化cv
+	ctx.initColumnsValueExtra()
 
+	ctx.initColumnsValueSoftDel() // 软删除
+
+	if ctx.err != nil {
+		return 0, ctx.err
+	}
 	ctx.wb.And(wb)
 
-	dialect.tableDelGen()
+	dialect.tableUpdateGen()
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}

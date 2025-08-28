@@ -17,8 +17,8 @@ func Insert(db Engine, v any, extra ...*ExtraContext) (num int64, err error) {
 	ctx.initConf()       //初始化表名，主键，自增id
 
 	ctx.initColumnsValue() //初始化cv
-	ctx.initTableNameExtra()
 	ctx.initColumnsValueExtra()
+
 	ctx.initColumnsValueSoftDel() // 软删除
 
 	dialect.tableInsertGen()
