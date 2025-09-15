@@ -16,7 +16,7 @@ type User struct {
 	Name2    string
 	Age      int
 	Age2     int
-	Birthday types.Date
+	Birthday types.LocalDate
 }
 
 func (User) TableConf() *TableConf {

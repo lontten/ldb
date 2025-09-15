@@ -22,8 +22,8 @@ type Hello struct {
 	Name string   `db:"hook.after:StringEn" json:"name"`
 }
 
-func ToArr(src pgtype.DateArray) []types.Date {
-	var arr []types.Date
+func ToArr(src pgtype.DateArray) []types.LocalDate {
+	var arr []types.LocalDate
 	err := src.AssignTo(&arr)
 	if err != nil {
 		panic(err)
@@ -31,7 +31,7 @@ func ToArr(src pgtype.DateArray) []types.Date {
 	return arr
 }
 
-func ToPgDateArr(src []types.Date) pgtype.DateArray {
+func ToPgDateArr(src []types.LocalDate) pgtype.DateArray {
 	var arr pgtype.DateArray
 	err := arr.Set(src)
 	if err != nil {

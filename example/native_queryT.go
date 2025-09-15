@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"example/dbinit"
 	"fmt"
+
 	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/ldb/v2"
 )

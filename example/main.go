@@ -54,7 +54,7 @@ func main() {
 	//Build1()
 	//Build2()
 	//Del()
-	First()
+	//First()
 	//First2()
 	//QueryOneT()
 	//List()

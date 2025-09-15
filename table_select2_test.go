@@ -16,7 +16,7 @@ func TestFirst2_mysql(t *testing.T) {
 	engine := MustConnectMock(db, &MysqlConf{})
 
 	mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT id ,name ,name2 ,age ,age2 ,birthday FROM t_user WHERE id = ? ORDER BY name LIMIT 1;")).
+		"SELECT id ,name ,name2 ,age ,age2 ,birthday FROM t_user WHERE id = ? ORDER BY name ASC LIMIT 1;")).
 		WithArgs(1).
 		WillReturnError(nil).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).
@@ -36,7 +36,7 @@ func TestFirst2_pg(t *testing.T) {
 	engine := MustConnectMock(db, &PgConf{})
 
 	mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT id ,name ,name2 ,age ,age2 ,birthday FROM t_user WHERE id = $1 ORDER BY name LIMIT 1;")).
+		"SELECT id ,name ,name2 ,age ,age2 ,birthday FROM t_user WHERE id = $1 ORDER BY name ASC LIMIT 1;")).
 		WithArgs(1).
 		WillReturnError(nil).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).

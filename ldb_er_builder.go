@@ -586,7 +586,7 @@ func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuil
 
 // BetweenDateTimeOfDate
 // 用 Date类型，去查询 DateTime 字段
-func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *types.Date, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *types.LocalDate, condition ...bool) *SqlBuilder {
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
@@ -603,14 +603,14 @@ func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *
 		}
 	}
 
-	var dateTimeBegin *types.DateTime = nil
+	var dateTimeBegin *types.LocalDateTime = nil
 	if dateBegin != nil {
 		dateTimeBegin = dateBegin.ToDateTimeP()
 	}
 
-	var dateTimeEnd *types.DateTime = nil
+	var dateTimeEnd *types.LocalDateTime = nil
 	if dateEnd != nil {
-		dateTimeEnd = types.DateOf(dateEnd.Time.AddDate(0, 0, 1)).ToDateTimeP()
+		dateTimeEnd = dateEnd.Add(types.Duration().Day(1)).ToDateTimeP()
 	}
 
 	if dateTimeBegin != nil {

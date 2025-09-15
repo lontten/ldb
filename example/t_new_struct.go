@@ -8,8 +8,8 @@ import (
 
 type Kk struct {
 	ID         types.UUID
-	CreateTime types.DateTime
-	UpdateTime types.DateTime
+	CreateTime types.LocalDateTime
+	UpdateTime types.LocalDateTime
 
 	KkName string
 	KkInfo string
