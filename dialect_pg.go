@@ -166,9 +166,9 @@ func (d *PgDialect) tableInsertGen() {
 			list = append(list, *ctx.autoPrimaryKeyColumnName)
 			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, list, ","))
 		case return_type.ZeroField:
-			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelZeroFieldNames, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelZeroColumnNames, ","))
 		case return_type.AllField:
-			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelAllFieldNames, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelAllColumnNames, ","))
 		}
 	}
 	query.WriteString(";")

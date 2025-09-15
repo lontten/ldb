@@ -280,32 +280,32 @@ type compCVMap struct {
 	//有效值列表
 	columnValues []field.Value
 
-	modelZeroFieldNames      []string //零值字段列表
-	modelNoSoftDelFieldNames []string // model 所有字段列表- 忽略软删除字段
-	modelAllFieldNames       []string //所有字段列表
+	modelZeroColumnNames      []string //零值字段列表
+	modelNoSoftDelColumnNames []string // model 所有字段列表- 忽略软删除字段
+	modelAllColumnNames       []string //所有字段列表
 
 	//所有字段 dbName:fieldName
-	modelAllFieldNameMap colName2fieldNameMap
+	modelAllCFNameMap colName2fieldNameMap
 }
 
 func getStructCVMap(v reflect.Value) (m compCVMap) {
 	m = compCVMap{
-		columns:                  make([]string, 0),
-		columnValues:             make([]field.Value, 0),
-		modelZeroFieldNames:      make([]string, 0),
-		modelAllFieldNames:       make([]string, 0),
-		modelNoSoftDelFieldNames: make([]string, 0),
-		modelAllFieldNameMap:     colName2fieldNameMap{},
+		columns:                   make([]string, 0),
+		columnValues:              make([]field.Value, 0),
+		modelZeroColumnNames:      make([]string, 0),
+		modelAllColumnNames:       make([]string, 0),
+		modelNoSoftDelColumnNames: make([]string, 0),
+		modelAllCFNameMap:         colName2fieldNameMap{},
 	}
 	list := getStructCV(v)
 	for _, cv := range list {
-		m.modelAllFieldNameMap[cv.columnName] = cv.fieldName
-		m.modelAllFieldNames = append(m.modelAllFieldNames, cv.columnName)
+		m.modelAllCFNameMap[cv.columnName] = cv.fieldName
+		m.modelAllColumnNames = append(m.modelAllColumnNames, cv.columnName)
 		if cv.isZero {
-			m.modelZeroFieldNames = append(m.modelZeroFieldNames, cv.columnName)
+			m.modelZeroColumnNames = append(m.modelZeroColumnNames, cv.columnName)
 		}
 		if !cv.isSoftDel {
-			m.modelNoSoftDelFieldNames = append(m.modelNoSoftDelFieldNames, cv.columnName)
+			m.modelNoSoftDelColumnNames = append(m.modelNoSoftDelColumnNames, cv.columnName)
 		}
 		if !cv.isZero && !cv.isSoftDel {
 			m.columns = append(m.columns, cv.columnName)

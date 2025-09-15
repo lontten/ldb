@@ -88,7 +88,7 @@ func TestHasOrInsert2_pg(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}))
 
 	mock.ExpectExec(regexp.QuoteMeta(
-		"INSERT INTO t_user (name) VALUES ($1) RETURNING Id;")).
+		"INSERT INTO t_user (name) VALUES ($1) RETURNING id;")).
 		WithArgs("tom").
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(2, 1))

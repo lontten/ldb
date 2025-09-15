@@ -71,6 +71,7 @@ type ormContext struct {
 
 	// 在不支持 insertCanReturn 的数据库中，使用 LastInsertId 返回 自增主键
 	autoPrimaryKeyColumnName *string // 自增主键字段名
+	autoPrimaryKeyFieldName  *string // 自增主键字段名
 	// 只能在 insert时，返回字段，只能支持 insertCanReturn 的数据库，可以返回
 	otherAutoColumnNames []string // 其他自动生成字段名列表
 	allAutoColumnNames   []string // 所有自动生成字段名列表
@@ -101,11 +102,11 @@ type ormContext struct {
 	columns      []string      // 有效字段列表
 	columnValues []field.Value // 有效字段- 值
 
-	modelZeroFieldNames      []string       // model 零值字段列表
-	modelNoSoftDelFieldNames []string       // model 所有字段列表- 忽略软删除字段
-	modelAllFieldNames       []string       // model 所有字段列表
-	modelFieldIndexMap       map[string]int // model字段名-index
-	modelSelectFieldNames    []string       // model select 字段列表
+	modelZeroColumnNames      []string       // model 零值字段列表
+	modelNoSoftDelColumnNames []string       // model 所有字段列表- 忽略软删除字段
+	modelAllColumnNames       []string       // model 所有字段列表
+	modelFieldIndexMap        map[string]int // model字段名-index
+	modelSelectFieldNames     []string       // model select 字段列表
 	// ------------------字段名：字段值-end----------------------
 
 	//------------------scan----------------------
@@ -174,7 +175,7 @@ func (ctx *ormContext) setLastInsertId(lastInsertId int64) {
 		ctx.err = errors.New("last_insert_id field type error")
 		return
 	}
-	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyColumnName)
+	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyFieldName)
 	if ctx.autoPrimaryKeyFieldIsPtr {
 		f.Set(vp)
 	} else {
@@ -252,9 +253,9 @@ func (ctx *ormContext) initColumnsValue() {
 	ctx.columns = cv.columns
 	ctx.columnValues = cv.columnValues
 
-	ctx.modelZeroFieldNames = cv.modelZeroFieldNames
-	ctx.modelNoSoftDelFieldNames = cv.modelAllFieldNames
-	ctx.modelAllFieldNames = cv.modelAllFieldNames
+	ctx.modelZeroColumnNames = cv.modelZeroColumnNames
+	ctx.modelNoSoftDelColumnNames = cv.modelAllColumnNames
+	ctx.modelAllColumnNames = cv.modelAllColumnNames
 
 	if ctx.scanIsPtr && ctx.returnType != return_type.None {
 		if ctx.insertCanReturn {
@@ -265,12 +266,12 @@ func (ctx *ormContext) initColumnsValue() {
 	}
 
 	if ctx.returnAutoPrimaryKey == pkFetchReturn {
-		fieldName, ok := cv.modelAllFieldNameMap[*ctx.autoPrimaryKeyColumnName]
+		fieldName, ok := cv.modelAllCFNameMap[*ctx.autoPrimaryKeyColumnName]
 		if !ok {
 			ctx.err = errors.New("auto_increment field not found")
 			return
 		}
-		ctx.autoPrimaryKeyColumnName = &fieldName
+		ctx.autoPrimaryKeyFieldName = &fieldName
 
 		structField, _ := ctx.destBaseType.FieldByName(fieldName)
 		isPtr, baseT := basePtrType(structField.Type)
@@ -313,7 +314,7 @@ func (ctx *ormContext) initColumnsValueExtra() {
 	for i, column := range e.columns {
 		cv := e.columnValues[i]
 		if cv.Type == field.Null || cv.Type == field.Now {
-			ctx.modelZeroFieldNames = append(ctx.modelZeroFieldNames, column)
+			ctx.modelZeroColumnNames = append(ctx.modelZeroColumnNames, column)
 		}
 		find := utils.Find(ctx.columns, column)
 		if find == -1 {
