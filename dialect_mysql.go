@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lontten/ldb/insert-type"
-	"github.com/lontten/ldb/softdelete"
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/ldb/v2/insert-type"
+	"github.com/lontten/ldb/v2/softdelete"
+	"github.com/lontten/ldb/v2/utils"
 )
 
 type MysqlDialect struct {

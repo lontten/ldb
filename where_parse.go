@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/lontten/lcore/lcutils"
+	"github.com/lontten/lcore/v2/lcutils"
 	"github.com/pkg/errors"
 )
 

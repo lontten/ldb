@@ -3,7 +3,7 @@ package ldb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/ldb/v2/utils"
 	"github.com/pkg/errors"
 	"reflect"
 )

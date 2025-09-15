@@ -1,10 +1,11 @@
 package dbinit
 
 import (
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/lontten/lcore/lcutils"
-	"github.com/lontten/ldb"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/lontten/lcore/v2/lcutils"
+	"github.com/lontten/ldb/v2"
 )
 
 //import _ "github.com/jackc/pgx/v5/stdlib"

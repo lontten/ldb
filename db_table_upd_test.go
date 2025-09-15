@@ -1,6 +1,6 @@
 package ldb
 
-import "github.com/lontten/lcore/types"
+import "github.com/lontten/lcore/v2/types"
 
 // import (
 //

@@ -2,7 +2,7 @@ package ldb
 
 //import (
 //	"github.com/DATA-DOG/go-sqlmock"
-//	"github.com/lontten/lcore/types"
+//	"github.com/lontten/lcore/v2/types"
 //	"github.com/stretchr/testify/assert"
 //	"testing"
 //)

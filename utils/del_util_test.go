@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lontten/ldb/softdelete"
+	"github.com/lontten/ldb/v2/softdelete"
 )
 
 type TestSoftDel1 struct {

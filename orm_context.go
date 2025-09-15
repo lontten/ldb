@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/lontten/ldb/field"
-	"github.com/lontten/ldb/insert-type"
-	"github.com/lontten/ldb/return-type"
-	"github.com/lontten/ldb/softdelete"
-	"github.com/lontten/ldb/sqltype"
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/ldb/v2/field"
+	"github.com/lontten/ldb/v2/insert-type"
+	"github.com/lontten/ldb/v2/return-type"
+	"github.com/lontten/ldb/v2/softdelete"
+	"github.com/lontten/ldb/v2/sqltype"
+	"github.com/lontten/ldb/v2/utils"
 	"github.com/pkg/errors"
 )
 

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/lontten/ldb/field"
-	"github.com/lontten/ldb/softdelete"
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/ldb/v2/field"
+	"github.com/lontten/ldb/v2/softdelete"
+	"github.com/lontten/ldb/v2/utils"
 )
 
 type StructValidFieldValueMap map[string]any

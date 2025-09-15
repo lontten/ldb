@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lontten/ldb/field"
+	"github.com/lontten/ldb/v2/field"
 	"github.com/pkg/errors"
 )
 

@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/lontten/ldb/softdelete"
 	"reflect"
+
+	"github.com/lontten/ldb/v2/softdelete"
 )
 
 // GetSoftDelType

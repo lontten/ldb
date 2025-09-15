@@ -1,7 +1,7 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/sqltype"
+	"github.com/lontten/ldb/v2/sqltype"
 )
 
 // Insert 插入或者根据主键冲突更新

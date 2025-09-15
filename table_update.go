@@ -1,7 +1,7 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/sqltype"
+	"github.com/lontten/ldb/v2/sqltype"
 )
 
 func Update(db Engine, wb *WhereBuilder, dest any, extra ...*ExtraContext) (int64, error) {

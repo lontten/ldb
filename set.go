@@ -1,7 +1,7 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/field"
+	"github.com/lontten/ldb/v2/field"
 	"reflect"
 )
 

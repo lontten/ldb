@@ -2,12 +2,13 @@ package softdelete
 
 import (
 	"github.com/gofrs/uuid"
-	"github.com/lontten/ldb/field"
+	"github.com/lontten/ldb/v2/field"
 	"gorm.io/plugin/soft_delete"
 )
 import (
-	"github.com/lontten/lcore/types"
 	"reflect"
+
+	"github.com/lontten/lcore/v2/types"
 )
 
 type SoftDelType int

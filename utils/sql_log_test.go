@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/lontten/lcore/types"
+	"github.com/lontten/lcore/v2/types"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"testing"

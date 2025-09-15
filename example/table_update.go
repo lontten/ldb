@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"example/dbinit"
 	"fmt"
-	"github.com/lontten/lcore/types"
-	"github.com/lontten/ldb"
-	return_type "github.com/lontten/ldb/return-type"
+
+	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/ldb/v2"
+	return_type "github.com/lontten/ldb/v2/return-type"
 )
 
 func TableUpdate() {

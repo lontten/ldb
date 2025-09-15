@@ -1,9 +1,9 @@
 package dbinit
 
 import (
-	"github.com/lontten/lcore/types"
-	"github.com/lontten/ldb"
-	"github.com/lontten/ldb/softdelete"
+	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/ldb/v2"
+	"github.com/lontten/ldb/v2/softdelete"
 	"gorm.io/gorm"
 )
 

@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lontten/lcore/lcutils"
-	"github.com/lontten/lcore/types"
+	"github.com/lontten/lcore/v2/lcutils"
+	"github.com/lontten/lcore/v2/types"
 )
 
 func QueryBuild(db Engine) *SqlBuilder {

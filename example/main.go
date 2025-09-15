@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lontten/ldb"
-	"github.com/lontten/ldb/softdelete"
+
+	"github.com/lontten/ldb/v2"
+	"github.com/lontten/ldb/v2/softdelete"
 )
 
 func Log(v any) {

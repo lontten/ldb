@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/lontten/lcore/types"
 	"reflect"
+
+	"github.com/lontten/lcore/v2/types"
 )
 
 type Kk struct {

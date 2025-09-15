@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/ldb/v2/utils"
 )
 
 type OrmConf struct {

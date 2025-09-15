@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"reflect"
 
-	"github.com/lontten/lcore/types"
-	"github.com/lontten/ldb/sqltype"
-	"github.com/lontten/ldb/utils"
+	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/ldb/v2/sqltype"
+	"github.com/lontten/ldb/v2/utils"
 	"github.com/pkg/errors"
 )
 

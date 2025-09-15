@@ -2,10 +2,11 @@ package hook
 
 import (
 	"encoding/json"
-	"github.com/jackc/pgtype"
-	"github.com/lontten/lcore/types"
 	"os/user"
 	"reflect"
+
+	"github.com/jackc/pgtype"
+	"github.com/lontten/lcore/v2/types"
 )
 
 /*

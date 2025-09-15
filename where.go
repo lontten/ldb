@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lontten/ldb/field"
+	"github.com/lontten/ldb/v2/field"
 )
 
 type parseFun func(c Clause) (string, error)

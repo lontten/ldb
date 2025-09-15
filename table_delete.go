@@ -1,7 +1,7 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/sqltype"
+	"github.com/lontten/ldb/v2/sqltype"
 )
 
 func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, error) {

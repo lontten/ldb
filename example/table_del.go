@@ -3,8 +3,9 @@ package main
 import (
 	"example/dbinit"
 	"fmt"
-	"github.com/lontten/lcore/types"
-	"github.com/lontten/ldb"
+
+	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/ldb/v2"
 )
 
 func Del() {

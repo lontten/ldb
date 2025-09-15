@@ -2,9 +2,10 @@ package ldb
 
 import (
 	"fmt"
-	"github.com/lontten/ldb/softdelete"
 	"reflect"
 	"testing"
+
+	"github.com/lontten/ldb/v2/softdelete"
 )
 
 type Ka struct {
