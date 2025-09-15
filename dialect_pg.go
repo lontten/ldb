@@ -24,10 +24,11 @@ func (d *PgDialect) getCtx() *ormContext {
 func (d *PgDialect) initContext() Dialecter {
 	return &PgDialect{
 		ctx: &ormContext{
-			ormConf:    d.ctx.ormConf,
-			query:      &strings.Builder{},
-			wb:         W(),
-			insertType: insert_type.Err,
+			ormConf:      d.ctx.ormConf,
+			query:        &strings.Builder{},
+			wb:           W(),
+			insertType:   insert_type.Err,
+			disableColor: d.ctx.disableColor,
 		},
 	}
 }
@@ -74,9 +75,9 @@ func (d PgDialect) escapeIdentifier(s string) string {
 	}
 	return s
 }
-func (d *PgDialect) getSql() string {
-	s := d.ctx.query.String()
-	return toPgSql(s)
+func (d *PgDialect) getSql() {
+	d.ctx.originalSql = d.ctx.query.String()
+	d.ctx.dialectSql = toPgSql(d.ctx.originalSql)
 }
 
 // insert 生成
@@ -191,13 +192,13 @@ func (d *PgDialect) tableDelGen() {
 	//  没有软删除 或者 跳过软删除 ，执行物理删除
 	if ctx.softDeleteType == softdelete.None || ctx.skipSoftDelete {
 		query.WriteString("DELETE FROM ")
-		query.WriteString(tableName)
+		query.WriteString(d.escapeIdentifier(tableName))
 	} else {
 		query.WriteString("UPDATE ")
-		query.WriteString(tableName)
+		query.WriteString(d.escapeIdentifier(tableName))
 
 		query.WriteString(" SET ")
-		ctx.genSetSqlBycolumnValues()
+		ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
 	}
 	query.WriteString(" WHERE ")
 	query.WriteString(whereStr)
@@ -208,12 +209,62 @@ func (d *PgDialect) tableDelGen() {
 
 // update 生成
 func (d *PgDialect) tableUpdateGen() {
+	ctx := d.ctx
+	if ctx.hasErr() {
+		return
+	}
+	var query = d.ctx.query
+	tableName := ctx.tableName
+	whereStr, args, err := ctx.wb.toSql(d.parse, ctx.primaryKeyColumnNames...)
+	if err != nil {
+		ctx.err = err
+		return
+	}
 
+	query.WriteString("UPDATE ")
+	query.WriteString(d.escapeIdentifier(tableName))
+	query.WriteString(" SET ")
+	ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
+	query.WriteString("WHERE ")
+
+	query.WriteString(whereStr)
+	ctx.args = append(ctx.args, args...)
+	query.WriteString(";")
 }
 
 // select 生成
 func (d *PgDialect) tableSelectGen() {
+	ctx := d.ctx
+	if ctx.hasErr() {
+		return
+	}
+	var query = d.ctx.query
+	tableName := ctx.tableName
+	whereStr, args, err := ctx.wb.toSql(d.parse)
+	if err != nil {
+		ctx.err = err
+		return
+	}
 
+	query.WriteString("SELECT ")
+	query.WriteString(escapeJoin(d.escapeIdentifier, ctx.modelSelectFieldNames, " ,"))
+	query.WriteString(" FROM ")
+	query.WriteString(tableName)
+
+	query.WriteString(" WHERE ")
+	query.WriteString(whereStr)
+	ctx.args = append(ctx.args, args...)
+	query.WriteString(ctx.lastSql)
+	if ctx.limit != nil {
+		query.WriteString(" LIMIT ")
+		query.WriteString(strconv.FormatInt(*ctx.limit, 10))
+	}
+	if ctx.offset != nil {
+		query.WriteString(" OFFSET ")
+		query.WriteString(strconv.FormatInt(*ctx.offset, 10))
+	}
+
+	query.WriteString(";")
 }
 
 func (d *PgDialect) execBatch(query string, args [][]any) (string, [][]any) {

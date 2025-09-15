@@ -2,7 +2,6 @@ package ldb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 
 	"github.com/lontten/lcore/types"
@@ -11,23 +10,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-//------------------------------------Select--------------------------------------------
-
 // First 根据条件获取第一个
 func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, err error) {
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
+	ctx.sqlType = sqltype.Select
 	ctx.limit = types.NewInt64(1)
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
+	ctx.initConf() //初始化表名，主键，自增id
+
 	if ctx.err != nil {
 		return nil, ctx.err
 	}
-
-	ctx.initConf() //初始化表名，主键，自增id
 	if ctx.lastSql == "" {
 		if ctx.autoPrimaryKeyColumnName != nil {
 			ctx.lastSql = " ORDER BY " + *ctx.autoPrimaryKeyColumnName + " DESC"
@@ -43,15 +41,15 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-		utils.PrintSql(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +68,7 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...) // 表名，whenUpdateSet，select配置
+	ctx.sqlType = sqltype.Select
 
 	var dest = &[]T{}
 	v := reflect.ValueOf(dest).Elem()
@@ -77,29 +76,28 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 	t := baseV.Type()
 
 	ctx.initScanDestListT(dest, v, baseV, t, false)
+	ctx.initConf() //初始化表名，主键，自增id
+	ctx.initColumns()
+	ctx.initColumnsValueSoftDel()
+
 	if ctx.err != nil {
 		return nil, ctx.err
 	}
-
-	ctx.initConf() //初始化表名，主键，自增id
-	ctx.initColumns()
-
-	ctx.initColumnsValueSoftDel()
-
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,6 +116,7 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
+	ctx.sqlType = sqltype.Select
 
 	var dest = &[]*T{}
 	v := reflect.ValueOf(dest).Elem()
@@ -125,31 +124,28 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 	t := baseV.Type()
 
 	ctx.initScanDestListT(dest, v, baseV, t, false)
+	ctx.initConf() //初始化表名，主键，自增id
+	ctx.initColumns()
+	ctx.initColumnsValueSoftDel()
+
 	if ctx.err != nil {
 		return nil, ctx.err
 	}
-
-	ctx.initConf() //初始化表名，主键，自增id
-	ctx.initColumns()
-	if len(ctx.modelSelectFieldNames) == 0 {
-		ctx.modelSelectFieldNames = ctx.modelAllFieldNames
-	}
-	ctx.initColumnsValueSoftDel()
-
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,31 +165,33 @@ func Has[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t bool, er
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
+	ctx.sqlType = sqltype.Select
 	ctx.modelSelectFieldNames = []string{"1"}
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
-	if ctx.err != nil {
-		return false, ctx.err
-	}
 
 	ctx.initConf() //初始化表名，主键，自增id
 	ctx.initColumnsValueSoftDel()
 
+	if ctx.err != nil {
+		return false, ctx.err
+	}
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
 	if ctx.hasErr() {
 		return false, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return false, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return false, err
 	}
@@ -209,32 +207,33 @@ func Count[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t int64,
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
 	ctx.initExtra(extra...)
-	ctx.modelSelectFieldNames = []string{"count(*)"}
+	ctx.sqlType = sqltype.Select
+	ctx.modelSelectFieldNames = []string{"COUNT(*)"}
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
-	if ctx.err != nil {
-		return 0, ctx.err
-	}
-
 	ctx.initConf() //初始化表名，主键，自增id
 	ctx.initColumnsValueSoftDel()
 
+	if ctx.err != nil {
+		return 0, ctx.err
+	}
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return 0, nil
 	}
+
 	var total int64
-	rows, err := db.query(sqlStr, ctx.args...)
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return 0, err
 	}
@@ -264,29 +263,28 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 
 	dest := new(T)
 	ctx.initScanDestOneT(dest)
-	if ctx.err != nil {
-		return nil, ctx.err
-	}
-
 	ctx.initConf() //初始化表名，主键，自增id
-
 	ctx.initColumns()
 	ctx.initColumnsValueSoftDel()
 
+	if ctx.err != nil {
+		return nil, ctx.err
+	}
 	ctx.wb.And(wb)
 
 	dialect.tableSelectGen()
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
+
 	if ctx.noRun {
 		return nil, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -315,16 +313,16 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		return nil, ctx.err
 	}
 
-	sqlStr = dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+	dialect.getSql()
+	dialectSql = ctx.dialectSql
+	ctx.printSql()
+
 	if ctx.noRun {
 		return nil, nil
 	}
 
 	if ctx.returnAutoPrimaryKey == pkQueryReturn {
-		rows, err = db.query(sqlStr, ctx.args...)
+		rows, err = db.query(dialectSql, ctx.args...)
 		if err != nil {
 			return nil, err
 		}
@@ -334,7 +332,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		}
 	}
 
-	exec, err := db.exec(sqlStr, ctx.args...)
+	exec, err := db.exec(dialectSql, ctx.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -360,11 +358,12 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	return d, nil
 }
 
-// InsertOrHas 根据条件查询是否已存在，不存在则直接插入
-// 应用场景：例如添加 后台管理员 时，如果名字已存在，返回名字重复，否者正常添加。
+// HasOrInsert 根据条件查询是否已存在
+// 如果存在，直接返回true，如果不存在返回false，并直接插入
+// 应用场景：例如添加 用户 时，如果名字已存在，返回名字重复，否者正常添加。
 // d insert 的 对象，
 // e 通用设置，select 自定义字段
-func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bool, error) {
+func HasOrInsert(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bool, error) {
 	db = db.init()
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
@@ -388,14 +387,15 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 	if ctx.hasErr() {
 		return false, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
+
 	if ctx.noRun {
 		return false, nil
 	}
-	rows, err := db.query(sqlStr, ctx.args...)
+	rows, err := db.query(dialectSql, ctx.args...)
 	if err != nil {
 		return false, err
 	}
@@ -418,16 +418,16 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		return false, ctx.err
 	}
 
-	sqlStr = dialect.getSql()
-	if ctx.showSql {
-		fmt.Println(sqlStr, ctx.args)
-	}
+	dialect.getSql()
+	dialectSql = ctx.dialectSql
+	ctx.printSql()
+
 	if ctx.noRun {
 		return false, nil
 	}
 
 	if ctx.returnAutoPrimaryKey == pkQueryReturn {
-		rows, err = db.query(sqlStr, ctx.args...)
+		rows, err = db.query(dialectSql, ctx.args...)
 		if err != nil {
 			return false, err
 		}
@@ -437,7 +437,7 @@ func InsertOrHas(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		}
 	}
 
-	exec, err := db.exec(sqlStr, ctx.args...)
+	exec, err := db.exec(dialectSql, ctx.args...)
 	if err != nil {
 		return false, err
 	}

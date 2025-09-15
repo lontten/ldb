@@ -139,7 +139,7 @@ type Dialecter interface {
 	tableDelGen()
 	tableUpdateGen()
 	tableSelectGen()
-	getSql() string
+	getSql()
 
 	escapeIdentifier(s string) string // 转义 数据库保留字
 }

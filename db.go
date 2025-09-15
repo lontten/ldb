@@ -3,6 +3,7 @@ package ldb
 import (
 	"context"
 	"database/sql"
+
 	"github.com/pkg/errors"
 )
 

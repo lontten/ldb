@@ -259,7 +259,7 @@ func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
 			return b
 		}
 	}
-	b.orderTokens = append(b.orderTokens, name)
+	b.orderTokens = append(b.orderTokens, name+" ASC")
 	return b
 }
 

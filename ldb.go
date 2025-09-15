@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var ImpValuer = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
@@ -39,6 +40,7 @@ func genOrmCtx(pc *PoolConf) *ormContext {
 			IdType:          0,
 			PrimaryKeyNames: []string{"id"},
 		},
+		disableColor: false,
 	}
 }
 

@@ -76,7 +76,7 @@ func (e *ExtraContext) OrderBy(name string, condition ...bool) *ExtraContext {
 			return e
 		}
 	}
-	e.orderByTokens = append(e.orderByTokens, name)
+	e.orderByTokens = append(e.orderByTokens, name+" ASC")
 	return e
 }
 
@@ -86,7 +86,7 @@ func (e *ExtraContext) OrderDescBy(name string, condition ...bool) *ExtraContext
 			return e
 		}
 	}
-	e.orderByTokens = append(e.orderByTokens, name+" desc")
+	e.orderByTokens = append(e.orderByTokens, name+" DESC")
 	return e
 }
 

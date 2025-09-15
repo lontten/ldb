@@ -156,12 +156,14 @@ func (ctx *ormContext) genInsertValuesSqlBycolumnValues() {
 // 根据 columnValues 生成的set sql
 // SET ...
 // column1 = value1, column2 = value2, ...
-func (ctx *ormContext) genSetSqlBycolumnValues() {
+func (ctx *ormContext) genSetSqlBycolumnValues(fn escapeFun) {
 	columns := ctx.columns
 	values := ctx.columnValues
 	var query = ctx.query
 
 	for i, v := range values {
+		column := columns[i]
+		column = fn(column)
 		if i > 0 {
 			query.WriteString(", ")
 		}
@@ -169,41 +171,41 @@ func (ctx *ormContext) genSetSqlBycolumnValues() {
 		case field.None:
 			break
 		case field.Null:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = NULL")
 			break
 		case field.Now:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = NOW()")
 			break
 		case field.UnixSecond:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
 			query.WriteString(strconv.Itoa(time.Now().Second()))
 			break
 		case field.UnixMilli:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
 			query.WriteString(strconv.FormatInt(time.Now().UnixMilli(), 10))
 			break
 		case field.UnixNano:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
 			query.WriteString(strconv.FormatInt(time.Now().UnixNano(), 10))
 			break
 		case field.Val:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ? ")
 			ctx.args = append(ctx.args, v.Value)
 			break
 		case field.Increment:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
-			query.WriteString(columns[i] + " + ? ")
+			query.WriteString(column + " + ? ")
 			ctx.args = append(ctx.args, v.Value)
 			break
 		case field.Expression:
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
 			query.WriteString(v.Value.(string))
 			break
@@ -212,10 +214,13 @@ func (ctx *ormContext) genSetSqlBycolumnValues() {
 				ctx.err = errors.New("软删除标记为主键id，需要单主键")
 				return
 			}
-			query.WriteString(columns[i])
+			query.WriteString(column)
 			query.WriteString(" = ")
 			query.WriteString(ctx.primaryKeyColumnNames[0])
 			break
+		default:
+			ctx.err = errors.New("genSetSqlBycolumnValues not support type")
 		}
+
 	}
 }

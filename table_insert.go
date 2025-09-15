@@ -2,7 +2,6 @@ package ldb
 
 import (
 	"github.com/lontten/ldb/sqltype"
-	"github.com/lontten/ldb/utils"
 )
 
 // Insert 插入或者根据主键冲突更新
@@ -26,23 +25,22 @@ func Insert(db Engine, v any, extra ...*ExtraContext) (num int64, err error) {
 		return 0, ctx.err
 	}
 
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		utils.PrintSql(sqlStr, ctx.args...)
-	}
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return 0, nil
 	}
 
 	if ctx.returnAutoPrimaryKey == pkQueryReturn {
-		rows, err := db.query(sqlStr, ctx.args...)
+		rows, err := db.query(dialectSql, ctx.args...)
 		if err != nil {
 			return 0, err
 		}
 		return ctx.ScanLnT(rows)
 	}
 
-	exec, err := db.exec(sqlStr, ctx.args...)
+	exec, err := db.exec(dialectSql, ctx.args...)
 	if err != nil {
 		return 0, err
 	}

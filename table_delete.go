@@ -2,7 +2,6 @@ package ldb
 
 import (
 	"github.com/lontten/ldb/sqltype"
-	"github.com/lontten/ldb/utils"
 )
 
 func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, error) {
@@ -24,14 +23,15 @@ func Delete[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (int64, 
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	sqlStr := dialect.getSql()
-	if ctx.showSql {
-		utils.PrintSql(sqlStr, ctx.args...)
-	}
+
+	dialect.getSql()
+	dialectSql := ctx.dialectSql
+	ctx.printSql()
 	if ctx.noRun {
 		return 0, nil
 	}
-	exec, err := db.exec(sqlStr, ctx.args...)
+
+	exec, err := db.exec(dialectSql, ctx.args...)
 	if err != nil {
 		return 0, err
 	}

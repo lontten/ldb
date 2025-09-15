@@ -91,6 +91,7 @@ type ormContext struct {
 	tableName      string //当前表名
 	checkParam     bool   // 是否检查参数
 	showSql        bool   // 打印sql
+	disableColor   bool   // 打印sql时，是否使用颜色
 	noRun          bool   // 不实际执行
 
 	// ------------------conf-end----------------------
@@ -111,8 +112,9 @@ type ormContext struct {
 	//true query,false exec
 	sqlType sqltype.SqlType
 
-	//要执行的sql语句
-	query *strings.Builder
+	query       *strings.Builder // query sql
+	originalSql string           // 原始sql
+	dialectSql  string           // 适配不同数据库的sql
 	//参数
 	args []any
 
@@ -390,6 +392,12 @@ func (ctx ormContext) Copy() ormContext {
 	return ormContext{
 		ormConf: ctx.ormConf,
 		log:     ctx.log,
+	}
+}
+
+func (ctx ormContext) printSql() {
+	if ctx.showSql {
+		utils.PrintSql(ctx.disableColor, ctx.originalSql, ctx.dialectSql, ctx.args...)
 	}
 }
 

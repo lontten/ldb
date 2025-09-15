@@ -25,10 +25,11 @@ func (d *MysqlDialect) getCtx() *ormContext {
 func (d *MysqlDialect) initContext() Dialecter {
 	return &MysqlDialect{
 		ctx: &ormContext{
-			ormConf:    d.ctx.ormConf,
-			query:      &strings.Builder{},
-			wb:         W(),
-			insertType: insert_type.Err,
+			ormConf:      d.ctx.ormConf,
+			query:        &strings.Builder{},
+			wb:           W(),
+			insertType:   insert_type.Err,
+			disableColor: d.ctx.disableColor,
 		},
 		dbVersion: d.dbVersion,
 	}
@@ -100,9 +101,9 @@ func (d MysqlDialect) escapeIdentifier(s string) string {
 // 中间服务
 // ===----------------------------------------------------------------------===//
 
-func (d *MysqlDialect) getSql() string {
-	s := d.ctx.query.String()
-	return s
+func (d *MysqlDialect) getSql() {
+	d.ctx.originalSql = d.ctx.query.String()
+	d.ctx.dialectSql = d.ctx.originalSql
 }
 
 // insert 生成
@@ -235,13 +236,13 @@ func (d *MysqlDialect) tableDelGen() {
 	//  没有软删除 或者 跳过软删除 ，执行物理删除
 	if ctx.softDeleteType == softdelete.None || ctx.skipSoftDelete {
 		query.WriteString("DELETE FROM ")
-		query.WriteString(tableName)
+		query.WriteString(d.escapeIdentifier(tableName))
 	} else {
 		query.WriteString("UPDATE ")
-		query.WriteString(tableName)
+		query.WriteString(d.escapeIdentifier(tableName))
 
 		query.WriteString(" SET ")
-		ctx.genSetSqlBycolumnValues()
+		ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
 	}
 	query.WriteString(" WHERE ")
 	query.WriteString(whereStr)
@@ -258,17 +259,17 @@ func (d *MysqlDialect) tableUpdateGen() {
 	}
 	var query = d.ctx.query
 	tableName := ctx.tableName
-	whereStr, args, err := ctx.wb.toSql(d.parse)
+	whereStr, args, err := ctx.wb.toSql(d.parse, ctx.primaryKeyColumnNames...)
 	if err != nil {
 		ctx.err = err
 		return
 	}
 
 	query.WriteString("UPDATE ")
-	query.WriteString(tableName)
+	query.WriteString(d.escapeIdentifier(tableName))
 	query.WriteString(" SET ")
-	ctx.genSetSqlBycolumnValues()
-	query.WriteString(" WHERE ")
+	ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
+	query.WriteString("WHERE ")
 
 	query.WriteString(whereStr)
 	ctx.args = append(ctx.args, args...)
