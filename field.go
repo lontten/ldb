@@ -1,9 +1,10 @@
 package ldb
 
 import (
+	"reflect"
+
 	"github.com/lontten/ldb/v2/field"
 	"github.com/pkg/errors"
-	"reflect"
 )
 
 // 校验struct 的 field 是否合法
@@ -95,20 +96,4 @@ func isFieldNull(v reflect.Value) bool {
 		return v.IsZero()
 	}
 	return v.IsNil()
-}
-
-// nil 值在传到 interface{}、any 时，无法通过 == nil,来判断是否为nil
-// ptr nil 为 true
-// 非ptr，零值为 false
-func isFieldNil(i any) bool {
-	if i == nil {
-		return true
-	}
-	if reflect.TypeOf(i).Kind() != reflect.Ptr {
-		return false
-	}
-	if reflect.ValueOf(i).IsNil() {
-		return true
-	}
-	return false
 }

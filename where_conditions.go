@@ -2,6 +2,8 @@ package ldb
 
 import (
 	"reflect"
+
+	"github.com/lontten/ldb/v2/utils"
 )
 
 //------------------model/map/id------------------
@@ -76,8 +78,14 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
+		w.andWheres = append(w.andWheres, WhereBuilder{
+			clause: &Clause{
+				Type:  IsNull,
+				query: query,
+			},
+		})
 		return w
 	}
 
@@ -140,8 +148,14 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
+		w.andWheres = append(w.andWheres, WhereBuilder{
+			clause: &Clause{
+				Type:  IsNotNull,
+				query: query,
+			},
+		})
 		return w
 	}
 
@@ -162,7 +176,7 @@ func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *Where
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}
@@ -185,7 +199,7 @@ func (w *WhereBuilder) Less(query string, arg any, condition ...bool) *WhereBuil
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}
@@ -208,7 +222,7 @@ func (w *WhereBuilder) LessEq(query string, arg any, condition ...bool) *WhereBu
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}
@@ -231,7 +245,7 @@ func (w *WhereBuilder) Greater(query string, arg any, condition ...bool) *WhereB
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}
@@ -253,7 +267,7 @@ func (w *WhereBuilder) GreaterEq(query string, arg any, condition ...bool) *Wher
 			return w
 		}
 	}
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}
@@ -372,7 +386,7 @@ func (w *WhereBuilder) Neq(query string, arg any, condition ...bool) *WhereBuild
 		}
 	}
 
-	isNil := isFieldNil(arg)
+	isNil := utils.IsNil(arg)
 	if isNil {
 		return w
 	}

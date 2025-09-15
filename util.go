@@ -1,6 +1,8 @@
 package ldb
 
-import "strings"
+import (
+	"strings"
+)
 
 var dangNamesMap = map[string]bool{
 	"accessible":                    true,

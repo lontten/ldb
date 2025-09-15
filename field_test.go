@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/lontten/ldb/v2/utils"
 )
 
 func Test_getFieldInter(t *testing.T) {
@@ -61,5 +63,5 @@ func Test_isFieldNull(t *testing.T) {
 	t.Log(is5)
 }
 func toNoNil(v any) bool {
-	return isFieldNil(v)
+	return utils.IsNil(v)
 }
