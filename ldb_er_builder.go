@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/lontten/lcore/v2/lcutils"
 	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/ldb/v2/utils"
 )
 
 func QueryBuild(db Engine) *SqlBuilder {
@@ -511,19 +511,18 @@ func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool)
 			return b
 		}
 	}
-	// any类型，无法直接判断 nil
-	begin = getFieldInterZero(reflect.ValueOf(begin))
-	end = getFieldInterZero(reflect.ValueOf(end))
+	has1 := !utils.IsNil(begin)
+	has2 := !utils.IsNil(end)
 
-	if begin != nil {
-		if end != nil {
+	if has1 {
+		if has2 {
 			b._whereArg(whereStr+" BETWEEN ? AND ?", begin, end)
 			return b
 		}
 		b._whereArg(whereStr+" >= ?", begin)
 		return b
 	}
-	if end != nil {
+	if has2 {
 		b._whereArg(whereStr+" <= ?", end)
 		return b
 	}

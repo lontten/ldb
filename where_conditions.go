@@ -1,6 +1,7 @@
 package ldb
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
@@ -10,6 +11,9 @@ import (
 
 // 过滤 软删除
 func (w *WhereBuilder) Model(v any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -27,6 +31,9 @@ func (w *WhereBuilder) Model(v any, condition ...bool) *WhereBuilder {
 }
 
 func (w *WhereBuilder) Map(v any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -40,6 +47,9 @@ func (w *WhereBuilder) Map(v any, condition ...bool) *WhereBuilder {
 	return w
 }
 func (w *WhereBuilder) PrimaryKey(args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	argsLen := len(args)
 	if argsLen == 0 {
 		return w
@@ -54,6 +64,9 @@ func (w *WhereBuilder) PrimaryKey(args ...any) *WhereBuilder {
 }
 
 func (w *WhereBuilder) FilterPrimaryKey(args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	argsLen := len(args)
 	if argsLen == 0 {
 		return w
@@ -70,8 +83,12 @@ func (w *WhereBuilder) FilterPrimaryKey(args ...any) *WhereBuilder {
 //------------------model/map/id-end------------------
 //------------------eq------------------
 
-// 参数为nil，自动跳过条件
+// Eq
+// x = ?
 func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -99,49 +116,12 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 	return w
 }
 
-func (w *WhereBuilder) In(query string, args ArgArray, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	argsLen := len(args)
-	if argsLen == 0 {
-		return w
-	}
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  In,
-			query: query,
-			args:  args,
-		},
-	})
-	return w
-}
-
-func (w *WhereBuilder) NotIn(query string, args ArgArray, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	argsLen := len(args)
-	if argsLen == 0 {
-		return w
-	}
-
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  NotIn,
-			query: query,
-			args:  args,
-		},
-	})
-	return w
-}
-
-// 参数为nil，不生成条件
+// NotEq
+// x <> ?
 func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -169,7 +149,101 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 	return w
 }
 
+// BoolIn
+// IN (?)
+func (w *WhereBuilder) BoolIn(condition bool, query string, args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
+	if !condition {
+		return w
+	}
+	argsLen := len(args)
+	if argsLen == 0 {
+		return w
+	}
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type:  In,
+			query: query,
+			args:  args,
+		},
+	})
+	return w
+}
+
+// In
+// IN (?)
+func (w *WhereBuilder) In(query string, args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
+	argsLen := len(args)
+	if argsLen == 0 {
+		return w
+	}
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type:  In,
+			query: query,
+			args:  args,
+		},
+	})
+	return w
+}
+
+// BoolNotIn
+// NOT IN (?)
+func (w *WhereBuilder) BoolNotIn(condition bool, query string, args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
+	if !condition {
+		return w
+	}
+	argsLen := len(args)
+	if argsLen == 0 {
+		return w
+	}
+
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type:  NotIn,
+			query: query,
+			args:  args,
+		},
+	})
+	return w
+}
+
+// NotIn
+// NOT IN (?)
+func (w *WhereBuilder) NotIn(query string, args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
+	argsLen := len(args)
+	if argsLen == 0 {
+		return w
+	}
+
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type:  NotIn,
+			query: query,
+			args:  args,
+		},
+	})
+	return w
+}
+
+// Contains
+// pg 独有
+// [1] @< [1,2]
 func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -191,8 +265,12 @@ func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *Where
 	return w
 }
 
-// 小于
-func (w *WhereBuilder) Less(query string, arg any, condition ...bool) *WhereBuilder {
+// Lt
+// x < a
+func (w *WhereBuilder) Lt(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -201,6 +279,7 @@ func (w *WhereBuilder) Less(query string, arg any, condition ...bool) *WhereBuil
 
 	isNil := utils.IsNil(arg)
 	if isNil {
+		w.err = fmt.Errorf("invalid use of Lt: argument for query '%s' is nil.", query)
 		return w
 	}
 
@@ -214,8 +293,12 @@ func (w *WhereBuilder) Less(query string, arg any, condition ...bool) *WhereBuil
 	return w
 }
 
-// 小于等于
-func (w *WhereBuilder) LessEq(query string, arg any, condition ...bool) *WhereBuilder {
+// Lte
+// x <= a
+func (w *WhereBuilder) Lte(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -224,6 +307,7 @@ func (w *WhereBuilder) LessEq(query string, arg any, condition ...bool) *WhereBu
 
 	isNil := utils.IsNil(arg)
 	if isNil {
+		w.err = fmt.Errorf("invalid use of Lte: argument for query '%s' is nil.", query)
 		return w
 	}
 
@@ -237,8 +321,12 @@ func (w *WhereBuilder) LessEq(query string, arg any, condition ...bool) *WhereBu
 	return w
 }
 
-// 大于
-func (w *WhereBuilder) Greater(query string, arg any, condition ...bool) *WhereBuilder {
+// Gt
+// x > a
+func (w *WhereBuilder) Gt(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -247,6 +335,7 @@ func (w *WhereBuilder) Greater(query string, arg any, condition ...bool) *WhereB
 
 	isNil := utils.IsNil(arg)
 	if isNil {
+		w.err = fmt.Errorf("invalid use of Gt: argument for query '%s' is nil.", query)
 		return w
 	}
 
@@ -260,8 +349,12 @@ func (w *WhereBuilder) Greater(query string, arg any, condition ...bool) *WhereB
 	return w
 }
 
-// 大于等于
-func (w *WhereBuilder) GreaterEq(query string, arg any, condition ...bool) *WhereBuilder {
+// Gte
+// x >= a
+func (w *WhereBuilder) Gte(query string, arg any, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -269,6 +362,7 @@ func (w *WhereBuilder) GreaterEq(query string, arg any, condition ...bool) *Wher
 	}
 	isNil := utils.IsNil(arg)
 	if isNil {
+		w.err = fmt.Errorf("invalid use of Gte: argument for query '%s' is nil.", query)
 		return w
 	}
 	w.andWheres = append(w.andWheres, WhereBuilder{
@@ -281,39 +375,12 @@ func (w *WhereBuilder) GreaterEq(query string, arg any, condition ...bool) *Wher
 	return w
 }
 
-func (w *WhereBuilder) Between(query string, arg1, arg2 any, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  Between,
-			query: query,
-			args:  []any{arg1, arg2},
-		},
-	})
-	return w
-}
-
-//func (w *WhereBuilder) Arg(arg any, condition ...bool) *WhereBuilder {
-//	for _, b := range condition {
-//		if !b {
-//			return w
-//		}
-//	}
-//	w.andArgs = append(w.andArgs, arg)
-//	return w
-//}
-//
-//func (w *WhereBuilder) Args(args ...any) *WhereBuilder {
-//	w.andArgs = append(w.andArgs, args...)
-//	return w
-//}
-
+// IsNull
+// x IS NULL
 func (w *WhereBuilder) IsNull(query string, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -329,7 +396,12 @@ func (w *WhereBuilder) IsNull(query string, condition ...bool) *WhereBuilder {
 	return w
 }
 
+// IsNotNull
+// x IS NOT NULL
 func (w *WhereBuilder) IsNotNull(query string, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -345,7 +417,12 @@ func (w *WhereBuilder) IsNotNull(query string, condition ...bool) *WhereBuilder 
 	return w
 }
 
+// IsFalse
+// x IS FALSE
 func (w *WhereBuilder) IsFalse(query string, condition ...bool) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
 	for _, b := range condition {
 		if !b {
 			return w
@@ -355,91 +432,6 @@ func (w *WhereBuilder) IsFalse(query string, condition ...bool) *WhereBuilder {
 		clause: &Clause{
 			Type:  IsFalse,
 			query: query,
-		},
-	})
-	return w
-}
-func (w *WhereBuilder) NotBetween(query string, arg1, arg2 any, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  NotBetween,
-			query: query,
-			args:  []any{arg1, arg2},
-		},
-	})
-	return w
-}
-
-// Neq
-// 不等于
-// 当 arg 为 nil 时，不添加条件
-func (w *WhereBuilder) Neq(query string, arg any, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-
-	isNil := utils.IsNil(arg)
-	if isNil {
-		return w
-	}
-
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  Neq,
-			query: query,
-			args:  []any{arg},
-		},
-	})
-	return w
-}
-
-func (w *WhereBuilder) Like(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	if arg == nil {
-		return w
-	}
-	if *arg == "" {
-		return w
-	}
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  Like,
-			query: query,
-			args:  []any{"%" + *arg + "%"},
-		},
-	})
-	return w
-}
-
-func (w *WhereBuilder) NoLike(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	if arg == nil {
-		return w
-	}
-	if *arg == "" {
-		return w
-	}
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  NotLike,
-			query: query,
-			args:  []any{"%" + *arg + "%"},
 		},
 	})
 	return w

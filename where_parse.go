@@ -19,6 +19,9 @@ primaryKeyFieldNames 主键字段名称列表
 */
 
 func (w WhereBuilder) toSql(f parseFun, primaryKeyColumnNames ...string) (string, []any, error) {
+	if w.err != nil {
+		return "", nil, w.err
+	}
 	_, _, sql, args, err := w.parse(f, primaryKeyColumnNames...)
 	if err != nil {
 		return "", nil, err
@@ -26,6 +29,9 @@ func (w WhereBuilder) toSql(f parseFun, primaryKeyColumnNames ...string) (string
 	return sql, args, err
 }
 func (w *WhereBuilder) parsePkClause(not bool, primaryKeyColumnNames ...string) error {
+	if w.err != nil {
+		return w.err
+	}
 	if len(primaryKeyColumnNames) == 0 {
 		return ErrNoPk
 	}
@@ -107,6 +113,9 @@ func (w *WhereBuilder) parsePkClause(not bool, primaryKeyColumnNames ...string) 
 	return nil
 }
 func (w WhereBuilder) parse(f parseFun, primaryKeyFieldNames ...string) (hasOr bool, hasAnd bool, sql string, args []any, err error) {
+	if w.err != nil {
+		return false, false, "", nil, w.err
+	}
 	sb := strings.Builder{}
 	var ors = w.wheres
 	var ands = w.andWheres

@@ -27,6 +27,7 @@ type WhereBuilder struct {
 	andWheres []WhereBuilder
 
 	clause *Clause
+	err    error
 }
 
 func W() *WhereBuilder {
