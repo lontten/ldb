@@ -35,7 +35,7 @@ jobs:
         run: go test -v -coverprofile=coverage.out ./...
 
       - name: List files in workspace
-        run: ls -al
+        run: cat coverage.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
