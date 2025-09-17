@@ -172,8 +172,8 @@ type DuplicateKey struct {
 
 // WhenDuplicateKey
 // 唯一索引冲突,设置索引字段列表；
-// Mysql可不设置
-// Postgresql 必须设置
+// Mysql 不用设置，如果设置了也会直接忽略
+// Postgresql 必须设置,如果没有设置，则为主键字段
 func (e *ExtraContext) WhenDuplicateKey(name ...string) *DuplicateKey {
 	e.duplicateKeyNames = name
 	return &DuplicateKey{

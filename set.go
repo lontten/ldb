@@ -1,8 +1,9 @@
 package ldb
 
 import (
-	"github.com/lontten/ldb/v2/field"
 	"reflect"
+
+	"github.com/lontten/ldb/v2/field"
 )
 
 type SetContext struct {
@@ -78,5 +79,6 @@ func (s *SetContext) Map(v map[string]any) *SetContext {
 // 在 initColumnsValueSet 中解析
 func (s *SetContext) Model(v any) *SetContext {
 	s.model = v
+	s.hasModel = true
 	return s
 }

@@ -20,7 +20,7 @@ func TestUpdate_mysql(t *testing.T) {
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	num, err := Update(engine, W().Eq("id", 1), User{Name: "tom"}, E().ShowSql())
+	num, err := Update(engine, User{Name: "tom"}, W().Eq("id", 1), E().ShowSql())
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 }
@@ -36,7 +36,7 @@ func TestUpdate_pg(t *testing.T) {
 		WillReturnError(nil).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	num, err := Update(engine, W().Eq("id", 1), User{Name: "tom"}, E().ShowSql())
+	num, err := Update(engine, User{Name: "tom"}, W().Eq("id", 1), E().ShowSql())
 	as.Nil(err)
 	as.Equal(int64(1), num, "num error")
 }

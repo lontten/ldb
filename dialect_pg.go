@@ -109,7 +109,11 @@ func (d *PgDialect) tableInsertGen() {
 
 	if ctx.insertType == insert_type.Ignore || ctx.insertType == insert_type.Update {
 		query.WriteString(" ON CONFLICT (")
-		query.WriteString(escapeJoin(d.escapeIdentifier, extra.duplicateKeyNames, ","))
+		if len(extra.duplicateKeyNames) > 0 {
+			query.WriteString(escapeJoin(d.escapeIdentifier, extra.duplicateKeyNames, ","))
+		} else {
+			query.WriteString(escapeJoin(d.escapeIdentifier, ctx.primaryKeyColumnNames, ","))
+		}
 		query.WriteString(") DO ")
 	}
 

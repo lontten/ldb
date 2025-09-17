@@ -172,9 +172,17 @@ func HighlightSQL(sql string) string {
 		"CROSS JOIN", "NATURAL JOIN", "UNION ALL", "INTERSECT", "EXCEPT",
 		"EXPLAIN", "ANALYZE", "OPTIMIZE",
 	}
-	for _, kw := range keywords {
-		re := regexp.MustCompile(`(?i)\b` + kw + `\b`)
-		sql = re.ReplaceAllString(sql, "\033[1;34m"+kw+"\033[0m")
+
+	// 预编译所有正则表达式
+	regexps := make([]*regexp.Regexp, len(keywords))
+	for i, kw := range keywords {
+		regexps[i] = regexp.MustCompile(`(\b` + kw + `\b)`)
 	}
+
+	// 依次应用所有正则表达式
+	for _, re := range regexps {
+		sql = re.ReplaceAllString(sql, "\033[1;34m${1}\033[0m")
+	}
+
 	return sql
 }

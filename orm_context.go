@@ -99,18 +99,16 @@ type ormContext struct {
 
 	// ------------------字段名：字段值----------------------
 
-	columns      []string      // 有效字段列表
-	columnValues []field.Value // 有效字段- 值
+	columns      []string      // 有效字段 column
+	columnValues []field.Value // 有效字段 value
 
-	modelZeroColumnNames      []string       // model 零值字段列表
-	modelNoSoftDelColumnNames []string       // model 所有字段列表- 忽略软删除字段
-	modelAllColumnNames       []string       // model 所有字段列表
-	modelFieldIndexMap        map[string]int // model字段名-index
-	modelSelectFieldNames     []string       // model select 字段列表
+	modelZeroColumnNames      []string // model 零值字段列表
+	modelNoSoftDelColumnNames []string // model 所有字段列表- 忽略软删除字段
+	modelAllColumnNames       []string // model 所有字段列表
+	modelSelectFieldNames     []string // model select 字段列表
 	// ------------------字段名：字段值-end----------------------
 
 	//------------------scan----------------------
-	//true query,false exec
 	sqlType sqltype.SqlType
 
 	query       *strings.Builder // query sql
