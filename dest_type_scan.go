@@ -1,8 +1,9 @@
 package ldb
 
 import (
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 func (ctx *ormContext) initScanDestList(dest any) {

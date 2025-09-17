@@ -5,8 +5,6 @@ import (
 	"reflect"
 )
 
-//todo 下面未重构--------------
-
 // atom 原子类型			#作为字段使用。
 // composite 非原子类型		#多个atom组成的实体类
 

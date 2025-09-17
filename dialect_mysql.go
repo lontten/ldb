@@ -46,7 +46,6 @@ func (d *MysqlDialect) getErr() error {
 // sql 方言化
 // ===----------------------------------------------------------------------===//
 func (d *MysqlDialect) query(query string, args ...any) (string, []any) {
-	d.ctx.log.Println(query, args)
 	return query, args
 }
 
@@ -63,7 +62,6 @@ func (d *MysqlDialect) exec(query string, args ...any) (string, []any) {
 }
 
 func (d *MysqlDialect) execBatch(query string, args [][]any) (string, [][]any) {
-	d.ctx.log.Println(query, args)
 
 	//var num int64 = 0
 	//stmt, err := d.ldb.Prepare(query)

@@ -9,33 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// has
-//func (ldb coreDb) doHas() (bool, error) {
-//if err := ldb.getCtx().err; err != nil {
-//	return false, err
-//}
-//var bb bytes.Buffer
-//
-//ctx := ldb.getCtx()
-//tableName := ctx.tableName
-//
-//bb.WriteString("SELECT 1 FROM ")
-//bb.WriteString(tableName)
-//bb.Write(ldb.genWhereSqlByToken())
-//bb.WriteString("LIMIT 1")
-//
-//rows, err := ldb.doQuery(bb.String(), ldb.args...)
-//
-//if err != nil {
-//	return false, err
-//}
-//defer rows.Close()
-//if rows.Next() {
-//	return true, nil
-//}
-//return false, nil
-//}
-
 // init 逻辑删除、租户
 func (d *MysqlDialect) initExtra() {
 	//if err := ldb.ctx.err; err != nil {
