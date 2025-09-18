@@ -1,5 +1,10 @@
 name: reviewdog
+
 on:
+  push:
+    paths:
+      - "**.go"
+      - .github/workflows/reviewdog.yml
   pull_request:
     paths:
       - "**.go"
