@@ -1,0 +1,94 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: benchmark_test
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready!"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL failed to start"
+          exit 1
+
+      # 新增步骤：安装 PostgreSQL 客户端
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      # 新增步骤：初始化数据库
+      - name: Initialize database
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          psql $DATABASE_URL -f scripts/init_db.sql
+
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+
+      - name: Run benchmarks
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          set -e
+          go test -bench=. -benchmem -benchtime=2s -count=3 ./... > benchmark_results.txt
+          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
+          cat benchmark_summary.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: |
+            benchmark_results.txt
+            benchmark_summary.txt
+
+      - name: Comment on PR with benchmark results
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const summary = fs.readFileSync('benchmark_summary.txt', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## Benchmark 结果\n\n\`\`\`\n${summary}\n\`\`\``
+              });
+            } catch (error) {
+              console.error('Failed to read benchmark summary:', error);
+            }
