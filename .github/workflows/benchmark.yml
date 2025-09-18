@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # 升级到最新版本
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -49,11 +49,9 @@ jobs:
           echo "PostgreSQL failed to start"
           exit 1
 
-      # 新增步骤：安装 PostgreSQL 客户端
       - name: Install PostgreSQL client
         run: sudo apt-get install -y postgresql-client
 
-      # 新增步骤：初始化数据库
       - name: Initialize database
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
@@ -73,12 +71,13 @@ jobs:
           cat benchmark_summary.txt
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # 升级到 v4 版本
         with:
           name: benchmark-results
           path: |
             benchmark_results.txt
             benchmark_summary.txt
+          retention-days: 3  # 可选：设置产物保留天数，避免存储空间不足:cite[7]
 
       - name: Comment on PR with benchmark results
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
