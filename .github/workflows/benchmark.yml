@@ -68,14 +68,10 @@ jobs:
           DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
         run: |
           set -e
+          chmod +x ./scripts/benchstat2md_enhanced.py
           go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
-          # 给转换脚本添加执行权限
-          chmod +x ./scripts/benchstat2md.py
-          # 转换为 Markdown 并保存
-          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary1.txt
-          cat benchmark_summary1.txt
-          cat benchmark_summary1.txt | ./scripts/benchstat2md.py  > benchmark_summary.txt
-          cat benchmark_summary.txt
+          benchstat benchmark_results.txt > benchmark_summary.txt
+          cat benchmark_summary.txt | python3 ./scripts/benchstat2md_enhanced.py > benchmark_summary.md
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
@@ -83,7 +79,7 @@ jobs:
           name: benchmark-results
           path: |
             benchmark_results.txt
-            benchmark_summary.txt
+            benchmark_summary.md
           retention-days: 3
 
       - name: Comment on PR with benchmark results
@@ -95,7 +91,7 @@ jobs:
             const fs = require('fs');
             try {
               // 读取格式化后的结果
-              const summary = fs.readFileSync('benchmark_summary.txt', 'utf8');
+              const summary = fs.readFileSync('benchmark_summary.md', 'utf8');
               // 构建评论内容（添加说明文字）
               const commentBody = `## 基准测试性能对比
             
@@ -131,7 +127,7 @@ jobs:
           echo "" >> benchmark_section.md
           echo "> 说明：数值越低性能越好，±表示95%置信区间波动范围" >> benchmark_section.md
           echo "" >> benchmark_section.md
-          cat benchmark_summary.txt >> benchmark_section.md
+          cat benchmark_summary.md >> benchmark_section.md
           
           # 1. 删除BENCHMARK_RESULTS_START和END之间的内容（保留标记）
           sed -i '/<!-- BENCHMARK_RESULTS_START -->/,/<!-- BENCHMARK_RESULTS_END -->/{//!d}' README.md
