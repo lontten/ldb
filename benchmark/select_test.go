@@ -69,7 +69,7 @@ func BenchmarkSelect_gorm(b *testing.B) {
 
 	// 执行b.N次（基准测试核心循环）
 	for i := 0; i < b.N; i++ {
-		_, err := gorm.G[User](GDB).Where("id = ?", 1).First(ctx)
+		_, err := gorm.G[User](GDB).Find(ctx)
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
