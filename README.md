@@ -6,11 +6,27 @@
 <!-- BENCHMARK_RESULTS_START -->
 ## 最新基准测试结果
 
-测试时间: 2025-09-19 07:05:50 UTC
+测试时间: 2025-09-19 07:11:37 UTC
 测试环境: Linux (AMD EPYC 7763 64-Core Processor)
 
 > 说明：数值越低性能越好，±表示95%置信区间波动范围
 
-无基准测试数据
+| goos: | linux |
+| --- | --- |
+| goarch: | amd64 |
+| --- | --- |
+| pkg: | github.com/lontten/ldb/v2/benchmark |
+| --- | --- |
+| cpu: | AMD EPYC 7763 64-Core Processor |
+| --- | --- |
+| Insert-4 | 333.9µ | ± | 3% |
+| Select-4 | 573.2µ | ± | 1% |
+| geomean | 437.5µ | | |
+| Insert-4 | 4.673Ki | ± | 0% |
+| Select-4 | 49.21Ki | ± | 0% |
+| geomean | 15.16Ki | | |
+| Insert-4 | 84.00 | ± | 0% |
+| Select-4 | 1.121k | ± | 0% |
+| geomean | 306.9 | | |
 <!-- BENCHMARK_RESULTS_END -->
 
