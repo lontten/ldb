@@ -45,7 +45,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4  # 使用官方Go环境配置动作
         with:
-          go-version: '1.24'  # 指定Go版本为1.24
+          go-version: '1.24'
 
       # 步骤3：等待PostgreSQL服务就绪
       - name: Wait for PostgreSQL
