@@ -5,6 +5,12 @@
 [![codecov](https://codecov.io/gh/lontten/ldb/branch/go-test/graph/badge.svg)](https://codecov.io/gh/lontten/ldb)
 ### 基准测试
 <!-- BENCHMARK_RESULTS_START -->
+## 最新基准测试结果
+
+测试时间: 2025-09-19 03:29:35 UTC
+
+```
+```
 <!-- BENCHMARK_RESULTS_END -->
 ## 最新基准测试结果
 
