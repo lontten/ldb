@@ -69,11 +69,10 @@ jobs:
         run: |
           set -e
           go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
-          $HOME/go/bin/benchstat benchmark_results.txt | awk '
-              BEGIN { print "| 测试名称   | 耗时/op | 内存/op | 分配次数/op |" }
-              NR == 1 { print "|------------|---------|---------|------------|" }
-              NR > 1 { print "| " $1 " | " $2 " | " $3 " | " $4 " |" }
-            ' > benchmark_summary.md
+          # 给转换脚本添加执行权限
+          chmod +x ./scripts/benchstat2md.py
+          # 转换为 Markdown 并保存
+          $HOME/go/bin/benchstat benchmark_results.txt | ./scripts/benchstat2md.py > benchmark_summary.txt
           cat benchmark_summary.txt
 
       - name: Upload benchmark results
