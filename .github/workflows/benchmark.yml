@@ -68,7 +68,7 @@ jobs:
           DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
         run: |
           set -e
-          go test -bench=. -benchmem -benchtime=2s -count=3 ./... > benchmark_results.txt
+          go test -bench=. -benchmem -benchtime=2s -count=3 ./... 2>&1 | tee benchmark_results.txt
           $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
           cat benchmark_summary.txt
 
