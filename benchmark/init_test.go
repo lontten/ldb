@@ -1,6 +1,7 @@
 package benchmark
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/lontten/ldb/v2"
@@ -18,6 +19,7 @@ func init() {
 	}
 	db, err := ldb.Connect(conf, nil)
 	if err != nil {
+		fmt.Println("init db error:", err.Error())
 		panic(err)
 	}
 	DB = db
