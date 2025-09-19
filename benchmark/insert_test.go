@@ -30,7 +30,7 @@ func BenchmarkInsert_mysql(b *testing.B) {
 			Email: fmt.Sprintf("xx%d@xx.com", i),
 		}
 
-		_, err := ldb.Insert(DB, u, ldb.E().ShowSql())
+		_, err := ldb.Insert(DB, &u)
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
