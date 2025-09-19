@@ -130,9 +130,7 @@ jobs:
           echo "" >> benchmark_section.md
           echo "> 说明：数值越低性能越好，±表示95%置信区间波动范围" >> benchmark_section.md
           echo "" >> benchmark_section.md
-          echo "\`\`\`" >> benchmark_section.md
           cat benchmark_summary.txt >> benchmark_section.md
-          echo "\`\`\`" >> benchmark_section.md
           
           # 替换README中标记间的内容（保留标记本身）
           # 1. 删除BENCHMARK_RESULTS_START和END之间的内容
