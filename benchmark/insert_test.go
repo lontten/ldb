@@ -60,7 +60,7 @@ func BenchmarkInsert_gorm(b *testing.B) {
 			Name:  "tom",
 			Email: fmt.Sprintf("xx%d@xx.com", i),
 		}
-		err = GDB.Create(u).Error
+		err = GDB.Create(&u).Error
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
