@@ -43,3 +43,4 @@ jobs:
         with:
           go_version: ${{ matrix.go-version }}
           level: warning
+          golangci_lint_flags: "--enable-all --exclude-use-default=false"
