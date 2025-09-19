@@ -6,7 +6,7 @@
 <!-- BENCHMARK_RESULTS_START -->
 ## 最新基准测试结果
 
-测试时间: 2025-09-19 08:33:35 UTC
+测试时间: 2025-09-19 08:44:24 UTC
 测试环境: Linux (AMD EPYC 7763 64-Core Processor)
 
 > 说明：数值越低性能越好，±表示95%置信区间波动范围
@@ -26,22 +26,28 @@
 
 | 测试名称 | 值 |
 |----------|----|
-| Insert-4 | 340.7µ ± 1% |
-| Select-4 | 576.2µ ± 3% |
+| Insert_ldb-4 | 413.3µ ± |
+| Insert_gorm-4 | 418.5µ ± |
+| Select_ldb-4 | 502.8µ ± 17% |
+| Select_gorm-4 | 502.5µ ± |
 
 ## B/op
 
 | 测试名称 | 值 |
 |----------|----|
-| Insert-4 | 4.673Ki ± 0% |
-| Select-4 | 49.21Ki ± 0% |
+| Insert_ldb-4 | 4.673Ki ± 0% |
+| Insert_gorm-4 | 4.673Ki ± 0% |
+| Select_ldb-4 | 49.21Ki ± 0% |
+| Select_gorm-4 | 49.21Ki ± 0% |
 
 ## allocs/op
 
 | 测试名称 | 值 |
 |----------|----|
-| Insert-4 | 84.00 ± 0% |
-| Select-4 | 1.121k ± 0% |
+| Insert_ldb-4 | 84.00 ± 0% |
+| Insert_gorm-4 | 84.00 ± 0% |
+| Select_ldb-4 | 1.121k ± 0% |
+| Select_gorm-4 | 1.121k ± 0% |
 
 
 <!-- BENCHMARK_RESULTS_END -->
