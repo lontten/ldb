@@ -6,7 +6,7 @@
 <!-- BENCHMARK_RESULTS_START -->
 ## 最新基准测试结果
 
-测试时间: 2025-09-19 03:42:49 UTC
+测试时间: 2025-09-19 05:36:47 UTC
 
 ```
 goos: linux
@@ -15,7 +15,7 @@ pkg: github.com/lontten/ldb/v2/benchmark
 cpu: AMD EPYC 7763 64-Core Processor                
                │ benchmark_results.txt │
                │        sec/op         │
-Insert_mysql-4             308.2µ ± 2%
+Insert_mysql-4             412.5µ ± 8%
 
                │ benchmark_results.txt │
                │         B/op          │
