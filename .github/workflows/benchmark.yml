@@ -101,7 +101,7 @@ jobs:
 
       # 新增：更新README中的基准测试结果
       - name: Update README with benchmark results
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
         run: |
           # 准备结果内容
           echo "## 最新基准测试结果" > benchmark_section.md
@@ -118,10 +118,10 @@ jobs:
 
       # 新增：提交更新后的README
       - name: Commit and push README update
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           git add README.md
           git commit -m "Update benchmark results in README" || echo "No changes to commit"
-          git push origin main
+          git push origin go-test
