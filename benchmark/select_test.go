@@ -7,10 +7,18 @@ import (
 	"github.com/lontten/ldb/v2"
 )
 
-func BenchmarkInsert(b *testing.B) {
-	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
-	if err != nil {
-		b.Fatalf("初始化清理数据失败: %v", err)
+func BenchmarkSelct(b *testing.B) {
+	for i := 0; i < 100; i++ {
+		u := User{
+			Id:    0,
+			Name:  "tom",
+			Email: fmt.Sprintf("xx%d@xx.com", i),
+		}
+
+		_, err := ldb.Insert(DB, u)
+		if err != nil {
+			b.Errorf("insert failed: %v", err)
+		}
 	}
 
 	b.Cleanup(func() {
@@ -24,16 +32,11 @@ func BenchmarkInsert(b *testing.B) {
 
 	// 执行b.N次（基准测试核心循环）
 	for i := 0; i < b.N; i++ {
-		u := User{
-			Id:    0,
-			Name:  "tom",
-			Email: fmt.Sprintf("xx%d@xx.com", i),
-		}
-
-		_, err := ldb.Insert(DB, u)
+		list, err := ldb.List[User](DB, ldb.W())
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
+		b.Logf("list len: %v", len(list))
 	}
 
 }
