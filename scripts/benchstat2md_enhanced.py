@@ -6,9 +6,9 @@
 import sys
 import re
 
-def parse_benchstat():
+def parse_benchstat(input_text):
     """解析 benchstat 输出"""
-    lines = [line.rstrip() for line in sys.stdin if line.strip()]
+    lines = input_text.strip().split('\n')
 
     # 检测是否有基准测试数据
     if not lines or "time/op" not in lines[0]:
