@@ -71,7 +71,9 @@ jobs:
           chmod +x ./scripts/benchstat2md_enhanced.py
           go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
           benchstat benchmark_results.txt > benchmark_summary.txt
+          cat benchmark_results.txt
           cat benchmark_summary.txt | python3 ./scripts/benchstat2md_enhanced.py > benchmark_summary.md
+          cat benchmark_summary.md
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
@@ -98,9 +100,7 @@ jobs:
                 > 以下是最新测试结果（单位：秒/操作、字节/操作、分配次数/操作）
                 > 数值越低越好，±表示波动范围
             
-                \`\`\`
                 ${summary}
-                \`\`\`
               `;
               // 调用GitHub API创建PR评论
               await github.rest.issues.createComment({
