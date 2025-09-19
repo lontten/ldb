@@ -10,13 +10,13 @@ import (
 )
 
 func BenchmarkInsert_ldb(b *testing.B) {
-	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+	_, err := ldb.Exec(DB, "DELETE FROM users")
 	if err != nil {
 		b.Fatalf("初始化清理数据失败: %v", err)
 	}
 
 	b.Cleanup(func() {
-		_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+		_, err := ldb.Exec(DB, "DELETE FROM users")
 		if err != nil {
 			b.Logf("测试后清理数据失败: %v", err)
 		}
@@ -40,13 +40,13 @@ func BenchmarkInsert_ldb(b *testing.B) {
 }
 
 func BenchmarkInsert_gorm(b *testing.B) {
-	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+	_, err := ldb.Exec(DB, "DELETE FROM users")
 	if err != nil {
 		b.Fatalf("初始化清理数据失败: %v", err)
 	}
 
 	b.Cleanup(func() {
-		_, err = ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+		_, err = ldb.Exec(DB, "DELETE FROM users")
 		if err != nil {
 			b.Logf("测试后清理数据失败: %v", err)
 		}
@@ -68,15 +68,15 @@ func BenchmarkInsert_gorm(b *testing.B) {
 
 }
 
-func BenchmarkInsert_gormt(b *testing.B) {
+func BenchmarkInsert_gormT(b *testing.B) {
 	ctx := context.Background()
-	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+	_, err := ldb.Exec(DB, "DELETE FROM users")
 	if err != nil {
 		b.Fatalf("初始化清理数据失败: %v", err)
 	}
 
 	b.Cleanup(func() {
-		_, err = ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+		_, err = ldb.Exec(DB, "DELETE FROM users")
 		if err != nil {
 			b.Logf("测试后清理数据失败: %v", err)
 		}

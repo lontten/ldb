@@ -124,7 +124,7 @@ jobs:
           echo "" >> benchmark_section.md
           echo "测试时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> benchmark_section.md
           echo "" >> benchmark_section.md
-          echo "> 说明：数值越低性能越好，±表示95%置信区间波动范围" >> benchmark_section.md
+          echo "> 说明：数值越低性能越好，±表示波动范围" >> benchmark_section.md
           echo "" >> benchmark_section.md
           cat benchmark_summary.md >> benchmark_section.md
           
