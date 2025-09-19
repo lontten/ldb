@@ -7,7 +7,7 @@ import (
 	"github.com/lontten/ldb/v2"
 )
 
-func BenchmarkSelct(b *testing.B) {
+func BenchmarkSelect(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		u := User{
 			Id:    0,
