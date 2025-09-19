@@ -2,6 +2,7 @@
 """
 将 benchstat 输出转换为格式良好的 Markdown 表格
 支持多指标类型（sec/op, B/op, allocs/op）
+并按测试类型组织数据
 """
 
 import sys
@@ -63,9 +64,34 @@ def parse_benchstat(input_text):
 
     return env_info, sections
 
-def format_markdown_table(env_info, sections):
+def organize_data_by_test(sections):
+    """按测试类型组织数据"""
+    test_data = {}
+
+    for section in sections:
+        metric = section.get('metric', '')
+        data = section.get('data', [])
+
+        for item in data:
+            test_name = item['name']
+            value = item['value']
+
+            # 提取测试类型（如 Insert、Select）
+            test_type = test_name.split('-')[0]
+
+            if test_type not in test_data:
+                test_data[test_type] = {}
+
+            if test_name not in test_data[test_type]:
+                test_data[test_type][test_name] = {}
+
+            test_data[test_type][test_name][metric] = value
+
+    return test_data
+
+def format_markdown_table(env_info, test_data):
     """生成格式化的 Markdown 表格"""
-    if not sections:
+    if not test_data:
         return "没有可用的基准测试数据"
 
     # 创建环境信息表
@@ -77,17 +103,18 @@ def format_markdown_table(env_info, sections):
         md_output += f"| {key} | {value} |\n"
     md_output += "\n"
 
-    # 为每个指标部分创建表格
-    for section in sections:
-        metric = section.get('metric', '未知指标')
-        data = section.get('data', [])
+    # 为每个测试类型创建表格
+    for test_type, tests in test_data.items():
+        md_output += f"## {test_type}\n\n"
+        md_output += "| 测试名称 | sec/op | B/op | allocs/op |\n"
+        md_output += "|----------|--------|------|-----------|\n"
 
-        md_output += f"## {metric}\n\n"
-        md_output += "| 测试名称 | 值 |\n"
-        md_output += "|----------|----|\n"
+        for test_name, metrics in tests.items():
+            sec_op = metrics.get('sec/op', 'N/A')
+            b_op = metrics.get('B/op', 'N/A')
+            allocs_op = metrics.get('allocs/op', 'N/A')
 
-        for item in data:
-            md_output += f"| {item['name']} | {item['value']} |\n"
+            md_output += f"| {test_name} | {sec_op} | {b_op} | {allocs_op} |\n"
 
         md_output += "\n"
 
@@ -104,8 +131,11 @@ def main():
         print("未能解析基准测试数据")
         return
 
+    # 按测试类型组织数据
+    test_data = organize_data_by_test(sections)
+
     # 生成 Markdown 报告
-    md_output = format_markdown_table(env_info, sections)
+    md_output = format_markdown_table(env_info, test_data)
     print(md_output)
 
 if __name__ == "__main__":
