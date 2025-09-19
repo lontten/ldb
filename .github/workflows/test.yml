@@ -36,7 +36,7 @@ jobs:
           go mod download
 
       - name: Run tests with coverage
-        run: go test -v -coverprofile=coverage.out "./... !./benchmark/... !./example/... "
+        run: go test -v -coverprofile=coverage.out $(go list ./... | grep -vE 'benchmark|example')
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
