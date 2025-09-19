@@ -8,6 +8,18 @@ import (
 )
 
 func BenchmarkInsert_mysql(b *testing.B) {
+	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+	if err != nil {
+		b.Fatalf("初始化清理数据失败: %v", err)
+	}
+
+	b.Cleanup(func() {
+		_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
+		if err != nil {
+			b.Logf("测试后清理数据失败: %v", err)
+		}
+	})
+
 	b.ResetTimer()
 
 	// 执行b.N次（基准测试核心循环）
