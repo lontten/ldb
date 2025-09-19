@@ -72,7 +72,7 @@ jobs:
           go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
           $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
           cat benchmark_summary.txt
-          cat benchmark_summary.txt | python3 ./scripts/benchstat2md_enhanced.py > benchmark_summary.md
+          ./scripts/benchstat2md_enhanced.py benchmark_summary.txt > benchmark_summary.md
           cat benchmark_summary.md
 
       - name: Upload benchmark results
