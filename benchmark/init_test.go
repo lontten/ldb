@@ -20,7 +20,6 @@ func init() {
 	db, err := ldb.Connect(conf, nil)
 	if err != nil {
 		fmt.Println("init db error:", err.Error())
-		panic(err)
 	}
 	DB = db
 }
