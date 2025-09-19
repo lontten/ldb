@@ -1,119 +1,111 @@
 #!/usr/bin/env python3
 """
 将 benchstat 输出转换为格式良好的 Markdown 表格
+支持多指标类型（sec/op, B/op, allocs/op）
 """
 
 import sys
 import re
 
 def parse_benchstat(input_text):
-    """解析 benchstat 输出"""
+    """解析多指标 benchstat 输出"""
+    sections = []
+    current_section = {}
     lines = input_text.strip().split('\n')
 
-    # 检测是否有基准测试数据
-    if not lines or "time/op" not in lines[0]:
-        return None, None, None
+    # 提取环境信息
+    env_info = {}
+    for line in lines[:4]:
+        if ':' in line:
+            key, value = line.split(':', 1)
+            env_info[key.strip()] = value.strip()
 
-    # 提取表头
-    headers = [h.strip() for h in lines[0].split() if h.strip()]
+    # 解析各个指标部分
+    i = 4  # 跳过前4行环境信息
+    while i < len(lines):
+        line = lines[i].strip()
 
-    # 解析数据行
-    data = []
-    current_package = None
+        # 检测新部分的开始
+        if line.startswith('│') and 'benchmark_results.txt' in line:
+            if current_section:  # 保存前一个部分
+                sections.append(current_section)
 
-    for line in lines[1:]:
-        if not line.strip():
+            current_section = {}
+            i += 1
             continue
 
-        # 检测包名行
-        if line.startswith(' ') or line.startswith('\t'):
-            # 这是数据行
-            parts = re.split(r'\s{2,}', line.strip())
-            if len(parts) >= 4:
-                row = {"package": current_package}
-                row["name"] = parts[0]
-                row["time/op"] = parts[1]
-                row["delta"] = parts[2] if len(parts) > 2 else ""
-                row["pval"] = parts[3] if len(parts) > 3 else ""
-                data.append(row)
-        else:
-            # 这是包名行
-            current_package = line.strip()
+        # 解析指标标题行
+        if line.startswith('│') and any(metric in line for metric in ['sec/op', 'B/op', 'allocs/op']):
+            metric_match = re.search(r'│\s+([^│]+)\s+│', line)
+            if metric_match:
+                current_section['metric'] = metric_match.group(1).strip()
+            i += 1
+            continue
 
-    return headers, data, current_package
+        # 解析数据行
+        if line and not line.startswith('│') and not line.startswith('─') and not line.startswith('geomean'):
+            parts = re.split(r'\s{2,}', line)
+            if len(parts) >= 2:
+                if 'data' not in current_section:
+                    current_section['data'] = []
 
-def format_markdown_table(headers, data):
+                test_name = parts[0]
+                value = parts[1] if len(parts) > 1 else ""
+                current_section['data'].append({
+                    'name': test_name,
+                    'value': value
+                })
+
+        i += 1
+
+    if current_section:  # 添加最后一个部分
+        sections.append(current_section)
+
+    return env_info, sections
+
+def format_markdown_table(env_info, sections):
     """生成格式化的 Markdown 表格"""
-    if not headers or not data:
+    if not sections:
         return "没有可用的基准测试数据"
 
-    # 创建表格头
-    md_table = "| 包名 | 测试名称 | 时间/操作 | 变化 | P值 |\n"
-    md_table += "|------|----------|-----------|------|-----|\n"
+    # 创建环境信息表
+    md_output = "# Go 基准测试报告\n\n"
+    md_output += "## 环境信息\n\n"
+    md_output += "| 参数 | 值 |\n"
+    md_output += "|------|----|\n"
+    for key, value in env_info.items():
+        md_output += f"| {key} | {value} |\n"
+    md_output += "\n"
 
-    # 填充数据行
-    for row in data:
-        md_table += f"| {row.get('package', '')} | {row.get('name', '')} | {row.get('time/op', '')} | {row.get('delta', '')} | {row.get('pval', '')} |\n"
+    # 为每个指标部分创建表格
+    for section in sections:
+        metric = section.get('metric', '未知指标')
+        data = section.get('data', [])
 
-    return md_table
+        md_output += f"## {metric}\n\n"
+        md_output += "| 测试名称 | 值 |\n"
+        md_output += "|----------|----|\n"
 
-def format_detailed_report(data):
-    """生成详细报告"""
-    report = "## 基准测试详细分析\n\n"
+        for item in data:
+            md_output += f"| {item['name']} | {item['value']} |\n"
 
-    # 按包分组
-    packages = {}
-    for row in data:
-        pkg = row.get('package', 'unknown')
-        if pkg not in packages:
-            packages[pkg] = []
-        packages[pkg].append(row)
+        md_output += "\n"
 
-    # 为每个包生成分析
-    for pkg, tests in packages.items():
-        report += f"### {pkg}\n\n"
-        report += "| 测试名称 | 时间/操作 | 变化 | 显著性 |\n"
-        report += "|----------|-----------|------|--------|\n"
-
-        for test in tests:
-            # 添加表情符号表示性能变化
-            delta = test.get('delta', '')
-            trend = "➡️"
-            if delta.startswith('-'):
-                trend = "✅"
-            elif delta.startswith('+'):
-                trend = "❌"
-
-            report += f"| {test.get('name', '')} | {test.get('time/op', '')} | {delta} | {trend} |\n"
-
-        report += "\n"
-
-    return report
+    return md_output
 
 def main():
     # 读取标准输入
     input_text = sys.stdin.read()
 
     # 解析 benchstat 输出
-    headers, data, pkg = parse_benchstat(input_text)
+    env_info, sections = parse_benchstat(input_text)
 
-    if not data:
+    if not sections:
         print("未能解析基准测试数据")
         return
 
     # 生成 Markdown 报告
-    md_output = "# Go 基准测试报告\n\n"
-    md_output += "## 测试概览\n\n"
-    md_output += format_markdown_table(headers, data)
-    md_output += "\n"
-    md_output += format_detailed_report(data)
-
-    # 添加总结部分
-    md_output += "## 总结\n\n"
-    md_output += "- ✅ 表示性能提升\n"
-    md_output += "- ❌ 表示性能下降\n"
-    md_output += "- ➡️ 表示无明显变化\n"
-
+    md_output = format_markdown_table(env_info, sections)
     print(md_output)
 
 if __name__ == "__main__":
