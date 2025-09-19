@@ -69,7 +69,11 @@ jobs:
         run: |
           set -e
           go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
-          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
+          $HOME/go/bin/benchstat benchmark_results.txt | awk '
+              BEGIN { print "| 测试名称   | 耗时/op | 内存/op | 分配次数/op |" }
+              NR == 1 { print "|------------|---------|---------|------------|" }
+              NR > 1 { print "| " $1 " | " $2 " | " $3 " | " $4 " |" }
+            ' > benchmark_summary.md
           cat benchmark_summary.txt
 
       - name: Upload benchmark results
