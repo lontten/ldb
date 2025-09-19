@@ -43,8 +43,6 @@ func BenchmarkSelect_ldb(b *testing.B) {
 }
 
 func BenchmarkSelect_gorm(b *testing.B) {
-	ctx := context.Background()
-
 	for i := 0; i < 1000; i++ {
 		u := User{
 			Id:    0,
