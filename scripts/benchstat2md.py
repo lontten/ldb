@@ -4,56 +4,78 @@ import sys
 import re
 
 def main():
+    # 读取输入并过滤空行
     lines = [line.rstrip() for line in sys.stdin if line.strip()]
     if not lines:
         print("无基准测试数据")
         return
 
-    # 提取开头的说明信息（测试时间、环境等）
-    desc_lines = []
-    table_start = 0
+    # 1. 处理系统信息（goos、goarch、pkg、cpu）
+    sys_info = []
+    data_start = 0
     for i, line in enumerate(lines):
-        if re.match(r'^goos:|^goarch:|^pkg:|^cpu:|^\s*benchmark', line):
-            table_start = i
-            break
-        desc_lines.append(line)
-
-    # 输出说明信息
-    if desc_lines:
-        print("\n".join(desc_lines))
-        print()  # 空行分隔
-
-    # 处理表格数据（区分键值对行和指标行）
-    table_lines = lines[table_start:]
-    current_header = None
-
-    for line in table_lines:
-        # 处理键值对行（如goos: linux）
-        if ':' in line:
+        # 匹配系统信息行（如 goos: linux）
+        if re.match(r'^(goos|goarch|pkg|cpu):\s+', line):
             key, value = re.split(r':\s+', line, 1)
+            sys_info.append((key, value))
+        else:
+            data_start = i  # 找到数据开始的位置
+            break
+
+    # 输出系统信息表格
+    if sys_info:
+        print("### 测试环境信息")
+        for key, value in sys_info:
             print(f"| {key}: | {value} |")
             print("| --- | --- |")
-        # 处理指标分组行（如sec/op、B/op）
-        elif re.match(r'^\s*\|?\s*benchmark_results\.txt\s*\|?', line):
-            if 'sec/op' in line:
-                current_header = ['benchmark', 'sec/op', '±', '波动']
-            elif 'B/op' in line:
-                current_header = ['benchmark', 'B/op', '±', '波动']
-            elif 'allocs/op' in line:
-                current_header = ['benchmark', 'allocs/op', '±', '波动']
-            # 输出分组表头
-            if current_header:
-                print()  # 分组间空行
-                print("| " + " | ".join(current_header) + " |")
-                print("| " + " | ".join(["---"] * len(current_header)) + " |")
-        # 处理具体数据行（如Insert-4 357.4µ ± 5%）
-        elif re.match(r'^[A-Za-z0-9-]+\s+', line):
-            parts = re.split(r'\s+', line.strip())
-            # 确保数据字段匹配表头
-            if len(parts) >= 4:
-                print(f"| {parts[0]} | {parts[1]} | {parts[2]} | {parts[3]} |")
-            elif len(parts) == 2:  # 处理geomean行
-                print(f"| {parts[0]} | {parts[1]} | | |")
+        print()  # 空行分隔
+
+    # 2. 处理指标组（sec/op、B/op、allocs/op）
+    # 分组标识和表头映射
+    groups = {
+        'sec/op': '每次操作耗时',
+        'B/op': '每次操作内存分配',
+        'allocs/op': '每次操作内存分配次数'
+    }
+    current_group = None
+    group_data = []
+
+    # 遍历数据行（从系统信息之后开始）
+    for line in lines[data_start:]:
+        # 检测分组标题行（如 "│        sec/op         │"）
+        for marker, title in groups.items():
+            if marker in line:
+                # 如果之前有分组数据，先输出
+                if current_group and group_data:
+                    print_group(current_group, group_data)
+                    group_data = []
+                current_group = title
+                break
+        else:
+            # 非标题行，收集数据（过滤空行和分隔符）
+            if line.strip() and not re.match(r'^\s*│', line):
+                group_data.append(line.strip())
+
+    # 输出最后一个分组
+    if current_group and group_data:
+        print_group(current_group, group_data)
+
+def print_group(title, data_lines):
+    """输出一个指标组的Markdown表格"""
+    print(f"### {title}")
+    # 表头
+    print("| 基准测试 | 数值 | ± | 波动范围 |")
+    print("| -------- | ---- | - | -------- |")
+    # 处理每行数据
+    for line in data_lines:
+        # 用正则分割（支持多空格分隔）
+        parts = re.split(r'\s+', line)
+        if len(parts) == 2:
+            # geomean行（没有±和波动范围）
+            print(f"| {parts[0]} | {parts[1]} | | |")
+        elif len(parts) >= 4:
+            # 普通行（包含±和波动范围）
+            print(f"| {parts[0]} | {parts[1]} | {parts[2]} | {parts[3]} |")
 
 if __name__ == "__main__":
     main()
