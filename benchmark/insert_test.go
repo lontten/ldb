@@ -9,8 +9,9 @@ import (
 func BenchmarkInsert_mysql(b *testing.B) {
 	// 定义测试对象
 	u := User{
-		Id:   0,
-		Name: "tom",
+		Id:    0,
+		Name:  "tom",
+		Email: "xx@xx.com",
 	}
 
 	// 重置计时器（排除初始化时间）
