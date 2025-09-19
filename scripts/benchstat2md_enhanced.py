@@ -43,15 +43,17 @@ def parse_benchstat(input_text):
             i += 1
             continue
 
-        # 解析数据行
+        # 解析数据行 - 使用更精确的解析方法
         if line and not line.startswith('│') and not line.startswith('─') and not line.startswith('geomean'):
-            parts = re.split(r'\s{2,}', line)
-            if len(parts) >= 2:
+            # 使用正则表达式匹配测试名称和值
+            match = re.match(r'([\w_\-]+)\s+([\d\.]+[µnmkK]?i?[B]?\s*[±\s*[\d\.%]+]*)', line)
+            if match:
                 if 'data' not in current_section:
                     current_section['data'] = []
 
-                test_name = parts[0]
-                value = parts[1] if len(parts) > 1 else ""
+                test_name = match.group(1)
+                value = match.group(2).strip()
+
                 current_section['data'].append({
                     'name': test_name,
                     'value': value
