@@ -2,7 +2,7 @@
 """
 将 benchstat 输出转换为格式良好的 Markdown 表格
 支持多指标类型（sec/op, B/op, allocs/op）
-并按测试类型组织数据
+并按操作类型组织数据，比较不同实现
 """
 
 import sys
@@ -64,9 +64,9 @@ def parse_benchstat(input_text):
 
     return env_info, sections
 
-def organize_data_by_test(sections):
-    """按测试类型组织数据"""
-    test_data = {}
+def organize_data_by_operation(sections):
+    """按操作类型组织数据，比较不同实现"""
+    operation_data = {}
 
     for section in sections:
         metric = section.get('metric', '')
@@ -76,22 +76,29 @@ def organize_data_by_test(sections):
             test_name = item['name']
             value = item['value']
 
-            # 提取测试类型（如 Insert、Select）
-            test_type = test_name.split('-')[0]
+            # 提取操作类型和实现（如 Insert_ldb -> Insert, ldb）
+            if '_' in test_name:
+                operation, implementation = test_name.split('_', 1)
+                # 去掉线程数后缀（如 -4）
+                implementation = re.sub(r'-\d+$', '', implementation)
+            else:
+                # 如果没有下划线，使用默认实现名称
+                operation = re.sub(r'-\d+$', '', test_name)
+                implementation = "default"
 
-            if test_type not in test_data:
-                test_data[test_type] = {}
+            if operation not in operation_data:
+                operation_data[operation] = {}
 
-            if test_name not in test_data[test_type]:
-                test_data[test_type][test_name] = {}
+            if implementation not in operation_data[operation]:
+                operation_data[operation][implementation] = {}
 
-            test_data[test_type][test_name][metric] = value
+            operation_data[operation][implementation][metric] = value
 
-    return test_data
+    return operation_data
 
-def format_markdown_table(env_info, test_data):
+def format_markdown_table(env_info, operation_data):
     """生成格式化的 Markdown 表格"""
-    if not test_data:
+    if not operation_data:
         return "没有可用的基准测试数据"
 
     # 创建环境信息表
@@ -103,18 +110,18 @@ def format_markdown_table(env_info, test_data):
         md_output += f"| {key} | {value} |\n"
     md_output += "\n"
 
-    # 为每个测试类型创建表格
-    for test_type, tests in test_data.items():
-        md_output += f"## {test_type}\n\n"
-        md_output += "| 测试名称 | sec/op | B/op | allocs/op |\n"
-        md_output += "|----------|--------|------|-----------|\n"
+    # 为每个操作类型创建表格
+    for operation, implementations in operation_data.items():
+        md_output += f"## {operation}\n\n"
+        md_output += "| 实现 | sec/op | B/op | allocs/op |\n"
+        md_output += "|------|--------|------|-----------|\n"
 
-        for test_name, metrics in tests.items():
+        for impl_name, metrics in implementations.items():
             sec_op = metrics.get('sec/op', 'N/A')
             b_op = metrics.get('B/op', 'N/A')
             allocs_op = metrics.get('allocs/op', 'N/A')
 
-            md_output += f"| {test_name} | {sec_op} | {b_op} | {allocs_op} |\n"
+            md_output += f"| {impl_name} | {sec_op} | {b_op} | {allocs_op} |\n"
 
         md_output += "\n"
 
@@ -131,11 +138,11 @@ def main():
         print("未能解析基准测试数据")
         return
 
-    # 按测试类型组织数据
-    test_data = organize_data_by_test(sections)
+    # 按操作类型组织数据
+    operation_data = organize_data_by_operation(sections)
 
     # 生成 Markdown 报告
-    md_output = format_markdown_table(env_info, test_data)
+    md_output = format_markdown_table(env_info, operation_data)
     print(md_output)
 
 if __name__ == "__main__":
