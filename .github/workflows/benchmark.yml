@@ -72,7 +72,9 @@ jobs:
           # 给转换脚本添加执行权限
           chmod +x ./scripts/benchstat2md.py
           # 转换为 Markdown 并保存
-          $HOME/go/bin/benchstat benchmark_results.txt | ./scripts/benchstat2md.py > benchmark_summary.txt
+          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary1.txt
+          cat benchmark_summary1.txt
+          ./scripts/benchstat2md.py benchmark_summary1.txt > benchmark_summary.txt
           cat benchmark_summary.txt
 
       - name: Upload benchmark results
