@@ -6,7 +6,7 @@
 <!-- BENCHMARK_RESULTS_START -->
 ## 最新基准测试结果
 
-测试时间: 2025-09-19 07:55:47 UTC
+测试时间: 2025-09-19 08:06:03 UTC
 测试环境: Linux (AMD EPYC 7763 64-Core Processor)
 
 > 说明：数值越低性能越好，±表示95%置信区间波动范围
