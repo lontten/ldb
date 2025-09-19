@@ -1,168 +1,124 @@
-# 基准测试工作流配置文件
-# 用于在代码推送或PR时自动运行性能基准测试，并将结果以PR评论或README更新的形式呈现
+  @ -1,45 +1,56 @@
+      name: Benchmark
 
-name: Benchmark  # 工作流名称
 
-# 工作流触发条件
-on:
-  push:  # 当有代码推送到仓库时触发
-  pull_request:  # 当有PR创建或更新时触发
+      on:
+        push:
+        pull_request:
 
-# 以下是备选触发配置（当前注释掉）：仅在main分支有推送/PR，或每周日0点定时触发
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
-#   schedule:
-#     - cron: '0 0 * * 0'
+  #on:
+  #  push:
+  #    branches: [main]
+  #  pull_request:
+  #    branches: [main]
+  #  schedule:
+  #    - cron: '0 0 * * 0'
 
-jobs:
-  benchmark:  # 定义名为benchmark的作业
-    runs-on: ubuntu-latest  # 运行在最新版Ubuntu系统上
-    permissions:
-      contents: write  # 授予写入权限，用于更新README文件
+      jobs:
+        benchmark:
+          runs-on: ubuntu-latest
+          permissions:
+            contents: write  # 授予写入权限以更新README
+          services:
+            postgres:
+              image: postgres:17
+              env:
+                POSTGRES_USER: postgres
+                POSTGRES_PASSWORD: postgres
+                POSTGRES_DB: benchmark_test
+              options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+              ports:
+                - 5432:5432
 
-    # 配置依赖服务：启动PostgreSQL数据库
-    services:
-      postgres:
-        image: postgres:17  # 使用PostgreSQL 17镜像
-        env:  # 数据库环境变量配置
-          POSTGRES_USER: postgres      # 用户名
-          POSTGRES_PASSWORD: postgres  # 密码
-          POSTGRES_DB: benchmark_test  # 数据库名
-        # 健康检查配置：每10秒检查一次，超时5秒，最多重试5次
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        ports:
-          - 5432:5432  # 映射容器5432端口到宿主5432端口
+          steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-    steps:
-      # 步骤1：拉取当前代码库
-      - name: Checkout code
-        uses: actions/checkout@v4  # 使用官方checkout动作，版本v4
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                go-version: '1.24'
 
-      # 步骤2：配置Go环境
-      - name: Set up Go
-        uses: actions/setup-go@v4  # 使用官方Go环境配置动作
-        with:
-          go-version: '1.24'
+            - name: Wait for PostgreSQL
+              run: |
+                for i in {1..10}; do
+                  if pg_isready -h localhost -p 5432 -U postgres; then
+                    echo "PostgreSQL is ready!"
+    @ -51,77 +62,107 @@ jobs:
+        echo "PostgreSQL failed to start"
+        exit 1
 
-      # 步骤3：等待PostgreSQL服务就绪
-      - name: Wait for PostgreSQL
-        run: |
-          # 最多尝试10次，每2秒检查一次数据库是否就绪
-          for i in {1..10}; do
-            if pg_isready -h localhost -p 5432 -U postgres; then
-              echo "PostgreSQL is ready!"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
-          echo "PostgreSQL failed to start"
-          exit 1
+        - name: Install PostgreSQL client
+          run: sudo apt-get install -y postgresql-client
 
-      # 步骤4：安装PostgreSQL客户端（用于执行SQL脚本）
-      - name: Install PostgreSQL client
-        run: sudo apt-get install -y postgresql-client
+        - name: Initialize database
+          env:
+            DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+          run: |
+            psql $DATABASE_URL -f scripts/init_db.sql
 
-      # 步骤5：初始化数据库（执行初始化脚本）
-      - name: Initialize database
-        env:
-          # 数据库连接URL（禁用SSL，适合本地测试）
-          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
-        run: |
-          # 执行scripts目录下的初始化SQL脚本
-          psql $DATABASE_URL -f scripts/init_db.sql
+        - name: Install benchstat
+          run: go install golang.org/x/perf/cmd/benchstat@latest
 
-      # 步骤6：安装benchstat工具（用于格式化基准测试结果）
-      - name: Install benchstat
-        run: go install golang.org/x/perf/cmd/benchstat@latest
+        - name: Run benchmarks
+          env:
+            DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+          run: |
+            set -e
+            go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
+            $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
+            cat benchmark_summary.txt
 
-      # 步骤7：运行基准测试并生成结果文件
-      - name: Run benchmarks
-        env:
-          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
-        run: |
-          set -e  # 遇到错误立即退出
-          # 运行Go基准测试：测试所有包，每个测试运行5秒，重复10次，不运行单元测试
-          go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
-          # 使用benchstat格式化结果，输出到摘要文件
-          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
-          # 打印摘要结果到日志
-          cat benchmark_summary.txt
+        - name: Upload benchmark results
+          uses: actions/upload-artifact@v4
+          with:
+            name: benchmark-results
+            path: |
+              benchmark_results.txt
+              benchmark_summary.txt
+            retention-days: 3
 
-      # 步骤8：上传基准测试结果作为工作流产物
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v4  # 使用官方上传产物动作
-        with:
-          name: benchmark-results  # 产物名称
-          path: |  # 要上传的文件
-            benchmark_results.txt
-            benchmark_summary.txt
-          retention-days: 3  # 产物保留3天
+        - name: Comment on PR with benchmark results
+          if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+          uses: actions/github-script@v6
+          with:
+            script: |
+              const fs = require('fs');
+              try {
+                const summary = fs.readFileSync('benchmark_summary.txt', 'utf8');
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## Benchmark 结果\n\n\`\`\`\n${summary}\n\`\`\``
+                });
+              } catch (error) {
+                console.error('Failed to read benchmark summary:', error);
+              }
 
-      # 步骤9：在PR中评论基准测试结果（仅对本仓库PR生效）
-      - name: Comment on PR with benchmark results
-        # 条件：仅在PR事件且PR源仓库为本仓库时执行
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v6  # 使用GitHub脚本动作
-        with:
-          script: |
-            const fs = require('fs');
-            try {
-              // 读取格式化后的结果
-              const summary = fs.readFileSync('benchmark_summary.txt', 'utf8');
-              // 构建评论内容（添加说明文字）
-              const commentBody = `## 基准测试性能对比\n
-      > 以下是最新测试结果（单位：秒/操作、字节/操作、分配次数/操作）
-      > 数值越低越好，±表示波动范围
+        # 新增：更新README中的基准测试结果
+        - name: Update README with benchmark results
+          if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
+          run: |
+            # 准备结果内容
+            echo "## 最新基准测试结果" > benchmark_section.md
+            echo "" >> benchmark_section.md
+            echo "测试时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> benchmark_section.md
+            echo "" >> benchmark_section.md
+            echo "\`\`\`" >> benchmark_section.md
+            cat benchmark_summary.txt >> benchmark_section.md
+            echo "\`\`\`" >> benchmark_section.md
+            
+            # 使用sed命令替换README中的标记部分
+            sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/,/<!-- BENCHMARK_RESULTS_END -->/{//!d;}' README.md
+            sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/r benchmark_section.md' README.md
 
-      \`\`\`
-      ${summary}
-      \`\`\``;
-      // 调用GitHub API创建PR评论
-      github.rest.issues.createComment({
-      issue_number: context.issue.number,
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      body: commentBody
-    });
-    } catch (error) {
-      console.error('Failed to read benchmark summary:', error);
-    }
-
-      # 步骤10：更新README中的基准测试结果（仅在推送到go-test分支时执行）
-      - name: Update README with benchmark results
-        if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
-        run: |
-          # 生成基准测试结果段落（包含时间、环境说明）
-          echo "## 最新基准测试结果" > benchmark_section.md
-          echo "" >> benchmark_section.md
-          echo "测试时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> benchmark_section.md
-          echo "测试环境: Linux (AMD EPYC 7763 64-Core Processor)" >> benchmark_section.md
-          echo "" >> benchmark_section.md
-          echo "> 说明：数值越低性能越好，±表示95%置信区间波动范围" >> benchmark_section.md
-          echo "" >> benchmark_section.md
-          echo "\`\`\`" >> benchmark_section.md
-          cat benchmark_summary.txt >> benchmark_section.md
-          echo "\`\`\`" >> benchmark_section.md
-          
-          # 替换README中标记间的内容（保留标记本身）
-          # 1. 删除BENCHMARK_RESULTS_START和END之间的内容
-          sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/{n; :a; /<!-- BENCHMARK_RESULTS_END -->/!{d; ba};}' README.md
-          # 2. 在BENCHMARK_RESULTS_START后插入新内容
-          sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/r benchmark_section.md' README.md
-
-      # 步骤11：提交并推送更新后的README（仅在推送到go-test分支时执行）
-      - name: Commit and push README update
-        if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
-        run: |
-          # 配置Git用户信息
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          # 添加并提交README更新（无变化则不提交）
-          git add README.md
-          git commit -m "Update benchmark results in README" || echo "No changes to commit"
-          # 推送到go-test分支
-          git push origin go-test
+        # 新增：提交更新后的README
+        - name: Commit and push README update
+          if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
+          run: |
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'actions@github.com'
+            git add README.md
+            git commit -m "Update benchmark results in README" || echo "No changes to commit"
+            git push origin go-test
