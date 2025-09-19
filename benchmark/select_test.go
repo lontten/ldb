@@ -32,7 +32,7 @@ func BenchmarkSelect(b *testing.B) {
 
 	// 执行b.N次（基准测试核心循环）
 	for i := 0; i < b.N; i++ {
-		list, err := ldb.List[User](DB, ldb.W(), ldb.E().ShowSql())
+		list, err := ldb.List[User](DB, ldb.W().Eq("1", 1), ldb.E().ShowSql())
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
