@@ -82,22 +82,35 @@ jobs:
           retention-days: 3
 
       - name: Comment on PR with benchmark results
+        # 条件：仅在PR事件且PR源仓库为本仓库时执行
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v6
+        uses: actions/github-script@v6  # 使用GitHub脚本动作
         with:
           script: |
             const fs = require('fs');
             try {
+              // 读取格式化后的结果
               const summary = fs.readFileSync('benchmark_summary.txt', 'utf8');
-              github.rest.issues.createComment({
+              // 构建评论内容（添加说明文字）
+              const commentBody = `## 基准测试性能对比\n
+                > 以下是最新测试结果（单位：秒/操作、字节/操作、分配次数/操作）
+                > 数值越低越好，±表示波动范围
+                    
+                \`\`\`
+                ${summary}
+                \`\`\``;
+                // 调用GitHub API创建PR评论
+                github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## Benchmark 结果\n\n\`\`\`\n${summary}\n\`\`\``
-              });
+                body: commentBody
+            });
             } catch (error) {
               console.error('Failed to read benchmark summary:', error);
             }
+
+      # 步骤10：更新README中的基准测试结果（仅在推送到go-test分支时执行）
 
       # 新增：更新README中的基准测试结果
       - name: Update README with benchmark results
