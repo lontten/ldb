@@ -103,25 +103,33 @@ jobs:
       - name: Update README with benchmark results
         if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
         run: |
-          # 准备结果内容
+          # 生成基准测试结果段落（包含时间、环境说明）
           echo "## 最新基准测试结果" > benchmark_section.md
           echo "" >> benchmark_section.md
           echo "测试时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> benchmark_section.md
+          echo "测试环境: Linux (AMD EPYC 7763 64-Core Processor)" >> benchmark_section.md
+          echo "" >> benchmark_section.md
+          echo "> 说明：数值越低性能越好，±表示95%置信区间波动范围" >> benchmark_section.md
           echo "" >> benchmark_section.md
           echo "\`\`\`" >> benchmark_section.md
           cat benchmark_summary.txt >> benchmark_section.md
           echo "\`\`\`" >> benchmark_section.md
           
-          # 使用sed命令替换README中的标记部分
-          sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/,/<!-- BENCHMARK_RESULTS_END -->/{//!d;}' README.md
+          # 替换README中标记间的内容（保留标记本身）
+          # 1. 删除BENCHMARK_RESULTS_START和END之间的内容
+          sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/{n; :a; /<!-- BENCHMARK_RESULTS_END -->/!{d; ba};}' README.md
+          # 2. 在BENCHMARK_RESULTS_START后插入新内容
           sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/r benchmark_section.md' README.md
-
-      # 新增：提交更新后的README
+          
+          # 步骤11：提交并推送更新后的README（仅在推送到go-test分支时执行）
       - name: Commit and push README update
         if: github.event_name == 'push' && github.ref == 'refs/heads/go-test'
         run: |
+          # 配置Git用户信息
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
+          # 添加并提交README更新（无变化则不提交）
           git add README.md
           git commit -m "Update benchmark results in README" || echo "No changes to commit"
+          # 推送到go-test分支
           git push origin go-test
