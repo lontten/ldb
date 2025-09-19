@@ -1,10 +1,12 @@
 package benchmark
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/lontten/ldb/v2"
+	"gorm.io/gorm"
 )
 
 func BenchmarkInsert_ldb(b *testing.B) {
@@ -39,6 +41,7 @@ func BenchmarkInsert_ldb(b *testing.B) {
 }
 
 func BenchmarkInsert_gorm(b *testing.B) {
+	ctx := context.Background()
 	_, err := ldb.Exec(DB, "DELETE FROM users WHERE 1=1")
 	if err != nil {
 		b.Fatalf("初始化清理数据失败: %v", err)
@@ -60,8 +63,7 @@ func BenchmarkInsert_gorm(b *testing.B) {
 			Name:  "tom",
 			Email: fmt.Sprintf("xx%d@xx.com", i),
 		}
-
-		_, err := ldb.Insert(DB, u)
+		err := gorm.G[User](GDB).Create(ctx, &u)
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}

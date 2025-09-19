@@ -1,10 +1,12 @@
 package benchmark
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/lontten/ldb/v2"
+	"gorm.io/gorm"
 )
 
 func BenchmarkSelect_ldb(b *testing.B) {
@@ -41,6 +43,8 @@ func BenchmarkSelect_ldb(b *testing.B) {
 }
 
 func BenchmarkSelect_gorm(b *testing.B) {
+	ctx := context.Background()
+
 	for i := 0; i < 100; i++ {
 		u := User{
 			Id:    0,
@@ -65,7 +69,7 @@ func BenchmarkSelect_gorm(b *testing.B) {
 
 	// 执行b.N次（基准测试核心循环）
 	for i := 0; i < b.N; i++ {
-		_, err := ldb.List[User](DB, ldb.W().Eq("1", 1))
+		_, err := gorm.G[User](GDB).Where("id = ?", 1).First(ctx)
 		if err != nil {
 			b.Errorf("insert failed: %v", err)
 		}
