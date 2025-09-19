@@ -131,9 +131,8 @@ jobs:
           echo "" >> benchmark_section.md
           cat benchmark_summary.txt >> benchmark_section.md
           
-          # 替换README中标记间的内容（保留标记本身）
-          # 1. 删除BENCHMARK_RESULTS_START和END之间的内容
-          sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/{n; :a; /<!-- BENCHMARK_RESULTS_END -->/!{d; ba};}' README.md
+          # 1. 删除BENCHMARK_RESULTS_START和END之间的内容（保留标记）
+          sed -i '/<!-- BENCHMARK_RESULTS_START -->/,/<!-- BENCHMARK_RESULTS_END -->/{//!d}' README.md
           # 2. 在BENCHMARK_RESULTS_START后插入新内容
           sed -i -e '/<!-- BENCHMARK_RESULTS_START -->/r benchmark_section.md' README.md
 
