@@ -40,7 +40,7 @@ func BenchmarkUpdate_ldb(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		_, err := ldb.Update[User](DB, upm, ldb.W().Eq("id", i))
+		_, err := ldb.Update(DB, upm, ldb.W().Eq("id", i))
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
