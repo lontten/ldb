@@ -69,7 +69,7 @@ jobs:
         run: |
           set -e
           chmod +x ./scripts/benchstat2md_enhanced.py
-          go test -bench=. -benchmem -benchtime=5s -count=10 -run=^$ ./... 2>&1 | tee benchmark_results.txt
+          go test -bench=. -benchmem -benchtime=5s -count=6 -run=^$ ./... 2>&1 | tee benchmark_results.txt
           $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
           cat benchmark_summary.txt
           cat benchmark_summary.txt | ./scripts/benchstat2md_enhanced.py  > benchmark_summary.md

@@ -35,7 +35,7 @@ func BenchmarkInsert_ldb(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		u.Id = 0
-		_, err := ldb.Insert(DB, &u)
+		_, err := ldb.Insert(DB, &u, ldb.E().ShowSql())
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
