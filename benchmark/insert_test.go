@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupTest(b *testing.B) {
+func setupTest_BenchmarkInsert(b *testing.B) {
 	var cleanDataSql = "TRUNCATE TABLE users"
 	_, err := ldb.Exec(DB, cleanDataSql)
 	if err != nil {
@@ -23,7 +23,7 @@ func setupTest(b *testing.B) {
 	})
 }
 func BenchmarkInsert_ldb(b *testing.B) {
-	setupTest(b)
+	setupTest_BenchmarkInsert(b)
 
 	u := User{
 		Id:    0,
@@ -44,7 +44,7 @@ func BenchmarkInsert_ldb(b *testing.B) {
 }
 
 func BenchmarkInsert_gorm(b *testing.B) {
-	setupTest(b)
+	setupTest_BenchmarkInsert(b)
 
 	u := User{
 		Id:    0,
@@ -66,7 +66,7 @@ func BenchmarkInsert_gorm(b *testing.B) {
 
 func BenchmarkInsert_gormT(b *testing.B) {
 	ctx := context.Background()
-	setupTest(b)
+	setupTest_BenchmarkInsert(b)
 
 	u := User{
 		Id:    0,

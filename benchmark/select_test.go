@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func BenchmarkSelect_setupTest(b *testing.B) {
+func setupTest_BenchmarkSelect(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		u := User{
 			Id:    0,
@@ -31,7 +31,7 @@ func BenchmarkSelect_setupTest(b *testing.B) {
 
 }
 func BenchmarkSelect_ldb(b *testing.B) {
-	BenchmarkSelect_setupTest(b)
+	setupTest_BenchmarkSelect(b)
 
 	b.ResetTimer()
 
@@ -46,7 +46,7 @@ func BenchmarkSelect_ldb(b *testing.B) {
 }
 
 func BenchmarkSelect_gorm(b *testing.B) {
-	BenchmarkSelect_setupTest(b)
+	setupTest_BenchmarkSelect(b)
 
 	var users []User
 
@@ -63,7 +63,7 @@ func BenchmarkSelect_gorm(b *testing.B) {
 
 func BenchmarkSelect_gormT(b *testing.B) {
 	ctx := context.Background()
-	BenchmarkSelect_setupTest(b)
+	setupTest_BenchmarkSelect(b)
 
 	b.ResetTimer()
 

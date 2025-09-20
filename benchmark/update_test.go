@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func BenchmarkUpdate_setupTest(b *testing.B) {
+func setupTest_BenchmarkUpdate(b *testing.B) {
 	for i := 0; i < 10000; i++ {
 		u := User{
 			Id:    int64(i),
@@ -31,7 +31,7 @@ func BenchmarkUpdate_setupTest(b *testing.B) {
 
 }
 func BenchmarkUpdate_ldb(b *testing.B) {
-	BenchmarkUpdate_setupTest(b)
+	setupTest_BenchmarkUpdate(b)
 
 	b.ResetTimer()
 
@@ -49,7 +49,7 @@ func BenchmarkUpdate_ldb(b *testing.B) {
 }
 
 func BenchmarkUpdate_gorm(b *testing.B) {
-	BenchmarkUpdate_setupTest(b)
+	setupTest_BenchmarkUpdate(b)
 
 	b.ResetTimer()
 
@@ -64,7 +64,7 @@ func BenchmarkUpdate_gorm(b *testing.B) {
 
 func BenchmarkUpdate_gormT(b *testing.B) {
 	ctx := context.Background()
-	BenchmarkUpdate_setupTest(b)
+	setupTest_BenchmarkUpdate(b)
 
 	b.ResetTimer()
 
