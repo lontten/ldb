@@ -34,7 +34,8 @@ func BenchmarkInsert_ldb(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := ldb.Insert(DB, u)
+		u.Id = 0
+		_, err := ldb.Insert(DB, &u)
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
@@ -54,6 +55,7 @@ func BenchmarkInsert_gorm(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		u.Id = 0
 		err := GDB.Create(&u).Error
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
@@ -75,6 +77,7 @@ func BenchmarkInsert_gormT(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		u.Id = 0
 		err := gorm.G[User](GDB).Create(ctx, &u)
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)

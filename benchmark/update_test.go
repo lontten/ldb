@@ -8,10 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func BenchmarkSelect_setupTest(b *testing.B) {
-	for i := 0; i < 100; i++ {
+func BenchmarkUpdate_setupTest(b *testing.B) {
+	for i := 0; i < 10000; i++ {
 		u := User{
-			Id:    0,
+			Id:    int64(i),
 			Name:  "tom",
 			Email: "xx@xx.com",
 		}
@@ -30,14 +30,17 @@ func BenchmarkSelect_setupTest(b *testing.B) {
 	})
 
 }
-func BenchmarkSelect_ldb(b *testing.B) {
-	BenchmarkSelect_setupTest(b)
+func BenchmarkUpdate_ldb(b *testing.B) {
+	BenchmarkUpdate_setupTest(b)
 
 	b.ResetTimer()
 
-	// 执行b.N次（基准测试核心循环）
+	upm := User{
+		Email: "aa@aa.com",
+	}
+
 	for i := 0; i < b.N; i++ {
-		_, err := ldb.List[User](DB, ldb.W().Eq("1", 1))
+		_, err := ldb.Update[User](DB, upm, ldb.W().Eq("id", i))
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
@@ -45,15 +48,13 @@ func BenchmarkSelect_ldb(b *testing.B) {
 
 }
 
-func BenchmarkSelect_gorm(b *testing.B) {
-	BenchmarkSelect_setupTest(b)
-
-	var users []User
+func BenchmarkUpdate_gorm(b *testing.B) {
+	BenchmarkUpdate_setupTest(b)
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		err := GDB.Find(&users).Error
+		err := GDB.Model(&User{}).Where("id = ?", i).Update("email", "aa@aa.com").Error
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
@@ -61,14 +62,14 @@ func BenchmarkSelect_gorm(b *testing.B) {
 
 }
 
-func BenchmarkSelect_gormT(b *testing.B) {
+func BenchmarkUpdate_gormT(b *testing.B) {
 	ctx := context.Background()
-	BenchmarkSelect_setupTest(b)
+	BenchmarkUpdate_setupTest(b)
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := gorm.G[User](GDB).Find(ctx)
+		_, err := gorm.G[User](GDB).Where("id = ?", i).Update(ctx, "email", "aa@aa.com")
 		if err != nil {
 			b.Fatalf("insert failed: %v", err)
 		}
