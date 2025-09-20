@@ -11,7 +11,6 @@ import re
 def parse_benchstat(input_text):
     """解析多指标 benchstat 输出"""
     sections = []
-    current_section = {}
     lines = input_text.strip().split('\n')
 
     # 提取环境信息
@@ -21,38 +20,35 @@ def parse_benchstat(input_text):
             key, value = line.split(':', 1)
             env_info[key.strip()] = value.strip()
 
-    # 解析各个指标部分
+    # 解析基准测试数据部分
+    current_section = {}
     i = 4  # 跳过前4行环境信息
+
     while i < len(lines):
         line = lines[i].strip()
 
-        # 检测新部分的开始
-        if line.startswith('│') and 'benchmark_results.txt' in line:
+        # 检测新部分的开始（指标标题行）
+        if line.startswith('name') and any(metric in line for metric in ['sec/op', 'B/op', 'allocs/op']):
             if current_section:  # 保存前一个部分
                 sections.append(current_section)
 
-            current_section = {}
-            i += 1
+            # 提取指标类型
+            metric_match = re.search(r'(\S+/op)', line)
+            current_section = {
+                'metric': metric_match.group(1) if metric_match else 'unknown',
+                'data': []
+            }
+            i += 2  # 跳过标题行和分隔行
             continue
 
-        # 解析指标标题行
-        if line.startswith('│') and any(metric in line for metric in ['sec/op', 'B/op', 'allocs/op']):
-            metric_match = re.search(r'│\s+([^│]+)\s+│', line)
-            if metric_match:
-                current_section['metric'] = metric_match.group(1).strip()
-            i += 1
-            continue
-
-        # 解析数据行 - 使用更精确的解析方法
-        if line and not line.startswith('│') and not line.startswith('─') and not line.startswith('geomean'):
+        # 解析数据行
+        if line and not line.startswith('goos:') and not line.startswith('goarch:'):
             # 使用正则表达式匹配测试名称和值
-            match = re.match(r'([\w_\-]+)\s+([\d\.]+[µnmkK]?i?[B]?\s*[±\s*[\d\.%]+]*)', line)
-            if match:
-                if 'data' not in current_section:
-                    current_section['data'] = []
-
-                test_name = match.group(1)
-                value = match.group(2).strip()
+            parts = re.split(r'\s+', line)
+            if len(parts) >= 2:
+                test_name = parts[0]
+                # 合并剩余部分作为值（可能包含空格，如 "10.5 ± 2%"）
+                value = ' '.join(parts[1:])
 
                 current_section['data'].append({
                     'name': test_name,
@@ -78,7 +74,7 @@ def organize_data_by_operation(sections):
             test_name = item['name']
             value = item['value']
 
-            # 提取操作类型和实现（如 Insert_ldb -> Insert, ldb）
+            # 提取操作类型和实现
             if '_' in test_name:
                 operation, implementation = test_name.split('_', 1)
                 # 去掉线程数后缀（如 -4）
@@ -114,7 +110,7 @@ def format_markdown_table(env_info, operation_data):
 
     # 为每个操作类型创建表格
     for operation, implementations in operation_data.items():
-        md_output += f"## {operation}\n\n"
+        md_output += f"## {operation} 操作性能比较\n\n"
         md_output += "| 实现 | sec/op | B/op | allocs/op |\n"
         md_output += "|------|--------|------|-----------|\n"
 
