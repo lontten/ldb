@@ -1,0 +1,138 @@
+name: Benchmark
+
+#on:
+#  workflow_dispatch: # 启用手动触发
+
+on:
+  push:
+  pull_request:
+
+#on:
+#  push:
+#    branches: [main]
+#  pull_request:
+#    branches: [main]
+#  schedule:
+#    - cron: '0 0 * * 0'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 授予写入权限以更新README
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: benchmark_test
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready!"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL failed to start"
+          exit 1
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Initialize database
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          psql $DATABASE_URL -f scripts/init_db.sql
+
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+
+      - name: Run benchmarks
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          set -e
+          chmod +x ./scripts/benchstat2md_enhanced.py
+          go test -bench=. -benchmem -benchtime=5s -count=6 -timeout 30m -run=^$ ./... 2>&1 | tee benchmark_results.txt
+          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
+          cat benchmark_summary.txt
+          cat benchmark_summary.txt | ./scripts/benchstat2md_enhanced.py  > benchmark_summary.md
+          cat benchmark_summary.md
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            benchmark_results.txt
+            benchmark_summary.md
+          retention-days: 3
+
+      - name: Comment on PR with benchmark results
+        # 条件：仅在PR事件且PR源仓库为本仓库时执行
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v6  # 使用GitHub脚本动作
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              // 读取格式化后的结果
+              const summary = fs.readFileSync('benchmark_summary.md', 'utf8');
+              // 构建评论内容（添加说明文字）
+              const commentBody = `## 基准测试性能对比
+            
+                > 以下是最新测试结果（单位：秒/操作、字节/操作、分配次数/操作）
+                > 数值越低越好，±表示波动范围
+            
+                ${summary}
+              `;
+              // 调用GitHub API创建PR评论
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+            } catch (error) {
+              console.error('Failed to read benchmark summary:', error);
+              // 主动抛出错误，让Action步骤标记为失败
+              throw new Error('无法读取基准测试结果文件，评论失败');
+            }
+
+      # 更新README中的基准测试结果
+      - name: Update README with benchmark results
+        if: github.event_name == 'push' && github.ref == 'refs/heads/ctt'
+        run: |
+          chmod +x ./scripts/update_benchmark.py
+          ./scripts/update_benchmark.py
+
+      # 提交并推送更新后的README
+      - name: Commit and push README update
+        if: github.event_name == 'push' && github.ref == 'refs/heads/ctt'
+        run: |
+          # 配置Git用户信息
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          # 添加并提交README更新（无变化则不提交）
+          git add README.md
+          git commit -m "Update benchmark results in README" || echo "No changes to commit"
+          # 推送到ctt分支
+          git push origin ctt
