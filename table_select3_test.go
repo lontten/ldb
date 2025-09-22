@@ -85,18 +85,20 @@ func TestHasOrInsert2_pg(t *testing.T) {
 		"SELECT 1 FROM t_user WHERE id = $1 ORDER BY name ASC;")).
 		WithArgs(1).
 		WillReturnError(nil).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name"}))
+		WillReturnRows(sqlmock.NewRows([]string{"?column?"}))
 
-	mock.ExpectExec(regexp.QuoteMeta(
+	mock.ExpectQuery(regexp.QuoteMeta(
 		"INSERT INTO t_user (name) VALUES ($1) RETURNING id;")).
 		WithArgs("tom").
 		WillReturnError(nil).
-		WillReturnResult(sqlmock.NewResult(2, 1))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(10),
+		)
 
 	user := User{Name: "tom"}
 	ok, err := HasOrInsert(engine, W().Eq("id", 1), &user,
 		E().ShowSql().OrderBy("name"))
 	as.Nil(err)
 	as.Equal(false, ok, "ok error")
-	as.Equal(int64(2), user.Id, "id error")
+	as.Equal(int64(10), user.Id, "id error")
 }

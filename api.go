@@ -119,7 +119,7 @@ PgDialect
 type Dialecter interface {
 	// 获取coreDb,coreTx 里面的 ctx
 	getCtx() *ormContext
-	initContext() Dialecter
+	copyContext() Dialecter
 	hasErr() bool
 	getErr() error
 

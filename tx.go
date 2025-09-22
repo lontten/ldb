@@ -14,7 +14,7 @@ type coreTX struct {
 func (db *coreTX) init() Engine {
 	return &coreTX{
 		tx:      db.tx,
-		dialect: db.dialect.initContext(),
+		dialect: db.dialect.copyContext(),
 	}
 }
 func (db *coreTX) ping() error {

@@ -15,7 +15,7 @@ type coreDB struct {
 func (db *coreDB) init() Engine {
 	return &coreDB{
 		db:      db.db,
-		dialect: db.dialect.initContext(),
+		dialect: db.dialect.copyContext(),
 	}
 }
 

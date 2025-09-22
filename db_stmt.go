@@ -12,7 +12,7 @@ type coreDBStmt struct {
 func (db *coreDBStmt) init() Stmter {
 	return &coreDBStmt{
 		db:      db.db,
-		dialect: db.dialect.initContext(),
+		dialect: db.dialect.copyContext(),
 	}
 }
 func (db *coreDBStmt) getCtx() *ormContext {

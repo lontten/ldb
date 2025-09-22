@@ -66,7 +66,6 @@ type ormContext struct {
 	// ------------------主键----------------------
 	indexs []Index // 索引列表
 
-	insertCanReturn      bool                     // 数据库是否支持 insert时直接返回字段
 	returnAutoPrimaryKey returnAutoPrimaryKeyType // 自增主键返回类型
 
 	// 在不支持 insertCanReturn 的数据库中，使用 LastInsertId 返回 自增主键
@@ -256,7 +255,7 @@ func (ctx *ormContext) initColumnsValue() {
 	ctx.modelAllColumnNames = cv.modelAllColumnNames
 
 	if ctx.scanIsPtr && ctx.returnType != return_type.None {
-		if ctx.insertCanReturn {
+		if ctx.ormConf.insertCanReturn {
 			ctx.returnAutoPrimaryKey = pkQueryReturn
 		} else if ctx.autoPrimaryKeyColumnName != nil {
 			ctx.returnAutoPrimaryKey = pkFetchReturn

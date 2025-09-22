@@ -330,6 +330,10 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		if err != nil {
 			return nil, err
 		}
+		if num == 0 {
+			return nil, errors.New("insert affected 0")
+		}
+		return d, nil
 	}
 
 	exec, err := db.exec(dialectSql, ctx.args...)
@@ -435,6 +439,7 @@ func HasOrInsert(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		if err != nil {
 			return false, err
 		}
+		return false, nil
 	}
 
 	exec, err := db.exec(dialectSql, ctx.args...)

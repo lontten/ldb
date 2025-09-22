@@ -21,7 +21,7 @@ type PgDialect struct {
 func (d *PgDialect) getCtx() *ormContext {
 	return d.ctx
 }
-func (d *PgDialect) initContext() Dialecter {
+func (d *PgDialect) copyContext() Dialecter {
 	return &PgDialect{
 		ctx: &ormContext{
 			ormConf:      d.ctx.ormConf,

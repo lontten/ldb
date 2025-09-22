@@ -29,6 +29,8 @@ type OrmConf struct {
 	PrimaryKeyNames   []string
 	PrimaryKeyNameFun func(v reflect.Value, dest any) []string
 
+	insertCanReturn bool // 数据库是否支持 insert时直接返回字段
+
 	//多租户
 	TenantIdFieldName    string                      //多租户的  租户字段名 空字符串极为不启用多租户
 	TenantIdValueFun     func() any                  //租户的id值，获取函数

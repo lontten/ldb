@@ -14,7 +14,7 @@ type PgConf struct {
 }
 
 func (c PgConf) dialect(ctx *ormContext) Dialecter {
-	ctx.insertCanReturn = true
+	ctx.ormConf.insertCanReturn = true
 	return &PgDialect{ctx: ctx}
 }
 

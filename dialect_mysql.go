@@ -22,7 +22,7 @@ type MysqlDialect struct {
 func (d *MysqlDialect) getCtx() *ormContext {
 	return d.ctx
 }
-func (d *MysqlDialect) initContext() Dialecter {
+func (d *MysqlDialect) copyContext() Dialecter {
 	return &MysqlDialect{
 		ctx: &ormContext{
 			ormConf:      d.ctx.ormConf,
