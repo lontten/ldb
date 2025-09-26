@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 import datetime
 import os
+import sys
+
+def get_script_directory():
+    """获取脚本所在目录的绝对路径"""
+    return os.path.dirname(os.path.abspath(__file__))
 
 def generate_benchmark_section():
     """生成基准测试结果段落并保存到文件"""
+    script_dir = get_script_directory()
+
     # 获取当前UTC时间
     current_utc_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
@@ -18,64 +25,115 @@ def generate_benchmark_section():
     ]
 
     # 读取benchmark_summary.md内容
-    if os.path.exists("benchmark_summary.md"):
-        with open("benchmark_summary.md", "r", encoding="utf-8") as f:
-            section_lines.extend(f.readlines())
-    else:
-        section_lines.append("警告：未找到benchmark_summary.md文件")
+    benchmark_summary_path = os.path.join(script_dir, "benchmark_summary.md")
+    try:
+        if os.path.exists(benchmark_summary_path):
+            with open(benchmark_summary_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    section_lines.append(content)
+                else:
+                    section_lines.append("基准测试数据为空")
+        else:
+            section_lines.append("警告：未找到 benchmark_summary.md 文件")
+            print(f"警告：文件 {benchmark_summary_path} 不存在")
+    except Exception as e:
+        error_msg = f"读取基准测试摘要文件时出错: {str(e)}"
+        section_lines.append(error_msg)
+        print(error_msg)
 
     # 写入到benchmark_section.md
-    with open("benchmark_section.md", "w", encoding="utf-8") as f:
-        f.write("\n".join(section_lines))
+    benchmark_section_path = os.path.join(script_dir, "benchmark_section.md")
+    try:
+        with open(benchmark_section_path, "w", encoding="utf-8") as f:
+            # 使用统一的换行符
+            f.write("\n".join(section_lines))
+        print(f"基准测试部分已生成: {benchmark_section_path}")
+    except Exception as e:
+        print(f"错误：写入 benchmark_section.md 失败: {str(e)}")
+        sys.exit(1)
 
 def update_readme():
     """更新README.md中的基准测试结果部分"""
-    if not os.path.exists("README.md"):
-        print("错误：未找到README.md文件")
-        return
+    script_dir = get_script_directory()
+    readme_path = os.path.join(script_dir, "README.md")
+
+    if not os.path.exists(readme_path):
+        print(f"错误：未找到 README.md 文件 ({readme_path})")
+        return False
 
     # 读取README.md内容
-    with open("README.md", "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    try:
+        with open(readme_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        print(f"错误：读取 README.md 失败: {str(e)}")
+        return False
 
-    # 查找标记位置
-    start_idx = None
-    end_idx = None
-    for i, line in enumerate(lines):
-        if "<!-- BENCHMARK_RESULTS_START -->" in line:
-            start_idx = i
-        if "<!-- BENCHMARK_RESULTS_END -->" in line:
-            end_idx = i
-
-    if start_idx is None or end_idx is None:
-        print("错误：在README.md中未找到完整的标记")
-        return
+    # 检查标记是否存在
+    if "<!-- BENCHMARK_RESULTS_START -->" not in content:
+        print("错误：在 README.md 中未找到 <!-- BENCHMARK_RESULTS_START --> 标记")
+        return False
+    if "<!-- BENCHMARK_RESULTS_END -->" not in content:
+        print("错误：在 README.md 中未找到 <!-- BENCHMARK_RESULTS_END --> 标记")
+        return False
 
     # 读取要插入的内容
-    if not os.path.exists("benchmark_section.md"):
-        print("错误：未找到benchmark_section.md文件")
-        return
+    benchmark_section_path = os.path.join(script_dir, "benchmark_section.md")
+    if not os.path.exists(benchmark_section_path):
+        print(f"错误：未找到 benchmark_section.md 文件 ({benchmark_section_path})")
+        return False
 
-    with open("benchmark_section.md", "r", encoding="utf-8") as f:
-        new_content = f.readlines()
+    try:
+        with open(benchmark_section_path, "r", encoding="utf-8") as f:
+            new_content = f.read().strip()
+    except Exception as e:
+        print(f"错误：读取 benchmark_section.md 失败: {str(e)}")
+        return False
 
-    # 构建新的内容列表
-    new_lines = []
-    # 添加开始标记前的内容
-    new_lines.extend(lines[:start_idx + 1])
-    # 添加新的基准测试内容
-    new_lines.extend(new_content)
-    # 添加结束标记及之后的内容
-    new_lines.extend(lines[end_idx:])
+    # 构建新的内容
+    start_marker = "<!-- BENCHMARK_RESULTS_START -->"
+    end_marker = "<!-- BENCHMARK_RESULTS_END -->"
+
+    start_index = content.find(start_marker)
+    end_index = content.find(end_marker)
+
+    if start_index == -1 or end_index == -1 or end_index <= start_index:
+        print("错误：标记位置无效")
+        return False
+
+    # 包含标记本身
+    new_content_full = f"{start_marker}\n{new_content}\n{end_marker}"
+    before_content = content[:start_index]
+    after_content = content[end_index + len(end_marker):]
+
+    final_content = before_content + new_content_full + after_content
 
     # 写回README.md
-    with open("README.md", "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+    try:
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.write(final_content)
+        print(f"README.md 已成功更新: {readme_path}")
+        return True
+    except Exception as e:
+        print(f"错误：写入 README.md 失败: {str(e)}")
+        return False
 
 def main():
+    """主函数"""
+    print("开始更新基准测试结果...")
+
+    # 生成基准测试部分
     generate_benchmark_section()
-    update_readme()
-    print("基准测试结果已成功更新到README.md")
+
+    # 更新README
+    success = update_readme()
+
+    if success:
+        print("基准测试结果已成功更新到 README.md")
+    else:
+        print("更新 README.md 失败")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
