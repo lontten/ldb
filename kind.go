@@ -62,11 +62,21 @@ func baseMapType(t reflect.Type) (is, has bool) {
 	return true, true
 }
 
+func _isScannerType(t reflect.Type) bool {
+	if t.Implements(ImpScanner) {
+		return true
+	}
+	if reflect.PointerTo(t).Implements(ImpScanner) {
+		return true
+	}
+	return false
+}
+
 func isScannerType(t reflect.Type) bool {
 	if _isBaseType(t) {
 		return true
 	}
-	return t.Implements(ImpScanner)
+	return _isScannerType(t)
 }
 
 func isValuerType(t reflect.Type) bool {

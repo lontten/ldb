@@ -100,28 +100,29 @@ func (c OrmConf) primaryKeyColumnNames(v reflect.Value, dest any) []string {
 }
 
 // 获取 rows 返回数据，每个字段index 对应 struct 的字段 名字
-func getColIndex2FieldNameMap(columns []string, t reflect.Type) (ColIndex2FieldNameMap, error) {
+func getColIndex2FieldNameMap(columns []string, t reflect.Type) map[string]compC {
+	r := make(map[string]compC)
 	if isValuerType(t) {
-		return ColIndex2FieldNameMap{}, nil
+		return r
 	}
 
 	colNum := len(columns)
-	ci2fm := make([]string, colNum)
-	cf := getStructCFMap(t)
+	cm := _getStructC_columnNameMap(t, "")
 
 	validNum := 0
 	for i, column := range columns {
-		fieldName, ok := cf[column]
+		c, ok := cm[column]
+		c.columnIndex = i
 		if !ok {
-			ci2fm[i] = ""
+			r[column] = compC{}
 			continue
 		}
-		ci2fm[i] = fieldName
+		r[column] = c
 		validNum++
 	}
 
 	if colNum == 1 && validNum == 0 {
-		return ColIndex2FieldNameMap{}, nil
+		return r
 	}
-	return ci2fm, nil
+	return r
 }

@@ -130,6 +130,7 @@ func getStructC(t reflect.Type) []compC {
 	}
 	return _getStructC(t, "")
 }
+
 func getStructCFMap(t reflect.Type) map[string]string {
 	list := _getStructC(t, "")
 	m := make(map[string]string, 0)
@@ -167,6 +168,7 @@ func getStructCList(t reflect.Type) []string {
 // tag== db:-  跳过
 // 过滤掉首字母小写的字段
 // 获取model对应的数据字段名：和其在model中的字段名
+// ldbName tag中定义的字段对应的数据库字段名
 func _getStructC(t reflect.Type, ldbName string) (list []compC) {
 	numField := t.NumField()
 	for i := 0; i < numField; i++ {
@@ -193,6 +195,15 @@ func _getStructC(t reflect.Type, ldbName string) (list []compC) {
 		tag := structField.Tag.Get("db")
 		if tag == "-" {
 			continue
+		}
+
+		cc.kind = structField.Type.Kind()
+		if cc.kind == reflect.Ptr {
+			cc.canNull = true
+		} else {
+			canNull, isScanner := checkHandleNull(structField.Type)
+			cc.canNull = canNull
+			cc.isScanner = isScanner
 		}
 
 		if name == "ID" {
@@ -229,10 +240,23 @@ func _getStructC(t reflect.Type, ldbName string) (list []compC) {
 	return
 }
 
+func _getStructC_columnNameMap(t reflect.Type, ldbName string) map[string]compC {
+	cm := make(map[string]compC)
+	list := _getStructC(t, ldbName)
+	for _, c := range list {
+		cm[c.columnName] = c
+	}
+	return cm
+}
+
 type compC struct {
-	fieldName  string // 字段名字
-	columnName string // 数据库字段名字
-	isSoftDel  bool   // 是否是软删除字段
+	fieldName   string // 字段名字
+	columnName  string // 数据库字段名字
+	columnIndex int
+	isSoftDel   bool // 是否是软删除字段
+	canNull     bool // 可以直接接收null；指针、实现了Valuer接口并处理了nil的结构体；（基础类型需要手动处理nil）
+	isScanner   bool // 是否是Scanner
+	kind        reflect.Kind
 }
 
 type compCV struct {

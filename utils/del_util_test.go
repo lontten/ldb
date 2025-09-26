@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/lontten/ldb/v2/softdelete"
+	"github.com/stretchr/testify/assert"
 )
 
 type TestSoftDel1 struct {
@@ -18,13 +19,16 @@ type TestSoftDel2 struct {
 }
 
 func TestCheckSoftDelType(t *testing.T) {
+	as := assert.New(t)
 
 	delType := GetSoftDelType(reflect.TypeOf(TestSoftDel2{}))
-	t.Log(delType)
+	as.Equal(softdelete.DelTimeGormMilli, delType)
 }
 
 func TestIsSoftDelFieldType(t *testing.T) {
+	as := assert.New(t)
 
 	delType := IsSoftDelFieldType(reflect.TypeOf(TestSoftDel2{}))
-	t.Log(delType)
+	as.False(delType)
+
 }
