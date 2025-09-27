@@ -2,15 +2,10 @@
 CREATE TABLE IF NOT EXISTS users
 (
     id         SERIAL PRIMARY KEY,
-    name       VARCHAR(100) NOT NULL,
-    email      VARCHAR(100) NOT NULL,
+    age        INTEGER,
+    name       VARCHAR(100),
+    money      DECIMAL(10, 2),
+    day1       TIMESTAMP,
+    day2       TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS products
-(
-    id    SERIAL PRIMARY KEY,
-    name  VARCHAR(200)   NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    stock INTEGER DEFAULT 0
 );

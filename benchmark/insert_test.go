@@ -19,9 +19,9 @@ func BenchmarkInsert_ldb(b *testing.B) {
 	setupTest_BenchmarkInsert(b)
 
 	user := User{
-		Id:    0,
-		Name:  "tom",
-		Email: "xx@xx.com",
+		Id:   0,
+		Name: "tom",
+		Age:  12,
 	}
 
 	b.ResetTimer()
@@ -40,9 +40,9 @@ func BenchmarkInsert_gorm(b *testing.B) {
 	setupTest_BenchmarkInsert(b)
 
 	user := User{
-		Id:    0,
-		Name:  "tom",
-		Email: "xx@xx.com",
+		Id:   0,
+		Name: "tom",
+		Age:  12,
 	}
 
 	b.ResetTimer()
@@ -62,9 +62,9 @@ func BenchmarkInsert_gormT(b *testing.B) {
 	setupTest_BenchmarkInsert(b)
 
 	user := User{
-		Id:    0,
-		Name:  "tom",
-		Email: "xx@xx.com",
+		Id:   0,
+		Name: "tom",
+		Age:  12,
 	}
 
 	b.ResetTimer()
@@ -83,9 +83,9 @@ func BenchmarkInsert_xorm(b *testing.B) {
 	setupTest_BenchmarkInsert(b)
 
 	user := User{
-		Id:    0,
-		Name:  "tom",
-		Email: "xx@xx.com",
+		Id:   0,
+		Name: "tom",
+		Age:  12,
 	}
 
 	b.ResetTimer()

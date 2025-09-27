@@ -2,15 +2,20 @@ package benchmark
 
 import (
 	"testing"
+	"time"
 
 	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/ldb/v2"
+	"github.com/shopspring/decimal"
 )
 
 type User struct {
 	Id        int64
 	Name      string
-	Email     string
+	Age       int32
+	Money     *decimal.Decimal
+	Day1      *time.Time
+	Day2      types.LocalDateTime
 	CreatedAt types.LocalDateTime
 }
 
@@ -43,9 +48,9 @@ func InsertUsers(count int, b *testing.B) {
 		users := make([]User, 0, end-start)
 		for i := start; i < end; i++ {
 			users = append(users, User{
-				Id:    int64(i + 1), // ID从1开始
-				Name:  "tom",
-				Email: "xx@xx.com",
+				Id:   int64(i + 1), // ID从1开始
+				Name: "tom",
+				Age:  12,
 			})
 		}
 

@@ -20,7 +20,7 @@ func BenchmarkUpdate_ldb(b *testing.B) {
 	setupTest_BenchmarkUpdate(b)
 
 	upm := User{
-		Email: "aa@aa.com",
+		Age: 14,
 	}
 
 	b.ResetTimer()
@@ -40,7 +40,7 @@ func BenchmarkUpdate_gorm(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		err := GDB.Model(&User{}).Where("id = ?", i).Update("email", "aa@aa.com").Error
+		err := GDB.Model(&User{}).Where("id = ?", i).Update("age", 14).Error
 		if err != nil {
 			b.Fatalf("update failed: %v", err)
 		}
@@ -55,7 +55,7 @@ func BenchmarkUpdate_gormT(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := gorm.G[User](GDB).Where("id = ?", i).Update(ctx, "email", "aa@aa.com")
+		_, err := gorm.G[User](GDB).Where("id = ?", i).Update(ctx, "age", 14)
 		if err != nil {
 			b.Fatalf("update failed: %v", err)
 		}
@@ -67,7 +67,7 @@ func BenchmarkUpdate_xorm(b *testing.B) {
 	setupTest_BenchmarkUpdate(b)
 
 	upm := User{
-		Email: "aa@aa.com",
+		Age: 14,
 	}
 
 	b.ResetTimer()
