@@ -3,16 +3,17 @@ import datetime
 import os
 import sys
 
-def get_script_directory():
-    """获取脚本所在目录的绝对路径"""
-    return os.path.dirname(os.path.abspath(__file__))
+def get_project_root():
+    """获取项目根目录（脚本所在目录的父目录）"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(script_dir)  # 返回scripts目录的父目录
 
 def generate_benchmark_section():
     """生成基准测试结果段落并保存到文件"""
-    script_dir = get_script_directory()
+    project_root = get_project_root()
 
-    # 获取当前UTC时间
-    current_utc_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    # 修复弃用警告：使用时区感知的UTC时间
+    current_utc_time = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     # 创建基准测试部分内容
     section_lines = [
@@ -24,8 +25,8 @@ def generate_benchmark_section():
         ""
     ]
 
-    # 读取benchmark_summary.md内容
-    benchmark_summary_path = os.path.join(script_dir, "benchmark_summary.md")
+    # 读取benchmark_summary.md内容（在项目根目录）
+    benchmark_summary_path = os.path.join(project_root, "benchmark_summary.md")
     try:
         if os.path.exists(benchmark_summary_path):
             with open(benchmark_summary_path, "r", encoding="utf-8") as f:
@@ -42,8 +43,8 @@ def generate_benchmark_section():
         section_lines.append(error_msg)
         print(error_msg)
 
-    # 写入到benchmark_section.md
-    benchmark_section_path = os.path.join(script_dir, "benchmark_section.md")
+    # 写入到benchmark_section.md（也在项目根目录）
+    benchmark_section_path = os.path.join(project_root, "benchmark_section.md")
     try:
         with open(benchmark_section_path, "w", encoding="utf-8") as f:
             # 使用统一的换行符
@@ -55,8 +56,8 @@ def generate_benchmark_section():
 
 def update_readme():
     """更新README.md中的基准测试结果部分"""
-    script_dir = get_script_directory()
-    readme_path = os.path.join(script_dir, "README.md")
+    project_root = get_project_root()
+    readme_path = os.path.join(project_root, "README.md")
 
     if not os.path.exists(readme_path):
         print(f"错误：未找到 README.md 文件 ({readme_path})")
@@ -79,7 +80,7 @@ def update_readme():
         return False
 
     # 读取要插入的内容
-    benchmark_section_path = os.path.join(script_dir, "benchmark_section.md")
+    benchmark_section_path = os.path.join(project_root, "benchmark_section.md")
     if not os.path.exists(benchmark_section_path):
         print(f"错误：未找到 benchmark_section.md 文件 ({benchmark_section_path})")
         return False
