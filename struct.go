@@ -14,26 +14,6 @@ import (
 
 type StructValidFieldValueMap map[string]any
 
-// ---------------struct-new-----------------
-/**
-根据 反射type，创建一个 struct,并返回 引用
-*/
-func newStruct(t reflect.Type) reflect.Value {
-	tPtr := reflect.New(t)
-	if isValuerType(t) {
-		return tPtr
-	}
-	numField := t.NumField()
-	for i := 0; i < numField; i++ {
-		structT := t.Field(i).Type
-		if structT.Kind() == reflect.Ptr {
-			f := reflect.New(structT.Elem())
-			tPtr.Elem().Field(i).Set(f)
-		}
-	}
-	return tPtr
-}
-
 // --------------------comp-field-valuer---------
 // v03 检查一个 struct/map 是否合法,valuer
 var compFieldVCache = make(map[reflect.Type]struct{})

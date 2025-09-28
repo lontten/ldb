@@ -152,7 +152,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 		return
 	}
 
-	num, err := ctx.ScanT(listRows)
+	num, err := ctx.Scan(listRows)
 	if err != nil {
 		return
 	}

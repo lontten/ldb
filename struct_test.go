@@ -8,7 +8,7 @@ import (
 	"github.com/lontten/ldb/v2/softdelete"
 )
 
-type Ka struct {
+type Kae struct {
 	Ka1 *string
 	Ka2 *string
 
@@ -16,7 +16,7 @@ type Ka struct {
 }
 
 type Kb struct {
-	Ka
+	Kae
 }
 type Kc struct {
 	Kb

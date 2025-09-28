@@ -5,25 +5,11 @@ import (
 	"fmt"
 
 	"github.com/lontten/ldb/v2"
-	"github.com/lontten/ldb/v2/softdelete"
 )
 
 func Log(v any) {
 	bytes, _ := json.Marshal(v)
 	fmt.Println(string(bytes))
-}
-
-type Ka struct {
-	Id   *int    `ldb:"id"`
-	Name *string `ldb:"name"`
-
-	softdelete.DeleteGormMilli
-}
-
-func (k Ka) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).
-		Table("t_ka").
-		AutoPrimaryKey("id")
 }
 
 type Kaaa struct {

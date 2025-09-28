@@ -28,7 +28,7 @@ func (p *NativePrepare) ScanOne(dest any) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanLnT(rows)
+	return ctx.ScanLn(rows)
 }
 
 func (p *NativePrepare) ScanList(dest any) (int64, error) {
@@ -41,5 +41,5 @@ func (p *NativePrepare) ScanList(dest any) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanLnT(rows)
+	return ctx.ScanLn(rows)
 }

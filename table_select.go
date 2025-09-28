@@ -53,7 +53,7 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.ScanLnT(rows)
+	num, err := ctx.ScanLn(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func List[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []T,
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.ScanT(rows)
+	num, err := ctx.Scan(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func ListP[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (list []*
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.ScanT(rows)
+	num, err := ctx.Scan(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.ScanLnT(rows)
+	num, err := ctx.ScanLn(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func GetOrInsert[T any](db Engine, wb *WhereBuilder, d *T, extra ...*ExtraContex
 		if err != nil {
 			return nil, err
 		}
-		num, err = ctx.ScanLnT(rows)
+		num, err = ctx.ScanLn(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -435,7 +435,7 @@ func HasOrInsert(db Engine, wb *WhereBuilder, d any, extra ...*ExtraContext) (bo
 		if err != nil {
 			return false, err
 		}
-		_, err = ctx.ScanLnT(rows)
+		_, err = ctx.ScanLn(rows)
 		if err != nil {
 			return false, err
 		}

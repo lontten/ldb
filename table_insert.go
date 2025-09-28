@@ -37,7 +37,7 @@ func Insert(db Engine, v any, extra ...*ExtraContext) (num int64, err error) {
 		if err != nil {
 			return 0, err
 		}
-		return ctx.ScanLnT(rows)
+		return ctx.ScanLn(rows)
 	}
 
 	exec, err := db.exec(dialectSql, ctx.args...)

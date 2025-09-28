@@ -650,7 +650,7 @@ func (b *SqlBuilder) ScanOne(dest any) (rowsNum int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanLnT(rows)
+	return ctx.ScanLn(rows)
 }
 
 func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
@@ -681,7 +681,7 @@ func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanT(rows)
+	return ctx.Scan(rows)
 }
 
 func (b *SqlBuilder) Exec() (sql.Result, error) {

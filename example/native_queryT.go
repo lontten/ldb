@@ -25,25 +25,3 @@ func QueryOneT2() {
 	}
 	fmt.Println(*ka)
 }
-
-func QueryListT() {
-	list, err := ldb.QueryList[Ka](dbinit.DB, "select * from t_ka where id>1")
-	if err != nil {
-		panic(err)
-	}
-	for _, ka := range list {
-		fmt.Println(*ka.Id)
-		fmt.Println(*ka.Name)
-	}
-}
-
-func QueryListT2() {
-	list, err := ldb.QueryListP[Ka](dbinit.DB, "select * from t_ka where id>1")
-	if err != nil {
-		panic(err)
-	}
-	for _, ka := range list {
-		fmt.Println(*ka.Id)
-		fmt.Println(*ka.Name)
-	}
-}

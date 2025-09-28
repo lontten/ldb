@@ -2,18 +2,17 @@ package ldb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
 	"github.com/pkg/errors"
 )
 
-// ScanLnT
+// ScanLn
 // 接收一行结果
 // 1.ptr single/comp
 // 2.slice- single
-func (ctx ormContext) ScanLnT(rows *sql.Rows) (num int64, err error) {
+func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	defer func(rows *sql.Rows) {
 		utils.PanicErr(rows.Close())
 	}(rows)
@@ -34,7 +33,7 @@ func (ctx ormContext) ScanLnT(rows *sql.Rows) (num int64, err error) {
 	}
 
 	if rows.Next() {
-		box, convert := createColBoxT(v, tP, cfm)
+		box, convert := createColBox(v, tP, cfm)
 		err = rows.Scan(box...)
 		if err != nil {
 			return
@@ -52,9 +51,9 @@ func (ctx ormContext) ScanLnT(rows *sql.Rows) (num int64, err error) {
 	return
 }
 
-// ScanT
+// Scan
 // 接收多行结果
-func (ctx ormContext) ScanT(rows *sql.Rows) (int64, error) {
+func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	defer func(rows *sql.Rows) {
 		utils.PanicErr(rows.Close())
 	}(rows)
@@ -70,13 +69,17 @@ func (ctx ormContext) ScanT(rows *sql.Rows) (int64, error) {
 	}
 	cfm := getColIndex2FieldNameMap(columns, t)
 	for rows.Next() {
-		box, vp, v := createColBox(t, cfm)
+		box, vp, v, convert := createColBoxNew(t, cfm)
 
 		err = rows.Scan(box...)
 		if err != nil {
-			fmt.Println(err)
 			return 0, err
 		}
+		err = convert()
+		if err != nil {
+			return 0, err
+		}
+
 		if isPtr {
 			arr.Set(reflect.Append(arr, vp))
 		} else {

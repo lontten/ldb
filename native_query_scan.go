@@ -29,7 +29,7 @@ func (q NativeQueryContext) ScanOne(dest any) (num int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanLnT(rows)
+	return ctx.ScanLn(rows)
 }
 
 func (q NativeQueryContext) ScanList(dest any) (num int64, err error) {
@@ -47,5 +47,5 @@ func (q NativeQueryContext) ScanList(dest any) (num int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	return ctx.ScanT(rows)
+	return ctx.Scan(rows)
 }

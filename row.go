@@ -12,50 +12,13 @@ import (
 // box	struct 的 字段box列表
 // vp	struct 的 引用
 // v	struct 的 值
-func createColBox(base reflect.Type, cfLink map[string]compC) (box []any, vp, v reflect.Value) {
-	vp = newStruct(base)
+func createColBoxNew(base reflect.Type, cfLink map[string]compC) (box []any, vp, v reflect.Value, fun func() error) {
+	vp = reflect.New(base)
 	v = reflect.Indirect(vp)
-	length := len(cfLink)
-	box = make([]any, 1)
-	if length == 0 {
-		box[0] = v.Addr().Interface()
-		return
-	}
-	box = make([]any, length)
-	for _, f := range cfLink {
-		if f.columnName == "" { // "" 表示此列不接收
-			box[f.columnIndex] = new([]uint8)
-		} else {
-			box[f.columnIndex] = v.FieldByName(f.fieldName).Addr().Interface()
-		}
-	}
-	return
-}
+	tP := vp.Interface()
 
-// 创建 row 返回数据，字段 对应的 struct 字段的box
-// 返回值 box, vp, v
-// box	struct 的 字段box列表
-// vp	struct 的 引用
-// v	struct 的 值
-func createColBoxTNew[T any](cfLink ColIndex2FieldNameMap) (box []any, vp, v reflect.Value) {
-	var tP = new(T)
-	vp = reflect.ValueOf(tP)
-	v = reflect.Indirect(vp)
-	length := len(cfLink)
-	box = make([]any, 1)
-	if length == 0 {
-		box[0] = v.Addr().Interface()
-		return
-	}
-	box = make([]any, length)
-	for c, f := range cfLink {
-		if f == "" { // "" 表示此列不接收
-			box[c] = new([]uint8)
-		} else {
-			box[c] = v.FieldByName(f).Addr().Interface()
-		}
-	}
-	return
+	colBox, fun := createColBox(v, tP, cfLink)
+	return colBox, vp, v, fun
 }
 
 // 创建 row 返回数据，字段 对应的 struct 字段的box
@@ -63,7 +26,7 @@ func createColBoxTNew[T any](cfLink ColIndex2FieldNameMap) (box []any, vp, v ref
 // box	struct 的 字段 引用列表
 // vp	struct 的 引用 Value
 // v	struct 的 值   Value
-func createColBoxT[T any](v reflect.Value, tP T, cfLink map[string]compC) (box []any, fun func() error) {
+func createColBox(v reflect.Value, tP any, cfLink map[string]compC) (box []any, fun func() error) {
 	fun = func() error { return nil }
 	length := len(cfLink)
 	if length == 0 {
