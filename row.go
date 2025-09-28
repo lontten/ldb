@@ -60,7 +60,7 @@ func createColBox(v reflect.Value, tP any, cfLink map[string]compC) (box []any, 
 			continue
 		}
 
-		converters = append(converters, func(f reflect.Value, rawBytes *sql.RawBytes, c compC) func() error {
+		converters = append(converters, func(f reflect.Value, fieldName string, rawBytes *sql.RawBytes, c compC) func() error {
 			return func() error {
 				if rawBytes == nil || len(*rawBytes) == 0 {
 					f.SetZero()
@@ -116,10 +116,10 @@ func createColBox(v reflect.Value, tP any, cfLink map[string]compC) (box []any, 
 					return nil
 
 				default:
-					return fmt.Errorf("不支持的类型转换: 无法将 []byte 转换为 %s", c.kind)
+					return fmt.Errorf("字段%s,不支持的类型转换: 无法将 []byte 转换为 %s", fieldName, c.kind)
 				}
 			}
-		}(field, rb, f))
+		}(field, f.fieldName, rb, f))
 	}
 	return
 }
