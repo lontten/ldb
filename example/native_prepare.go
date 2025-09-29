@@ -46,16 +46,3 @@ func Prepare3() {
 	fmt.Println(list)
 	fmt.Println(num)
 }
-
-func Prepare4() {
-	stmt, err := ldb.Prepare(dbinit.DB, "select * from t_ka where id>$1 ")
-	if err != nil {
-		panic(err)
-	}
-	n, err := ldb.StmtQueryOne[Ka](stmt, 2)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(*n.Id)
-	fmt.Println(*n.Name)
-}

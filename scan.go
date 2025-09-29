@@ -32,8 +32,18 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 		cfm = getColIndex2FieldNameMap(columns, t)
 	}
 
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return 0, err
+	}
+	var noNullableMap = make([]bool, len(columnTypes))
+	for i, columnType := range columnTypes {
+		nullable, ok := columnType.Nullable()
+		noNullableMap[i] = ok && !nullable
+	}
+
 	if rows.Next() {
-		box, convert := createColBox(v, tP, cfm)
+		box, convert := createColBox(v, tP, cfm, noNullableMap)
 		err = rows.Scan(box...)
 		if err != nil {
 			return
@@ -68,8 +78,19 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 		return 0, err
 	}
 	cfm := getColIndex2FieldNameMap(columns, t)
+
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return 0, err
+	}
+	var noNullableMap = make([]bool, len(columnTypes))
+	for i, columnType := range columnTypes {
+		nullable, ok := columnType.Nullable()
+		noNullableMap[i] = ok && !nullable
+	}
+
 	for rows.Next() {
-		box, vp, v, convert := createColBoxNew(t, cfm)
+		box, vp, v, convert := createColBoxNew(t, cfm, noNullableMap)
 
 		err = rows.Scan(box...)
 		if err != nil {

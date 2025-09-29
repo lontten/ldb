@@ -28,28 +28,5 @@ func (u User) TableConf() *ldb.TableConf {
 }
 
 func main() {
-	//QueryOneT2()
-	//QueryListT2()
-	//
-	//QueryOneT()
-	//QueryList2()
-	//
-	//Prepare4()
-	//time.Sleep(1 * time.Hour)
-	//TableInsert()
-	//Build1()
-	//Build2()
-	//Del()
-	//First()
-	//First2()
-	//QueryOneT()
-	//List()
-	//Insertttt()
-	//TableUpdate()
-	//GetOrInsert()
-	//InsertOrHas()
-	//TableInsert3()
-	//QueryBuild()
-	//Has()
-	//TableUpdate2()
+	QueryOne()
 }

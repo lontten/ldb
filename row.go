@@ -12,12 +12,12 @@ import (
 // box	struct 的 字段box列表
 // vp	struct 的 引用
 // v	struct 的 值
-func createColBoxNew(base reflect.Type, cfLink map[string]compC) (box []any, vp, v reflect.Value, fun func() error) {
+func createColBoxNew(base reflect.Type, cfLink map[string]compC, noNullableMap []bool) (box []any, vp, v reflect.Value, fun func() error) {
 	vp = reflect.New(base)
 	v = reflect.Indirect(vp)
 	tP := vp.Interface()
 
-	colBox, fun := createColBox(v, tP, cfLink)
+	colBox, fun := createColBox(v, tP, cfLink, noNullableMap)
 	return colBox, vp, v, fun
 }
 
@@ -26,7 +26,7 @@ func createColBoxNew(base reflect.Type, cfLink map[string]compC) (box []any, vp,
 // box	struct 的 字段 引用列表
 // vp	struct 的 引用 Value
 // v	struct 的 值   Value
-func createColBox(v reflect.Value, tP any, cfLink map[string]compC) (box []any, fun func() error) {
+func createColBox(v reflect.Value, tP any, cfLink map[string]compC, noNullableMap []bool) (box []any, fun func() error) {
 	fun = func() error { return nil }
 	length := len(cfLink)
 	if length == 0 {
@@ -55,7 +55,8 @@ func createColBox(v reflect.Value, tP any, cfLink map[string]compC) (box []any, 
 		}
 		field := v.FieldByName(f.fieldName)
 
-		if f.canNull {
+		// 字段可以接收null 或者 返回值不为null
+		if f.canNull || noNullableMap[f.columnIndex] {
 			box[f.columnIndex] = field.Addr().Interface()
 			continue
 		}

@@ -7,15 +7,31 @@ import (
 	"github.com/lontten/ldb/v2"
 )
 
+type ExamUser struct {
+	Id   int64
+	Name string
+	Age  int
+}
+
 func QueryOne() {
-	var ka Ka
-	num, err := ldb.NativeQueryScan(dbinit.DB, "select * from t_ka where id=?", 2).ScanOne(&ka)
+	var user ExamUser
+	num, err := ldb.NativeQueryScan(dbinit.DB, `
+SELECT 
+  CASE 
+    WHEN id > 10 THEN NULL  -- 当id大于10时返回null
+    WHEN id < 10 THEN id    -- 当id小于10时返回具体id值
+  END AS id,
+  NULL AS name ,
+  age
+FROM t_test2
+limit 1
+`).ScanOne(&user)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(num)
-	fmt.Println(*ka.Id)
-	fmt.Println(*ka.Name)
+	fmt.Println(user.Id)
+	fmt.Println(user.Name)
 }
 func QueryOne1() {
 	var n int

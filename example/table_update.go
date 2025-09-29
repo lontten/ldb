@@ -14,7 +14,7 @@ func TableUpdate() {
 	var user = User{
 		Name: types.NewString("abc"),
 	}
-	num, err := ldb.Update(dbinit.DB, ldb.W(), &user, ldb.E().
+	num, err := ldb.Update(dbinit.DB, &user, ldb.W(), ldb.E().
 		SetNull("abc").
 		TableName("t_user").
 		ReturnType(return_type.Auto).
