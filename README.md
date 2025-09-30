@@ -1,320 +1,79 @@
 # ldb
 
+[![Go Test](https://github.com/lontten/ldb/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/lontten/ldb/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/lontten/ldb/branch/ctt/graph/badge.svg)](https://codecov.io/gh/lontten/ldb)
 
-### init ldb
-```go
+<!-- BENCHMARK_RESULTS_START -->
+## 最新基准测试结果
 
-	path := "./log/go.log"
-	writer, _ := rotatelogs.New(
-		path+".%Y-%m-%d",
-		rotatelogs.WithLinkName(path),
-		rotatelogs.WithMaxAge(time.Duration(365*24)*time.Hour),
-		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour),
-	)
-	newLogger := log.New(writer, "\r\n", log.LstdFlags)
+测试时间: 2025-09-29 03:27:38 UTC
 
-	var dbName = pg.DbName
+> 说明：数值越低性能越好，±表示波动范围
 
-	pgConf := ldb.PgConf{
-		Host:     pg.Ip,
-		Port:     pg.Port,
-		DbName:   pg.dbName,
-		User:     pg.User,
-		Password: pg.Pwd,
-		Other:    "sslmode=disable TimeZone=Asia/Shanghai",
-	}
-	poolConf := ldb.PoolConf{
-		MaxIdleCount: 10,
-		MaxOpen:      100,
-		MaxLifetime:  time.Hour,
-		Logger:       newLogger,
-	}
-	ormConf := ldb.OrmConf{
-		TableNamePrefix: "t_",
-		PrimaryKeyNames: []string{"id"},
-	}
+# Go 基准测试报告
 
-	db := ldb.MustConnect(&pgConf, &poolConf).OrmConf(&ormConf)
+## 环境信息
 
-```
-```go
-type User struct {
-	ID   types.UUID `json:"id"  tableName:"public.t_user"`
-	Name string     `json:"info"`
-	Age  int        `json:"age"`
-}
+| 参数 | 值 |
+|------|----|
+| goos | linux |
+| goarch | amd64 |
+| pkg | github.com/lontten/ldb/v2/benchmark |
+| cpu | AMD EPYC 7763 64-Core Processor |
 
-type NullUser struct {
-	ID   *types.UUID `json:"id"  tableName:"public.t_user"`
-	Name *string     `json:"info"`
-	Age  *int        `json:"age"`
-}
+## Select 操作性能比较
 
-```
-### create
-```go
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	// create 是引用，会返回id
-	num, err := db.Insert(&user)
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	//return id
-	fmt.Println(user.ID)
-	
-	//-----------------------
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | **2.574m ±  1%** 🏆 | **422.2Ki ± 0%** 🏆 | **18.80k ± 0%** 🏆 |
+| gormT | 2.647m ±  1% | 708.3Ki ± 0% | 18.82k ± 0% |
+| xorm | 5.032m ±  4% | 1.961Mi ± 1% | 51.84k ± 0% |
 
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	// create 不是引用，不会返回id
-	num, err := db.Insert(user)
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	// nil
-	fmt.Println(user.ID)
+## Delete 操作性能比较
 
-```
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | 688.6µ ±  3% | 5.454Ki ± 0% | 62.00 ± 0% |
+| gormT | 697.0µ ±  1% | 6.322Ki ± 0% | 70.00 ± 0% |
+| ldb | 383.3µ ± 12% | **2.983Ki ± 0%** 🏆 | **61.00 ± 0%** 🏆 |
+| xorm | **361.2µ ±  1%** 🏆 | 5.048Ki ± 0% | 133.0 ± 0% |
 
-###create or update
-```go
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	// 创建或更新，根据主键
-	num, err := db.InsertOrUpdate(&user).ByPrimaryKey()
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	//------------------
-	
-	user := NullUser{
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	// 创建或更新，根据 name,age组合的唯一索引；mysql不支持此功能
-	num, err := db.InsertOrUpdate(&user).ByUnique([]string{"name","age"})
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
+## Insert 操作性能比较
 
-```
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | 725.4µ ±  5% | 6.606Ki ± 0% | 87.00 ± 0% |
+| gormT | 733.9µ ±  4% | 7.505Ki ± 0% | 95.00 ± 0% |
+| ldb | **407.2µ ± 11%** 🏆 | 10.08Ki ± 0% | 148.0 ± 0% |
+| xorm | 596.8µ ±  6% | **3.993Ki ± 0%** 🏆 | **83.00 ± 0%** 🏆 |
 
-### update
-```go
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	//根据主键更新
-	num, err := db.Update(&user).ByPrimaryKey()
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	
-	//----------------
-	
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	//根据条件更新
-	num, err := db.Update(&user).ByModel(NullUser{
-		Name: types.NewString("tom"),
-	})
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	//-------------------
-	
-	
-	user := NullUser{
-		ID:   types.NewV4P(),
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}
-	
-	//使用条件构造器
-	num, err := db.Update(&user).ByWhere(new(ldb.WhereBuilder).
-		Eq("id", user.ID,true).
-		NoLike("age", *user.Name, user.Name != nil).
-		Ne("age", user.Age,false))
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
+## First 操作性能比较
 
-```
-### delete
-```go
- 
-	
-	//根据主键删除
-	num, err := db.Delete(User{}).ByPrimaryKey(id)
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	
-	//----------------
-	
- 
-	//根据条件删除
-	num, err := db.Delete(User{}).ByModel(NullUser{
-		Name: types.NewString("tom"),
-	})
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	//-------------------
-	
-	 
-	
-	//使用条件构造器
-	num, err := db.Delete(User{}).ByWhere(new(ldb.WhereBuilder).
-		Eq("id", user.ID,true).
-		NoLike("age", *user.Name, user.Name != nil).
-		Ne("age", user.Age,false))
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | 189.2µ ±  1% | **4.969Ki ± 0%** 🏆 | **92.00 ± 0%** 🏆 |
+| gormT | **187.9µ ±  0%** 🏆 | 5.836Ki ± 0% | 100.0 ± 0% |
+| ldb | 205.1µ ±  0% | 10.36Ki ± 0% | 188.0 ± 0% |
+| xorm | 381.2µ ±  0% | 6.103Ki ± 0% | 152.0 ± 0% |
 
-```
+## SelectNuller 操作性能比较
 
-###select
-```go
-	user := User{}
-	num, err := db.Select(User{}).ByPrimaryKey(id).ScanOne(&user)
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	
-	fmt.Println(user)
-	//-----------------
-	
-	users := make([]User,0)
-	num, err := db.Select(User{}).ByPrimaryKey(id1,id2,id3).ScanList(&users)
-	if err != nil {
-		return err
-	}
-	// num=1
-	fmt.Println(num)
-	
-	fmt.Println(user)
-	//-----------------
-	
-	
-	users := make([]User, 0)
-	num, err := db.Select(User{}).ByModel(NullUser{
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}).ScanList(&users)
-	if err != nil {
-		return err
-	}
-	// num 查询的数据个数
-	fmt.Println(num)
-	
-	fmt.Println(users)
-	//----------------
-	
-	user := User{}
-	//随机获取一个
-	num, err := db.Select(User{}).ByModel(NullUser{
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	}).ScanFirst(&user)
-	if err != nil {
-		return err
-	}
-	// num 查询的数据个数
-	fmt.Println(num)
-	
-	fmt.Println(user)
-	//-----------------------
-	
-	
-	has, err := db.Select(User{}).ByModel(NullUser{
-		Name: types.NewString("tom"),
-		Age:  types.NewInt(12),
-	})
-	if err != nil {
-		return err
-	}
-	// has 查询是否存在数据
-	fmt.Println(num)
-	
-	
-	
-	//----------------------------
-	has, err := db.Has(User{}).ByWhere(new(ldb.WhereBuilder).
-		Eq("id", user.ID, true).
-		NoLike("age", *user.Name, user.Name != nil).
-		Ne("age", user.Age, false))
-	if err != nil {
-		return err
-	}
-	// has 查询是否存在数据
-	fmt.Println(has)
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | **2.347m ±  2%** 🏆 | **320.6Ki ± 0%** 🏆 | **13.80k ± 0%** 🏆 |
+| gormT | 2.439m ±  1% | 551.8Ki ± 0% | 13.82k ± 0% |
+| ldb | 2.965m ±  1% | 1.110Mi ± 0% | 25.91k ± 0% |
+| xorm | 3.440m ±  2% | 1.530Mi ± 6% | 35.84k ± 0% |
 
-	
-	
-	
-	has, err := db.Has(User{}).ByWhere(new(ldb.WhereBuilder).
-		Eq("id", user.ID, true).
-		NoLike("age", *user.Name, user.Name != nil).
-		Ne("age", user.Age, false))
-	if err != nil {
-		return err
-	}
-	// num 查询是否存在数据
-	fmt.Println(has)
+## Update 操作性能比较
 
-	
-	
-	
-```
+| 实现 | sec/op | B/op | allocs/op |
+|------|--------|------|-----------|
+| gorm | 717.4µ ±  1% | 8.221Ki ± 0% | 93.00 ± 0% |
+| gormT | 692.8µ ±  7% | 7.604Ki ± 0% | **75.00 ± 0%** 🏆 |
+| ldb | **398.1µ ±  4%** 🏆 | 6.741Ki ± 0% | 105.0 ± 0% |
+| xorm | 571.0µ ±  7% | **4.406Ki ± 0%** 🏆 | 116.0 ± 0% |
 
+> 🏆 表示该指标的最佳性能（最小值）
+<!-- BENCHMARK_RESULTS_END -->
 
-###tx
-```go
-	tx := Db.Begin()
-    err := tx.Commit()
-    err := tx.Rollback()
-```

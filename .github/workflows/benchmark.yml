@@ -1,0 +1,97 @@
+name: Benchmark
+
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 授予写入权限以更新README
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: benchmark_test
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready!"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL failed to start"
+          exit 1
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Initialize database
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          psql $DATABASE_URL -f scripts/init_db.sql
+
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+
+      - name: Run benchmarks
+        env:
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/benchmark_test?sslmode=disable"
+        run: |
+          set -e
+          chmod +x ./scripts/benchstat2md_enhanced.py
+          go test -bench=. -benchmem -benchtime=5s -count=6 -timeout 30m -run=^$ ./... 2>&1 | tee benchmark_results.txt
+          $HOME/go/bin/benchstat benchmark_results.txt > benchmark_summary.txt
+          cat benchmark_summary.txt
+          cat benchmark_summary.txt | ./scripts/benchstat2md_enhanced.py  > benchmark_summary.md
+          cat benchmark_summary.md
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            benchmark_results.txt
+            benchmark_summary.md
+          retention-days: 3
+
+      # 更新README中的基准测试结果
+      - name: Update README with benchmark results
+        if: github.event_name == 'push' && github.ref == 'refs/heads/benchmark'
+        run: |
+          chmod +x ./scripts/update_benchmark.py
+          ./scripts/update_benchmark.py
+
+      # 提交并推送更新后的README
+      - name: Commit and push README update
+        if: github.event_name == 'push' && github.ref == 'refs/heads/benchmark'
+        run: |
+          # 配置Git用户信息
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          # 添加并提交README更新（无变化则不提交）
+          git add README.md
+          git commit -m "Update benchmark results in README" || echo "No changes to commit"
+          # 推送到benchmark分支
+          git push origin benchmark
