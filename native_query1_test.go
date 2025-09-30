@@ -66,11 +66,17 @@ func TestQuery2_pg(t *testing.T) {
 	as.Nil(err, "new sqlmock error")
 	engine := MustConnectMock(db, &PgConf{})
 
+	column1 := mock.NewColumn("id").OfType("int", 12).Nullable(false)
+	column2 := mock.NewColumn("name").OfType("VARCHAR", nil).Nullable(true)
+	column3 := mock.NewColumn("money").OfType("DECIMAL", nil).Nullable(true).WithPrecisionAndScale(10, 4)
+	column4 := mock.NewColumn("day1").OfType("TIMESTAMP", nil).Nullable(true)
+	column5 := mock.NewColumn("day2").OfType("TIMESTAMP", nil).Nullable(true)
+	rows := mock.NewRowsWithColumnDefinition(column1, column2, column3, column4, column5)
+	rows.AddRow(12, nil, nil, nil, nil)
+
 	mock.ExpectQuery("select q1").
 		WillReturnError(nil).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "money", "day1", "day2"}).
-			AddRow(12, nil, nil, nil, nil),
-		)
+		WillReturnRows(rows)
 
 	list, err := QueryList[UserNil2](engine, "select q1")
 	as.Nil(err)
