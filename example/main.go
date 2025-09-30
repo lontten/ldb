@@ -28,5 +28,5 @@ func (u User) TableConf() *ldb.TableConf {
 }
 
 func main() {
-	QueryOne()
+	QueryOne2()
 }

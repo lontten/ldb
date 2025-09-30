@@ -2,11 +2,18 @@ package ldb
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
 	"github.com/pkg/errors"
 )
+
+type rowColumnType struct {
+	index            int    // 字段再row中的位置
+	noNull           bool   // true 字段必定不为null
+	databaseTypeName string // 字段-数据库数据类型
+}
 
 // ScanLn
 // 接收一行结果
@@ -36,14 +43,19 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	var noNullableMap = make([]bool, len(columnTypes))
+	var rowColumnTypeMap = make(map[int]rowColumnType)
 	for i, columnType := range columnTypes {
 		nullable, ok := columnType.Nullable()
-		noNullableMap[i] = ok && !nullable
+		rowColumnTypeMap[i] = rowColumnType{
+			index:            i,
+			databaseTypeName: columnType.DatabaseTypeName(),
+			noNull:           ok && !nullable,
+		}
+		fmt.Println(columnType.Name(), columnType.ScanType(), columnType.DatabaseTypeName(), ok, nullable)
 	}
 
 	if rows.Next() {
-		box, convert := createColBox(v, tP, cfm, noNullableMap)
+		box, convert := createColBox(v, tP, cfm, rowColumnTypeMap)
 		err = rows.Scan(box...)
 		if err != nil {
 			return
@@ -83,14 +95,19 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	var noNullableMap = make([]bool, len(columnTypes))
+
+	var rowColumnTypeMap = make(map[int]rowColumnType)
 	for i, columnType := range columnTypes {
 		nullable, ok := columnType.Nullable()
-		noNullableMap[i] = ok && !nullable
+		rowColumnTypeMap[i] = rowColumnType{
+			index:            i,
+			databaseTypeName: columnType.DatabaseTypeName(),
+			noNull:           ok && !nullable,
+		}
 	}
 
 	for rows.Next() {
-		box, vp, v, convert := createColBoxNew(t, cfm, noNullableMap)
+		box, vp, v, convert := createColBoxNew(t, cfm, rowColumnTypeMap)
 
 		err = rows.Scan(box...)
 		if err != nil {
