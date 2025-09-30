@@ -2,7 +2,6 @@ package ldb
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
@@ -51,7 +50,6 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 			databaseTypeName: columnType.DatabaseTypeName(),
 			noNull:           ok && !nullable,
 		}
-		fmt.Println(columnType.Name(), columnType.ScanType(), columnType.DatabaseTypeName(), ok, nullable)
 	}
 
 	if rows.Next() {
