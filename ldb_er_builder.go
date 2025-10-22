@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lontten/lcore/v2/lcutils"
 	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/ldb/v2/utils"
 )
@@ -557,7 +556,7 @@ func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuil
 		return b
 	}
 
-	if lcutils.NilToZero(key) == "" {
+	if types.NilToZero(key) == "" {
 		return b
 	}
 	if len(fields) == 0 {
