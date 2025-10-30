@@ -26,7 +26,8 @@ type SqlBuilder struct {
 	// 最终参数列表
 	args []any
 
-	// select部分
+	// select部分;分页时，需要将select 部分换成 count，这时如果select部分有 arg需要也一起去掉。
+	// 所有 select/where 两部分的arg时分开的，需要 selectStatus 来区分，arg放在哪里。
 	selectStatus int8
 
 	selectTokens []string
@@ -42,7 +43,8 @@ type SqlBuilder struct {
 	// 其他部分
 	otherSqlBuilder *strings.Builder
 	otherSqlArgs    []any
-	whereStatus     int8
+	// 用来判断是否需要添加 where
+	whereStatus int8
 
 	// page
 	other any
@@ -134,6 +136,10 @@ func (b *SqlBuilder) AppendArgs(args ...any) *SqlBuilder {
 // 添加一个 select 字段，多个断言
 func (b *SqlBuilder) Select(arg string, condition ...bool) *SqlBuilder {
 	ctx := b.db.getCtx()
+	if b.selectStatus == selectDone {
+		ctx.err = errors.New("Select 代码位置异常")
+		return b
+	}
 	if ctx.hasErr() {
 		return b
 	}
@@ -152,6 +158,10 @@ func (b *SqlBuilder) Select(arg string, condition ...bool) *SqlBuilder {
 // 添加 多个 select 字段，从 model中
 func (b *SqlBuilder) SelectModel(v any) *SqlBuilder {
 	ctx := b.db.getCtx()
+	if b.selectStatus == selectDone {
+		ctx.err = errors.New("SelectModel 代码位置异常")
+		return b
+	}
 	if ctx.hasErr() {
 		return b
 	}
@@ -170,17 +180,18 @@ func (b *SqlBuilder) SelectModel(v any) *SqlBuilder {
 // from 表名
 // 状态从 selectNoSet 变成 selectSet
 func (b *SqlBuilder) From(name string) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
 	}
-	b.selectStatus = selectDone
 	b.otherSqlBuilder.WriteString(" FROM " + name)
 	return b
 }
 
 // join 联表
 func (b *SqlBuilder) Join(name string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -218,6 +229,7 @@ func (b *SqlBuilder) Args(args ...any) *SqlBuilder {
 }
 
 func (b *SqlBuilder) LeftJoin(name string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -235,6 +247,7 @@ func (b *SqlBuilder) LeftJoin(name string, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) RightJoin(name string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -249,6 +262,7 @@ func (b *SqlBuilder) RightJoin(name string, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -263,6 +277,7 @@ func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) OrderDescBy(name string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -292,6 +307,7 @@ func (b *SqlBuilder) Native(sql string, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) Limit(num int64, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -306,6 +322,7 @@ func (b *SqlBuilder) Limit(num int64, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) Offset(num int64, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -321,6 +338,7 @@ func (b *SqlBuilder) Offset(num int64, condition ...bool) *SqlBuilder {
 }
 
 func (b *SqlBuilder) WhereBuilder(w *WhereBuilder) *SqlBuilder {
+	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -338,9 +356,6 @@ func (b *SqlBuilder) WhereBuilder(w *WhereBuilder) *SqlBuilder {
 	}
 	sqlStr = "(" + sqlStr + ")"
 
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("未完成 select 设置")
-	}
 	switch b.whereStatus {
 	case whereNoSet:
 		b.whereStatus = whereSet
@@ -357,13 +372,8 @@ func (b *SqlBuilder) WhereBuilder(w *WhereBuilder) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) LinkWhere() *SqlBuilder {
-	b.selectStatus = selectDone
-	b.whereStatus = whereSet
-	return b
-}
-
 func (b *SqlBuilder) Where(whereStr string, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	for _, c := range condition {
 		if !c {
 			return b
@@ -379,7 +389,6 @@ func (b *SqlBuilder) _whereArg(whereStr string, args ...any) *SqlBuilder {
 	if ctx.hasErr() {
 		return b
 	}
-	b.selectStatus = selectDone
 
 	b.AppendArgs(args...)
 	switch b.whereStatus {
@@ -397,6 +406,7 @@ func (b *SqlBuilder) _whereArg(whereStr string, args ...any) *SqlBuilder {
 	return b
 }
 func (b *SqlBuilder) BoolWhere(condition bool, whereStr string, args ...any) *SqlBuilder {
+	b.selectStatus = selectDone
 	if !condition {
 		return b
 	}
@@ -405,6 +415,7 @@ func (b *SqlBuilder) BoolWhere(condition bool, whereStr string, args ...any) *Sq
 }
 
 func (b *SqlBuilder) WhereIn(whereStr string, args ...any) *SqlBuilder {
+	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
@@ -416,11 +427,6 @@ func (b *SqlBuilder) WhereIn(whereStr string, args ...any) *SqlBuilder {
 	}
 	length := len(args)
 	if length == 0 {
-		return b
-	}
-
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("Where 设置异常：" + whereStr)
 		return b
 	}
 
@@ -451,6 +457,7 @@ func (b *SqlBuilder) WhereIn(whereStr string, args ...any) *SqlBuilder {
 // WhereSqlIn
 // in ? 当参数列表长度为0时，跳过这个where
 func (b *SqlBuilder) WhereSqlIn(whereStr string, args ...any) *SqlBuilder {
+	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
@@ -462,11 +469,6 @@ func (b *SqlBuilder) WhereSqlIn(whereStr string, args ...any) *SqlBuilder {
 	}
 	length := len(args)
 	if length == 0 {
-		return b
-	}
-
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("Where 设置异常：" + whereStr)
 		return b
 	}
 
@@ -495,13 +497,10 @@ func (b *SqlBuilder) WhereSqlIn(whereStr string, args ...any) *SqlBuilder {
 }
 
 func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
-		return b
-	}
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("Where 设置异常：" + whereStr)
 		return b
 	}
 
@@ -529,14 +528,17 @@ func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool)
 }
 
 func (b *SqlBuilder) Like(key *string, fields ...string) *SqlBuilder {
+	b.selectStatus = selectDone
 	b._like(key, 1, fields...)
 	return b
 }
 func (b *SqlBuilder) LikeLeft(key *string, fields ...string) *SqlBuilder {
+	b.selectStatus = selectDone
 	b._like(key, 2, fields...)
 	return b
 }
 func (b *SqlBuilder) LikeRight(key *string, fields ...string) *SqlBuilder {
+	b.selectStatus = selectDone
 	b._like(key, 3, fields...)
 	return b
 }
@@ -585,13 +587,10 @@ func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuil
 // BetweenDateTimeOfDate
 // 用 Date类型，去查询 DateTime 字段
 func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *types.LocalDate, condition ...bool) *SqlBuilder {
+	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
-		return b
-	}
-	if b.selectStatus != selectDone {
-		ctx.err = errors.New("Where 设置异常：" + whereStr)
 		return b
 	}
 
@@ -622,13 +621,13 @@ func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *
 }
 
 func (b *SqlBuilder) ScanOne(dest any) (rowsNum int64, err error) {
+	b.selectStatus = selectDone
+	b.whereStatus = whereDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	b.selectStatus = selectDone
-	b.whereStatus = whereDone
 
 	ctx.initScanDestOne(dest)
 	if ctx.err != nil {
@@ -653,13 +652,13 @@ func (b *SqlBuilder) ScanOne(dest any) (rowsNum int64, err error) {
 }
 
 func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
+	b.selectStatus = selectDone
+	b.whereStatus = whereDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
 		return 0, ctx.err
 	}
-	b.selectStatus = selectDone
-	b.whereStatus = whereDone
 
 	ctx.initScanDestList(dest)
 	if ctx.err != nil {
@@ -684,10 +683,10 @@ func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
 }
 
 func (b *SqlBuilder) Exec() (sql.Result, error) {
-	db := b.db
-	ctx := db.getCtx()
 	b.selectStatus = selectDone
 	b.whereStatus = whereDone
+	db := b.db
+	ctx := db.getCtx()
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
