@@ -54,6 +54,9 @@ type Engine interface {
 
 	Commit() error
 	Rollback() error
+
+	// 解析 WhereBuilder
+	Parse(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error)
 }
 
 /*

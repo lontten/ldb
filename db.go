@@ -69,3 +69,7 @@ func (db *coreDB) Commit() error {
 func (db *coreDB) Rollback() error {
 	return errors.New("this not tx")
 }
+
+func (db *coreDB) Parse(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error) {
+	return w.toSql(db.getDialect().parse, primaryKeyColumnNames...)
+}

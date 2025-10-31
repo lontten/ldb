@@ -3,6 +3,7 @@ package ldb
 import (
 	"context"
 	"database/sql"
+
 	"github.com/pkg/errors"
 )
 
@@ -58,4 +59,8 @@ func (db *coreTX) Commit() error {
 
 func (db *coreTX) Rollback() error {
 	return db.tx.Rollback()
+}
+
+func (db *coreTX) Parse(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error) {
+	return w.toSql(db.getDialect().parse, primaryKeyColumnNames...)
 }
