@@ -56,7 +56,7 @@ type Engine interface {
 	Rollback() error
 
 	// 解析 WhereBuilder
-	Parse(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error)
+	ToWhereSQL(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error)
 }
 
 /*

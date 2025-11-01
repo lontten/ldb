@@ -62,7 +62,7 @@ func TestWhereBuilderFilterNot5(t *testing.T) {
 
 	w1 := W().FilterPrimaryKey(1, 2).Not()
 
-	query, args, err := w1.toSql(engine.getDialect().parse, "id", "name")
+	query, args, err := engine.ToWhereSQL(w1, "id", "name")
 	as.ErrorIs(err, ErrNeedMultiPk)
 	as.Equal("", query)
 	as.Nil(args)

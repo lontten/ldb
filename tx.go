@@ -61,6 +61,6 @@ func (db *coreTX) Rollback() error {
 	return db.tx.Rollback()
 }
 
-func (db *coreTX) Parse(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error) {
+func (db *coreTX) ToWhereSQL(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error) {
 	return w.toSql(db.getDialect().parse, primaryKeyColumnNames...)
 }

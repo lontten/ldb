@@ -270,3 +270,12 @@ func escapeJoinExtra(fun escapeFun, list []string, s string, extra string) strin
 	}
 	return strings.Join(escapedColumns, s)
 }
+
+func ToAnyList[T any](v []T) []any {
+	anyList := make([]any, len(v))
+	// 遍历原切片，将每个元素转换为any类型并存入新切片
+	for i, item := range v {
+		anyList[i] = item // 这里利用了Go的隐式类型转换，T类型会自动转为interface{}
+	}
+	return anyList
+}
