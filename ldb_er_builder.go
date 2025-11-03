@@ -64,11 +64,14 @@ const (
 )
 
 func (b *SqlBuilder) initSelectSql() {
-	b.selectQuery.WriteString("SELECT ")
-	b.selectQuery.WriteString(strings.Join(b.selectTokens, ","))
+	dialect := b.db.getDialect()
+	if len(b.selectTokens) > 0 {
+		b.selectQuery.WriteString("SELECT ")
+	}
+	b.selectQuery.WriteString(escapeJoin(dialect.escapeIdentifier, b.selectTokens, " ,"))
 	b.query = b.selectQuery.String() + " " + b.otherSqlBuilder.String()
 	if len(b.orderTokens) > 0 {
-		b.query = b.query + " ORDER BY " + strings.Join(b.orderTokens, ",")
+		b.query = b.query + " ORDER BY " + escapeJoin(dialect.escapeIdentifier, b.orderTokens, " ,")
 	}
 	b.args = append(b.selectArgs, b.otherSqlArgs...)
 }
