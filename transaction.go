@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func Transaction[T any](db Engine, fn func(tx Engine) (T, error)) (res T, err error) {
+func Transaction[T any](db Engine, fn func(tx Engine) T) (res T, err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return res, err
@@ -28,7 +28,7 @@ func Transaction[T any](db Engine, fn func(tx Engine) (T, error)) (res T, err er
 		}
 	}()
 
-	res, err = fn(tx)
+	res = fn(tx)
 	if err != nil {
 		rbErr := tx.Rollback()
 		if rbErr != nil {
