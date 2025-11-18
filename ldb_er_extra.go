@@ -64,6 +64,7 @@ type PageResult struct {
 	Current  int64 `json:"current"`   // 当前页码
 	Total    int64 `json:"total"`     // 总数
 	PageNum  int64 `json:"totalPage"` // 总页数
+	HasMore  bool  `json:"hasMore"`   // 是否有更多
 }
 
 // ScanPage 查询分页
@@ -143,6 +144,7 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 			PageNum:  pageNum,
 			Current:  current,
 			Total:    total,
+			HasMore:  total > size*current,
 		}
 		return 0, dto, nil
 	}
@@ -160,12 +162,14 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 	if num == 0 {
 		dest = make([]any, 0)
 	}
+
 	dto = PageResult{
 		List:     dest,
 		PageSize: size,
 		PageNum:  pageNum,
 		Current:  current,
 		Total:    total,
+		HasMore:  total > size*current,
 	}
 	return num, dto, nil
 }
