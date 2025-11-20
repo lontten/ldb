@@ -10,7 +10,8 @@ import (
 )
 
 func QueryOneT() {
-	ka, err := ldb.QueryOne[User](dbinit.DB, "select * from t_user where id=?", 2222)
+	ka, err := ldb.NativeQuery[User](dbinit.DB,
+		"select * from t_user where id=?", 2222).One()
 	if err != nil {
 		panic(err)
 	}
@@ -19,7 +20,8 @@ func QueryOneT() {
 	fmt.Println(string(bytes))
 }
 func QueryOneT2() {
-	ka, err := ldb.QueryOne[types.StringList](dbinit.DB, "select img_list from public.user  where id=$1", 6)
+	ka, err := ldb.NativeQuery[types.StringList](dbinit.DB,
+		"select img_list from public.user  where id=$1", 6).One()
 	if err != nil {
 		panic(err)
 	}
