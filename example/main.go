@@ -1,32 +1,21 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/lontten/ldb/v2"
 )
 
-func Log(v any) {
-	bytes, _ := json.Marshal(v)
-	fmt.Println(string(bytes))
-}
-
-type Kaaa struct {
-}
 type User struct {
-	Id   *int    `db:"user_id"`
-	Name *string `db:"-"`
-	Age  *int    `db:"-"`
-	Kaaa `db:"-"`
+	Id   *int `db:"id"`
+	Name *string
+	Age  *int
 }
 
 func (u User) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("xjwy_user").
-		PrimaryKeys("user_id").
-		AutoPrimaryKey("user_id")
+	return new(ldb.TableConf).Table("t_user").
+		PrimaryKeys("id").
+		AutoPrimaryKey("id")
 }
 
 func main() {
-	QueryOne2()
+	QueryBuild()
 }

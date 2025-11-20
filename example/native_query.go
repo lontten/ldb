@@ -4,7 +4,7 @@ import (
 	"example/dbinit"
 	"fmt"
 
-	"github.com/lontten/lcore/v2/lcutils"
+	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/ldb/v2"
 	"github.com/shopspring/decimal"
 )
@@ -40,9 +40,9 @@ func QueryOne2() {
 	var user ExamUser
 	num, err := ldb.NativeQueryScan(dbinit.DB, `
 SELECT 
-  1 as  id ,
-  'a' as name ,
-  null as age,
+  'a' as  id ,
+  1 as name ,
+  'b' as age,
     2.33 as money
 FROM t_test2
 limit 1
@@ -50,7 +50,7 @@ limit 1
 	if err != nil {
 		panic(err)
 	}
-	lcutils.LogJson(user)
+	logutil.Log(user)
 	fmt.Println(num)
 	fmt.Println(user.Id)
 	fmt.Println(user.Name)

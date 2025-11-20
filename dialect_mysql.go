@@ -26,6 +26,7 @@ func (d *MysqlDialect) copyContext() Dialecter {
 	return &MysqlDialect{
 		ctx: &ormContext{
 			ormConf:      d.ctx.ormConf,
+			convertCtx:   ConvertCtx{}.Init(),
 			query:        &strings.Builder{},
 			wb:           W(),
 			insertType:   insert_type.Err,

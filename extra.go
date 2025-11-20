@@ -20,6 +20,8 @@ type ExtraContext struct {
 	offset         *int64
 	orderByTokens  []string // 排序
 
+	convertCtx ConvertCtx // 查询结果转换函数
+
 	columns      []string
 	columnValues []field.Value
 
@@ -34,6 +36,7 @@ type ExtraContext struct {
 func E() *ExtraContext {
 	return &ExtraContext{
 		whenUpdateSet: Set(),
+		convertCtx:    ConvertCtx{}.Init(),
 	}
 }
 
@@ -55,6 +58,15 @@ func (e *ExtraContext) NoRun() *ExtraContext {
 	return e
 }
 
+// Convert
+// 查询结果转换函数
+func (e *ExtraContext) Convert(c Convert) *ExtraContext {
+	e.convertCtx.Add(c)
+	return e
+}
+
+// SkipSoftDelete
+// 跳过软删除
 func (e *ExtraContext) SkipSoftDelete() *ExtraContext {
 	e.skipSoftDelete = true
 	return e
@@ -65,6 +77,8 @@ func (e *ExtraContext) TableName(name string) *ExtraContext {
 	return e
 }
 
+// Select
+// select 的 字段名，覆盖根据结构体生成的字段列表
 func (e *ExtraContext) Select(name ...string) *ExtraContext {
 	e.selectColumns = name
 	return e

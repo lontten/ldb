@@ -98,6 +98,18 @@ func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
 	return b
 }
 
+// Convert
+// 查询结果转换函数
+func (b *SqlBuilder) Convert(c Convert, conditions ...bool) *SqlBuilder {
+	for _, c := range conditions {
+		if !c {
+			return b
+		}
+	}
+	b.db.getCtx().convertCtx.Add(c)
+	return b
+}
+
 // 添加一个 arg，多个断言
 func (b *SqlBuilder) AppendArg(arg any, conditions ...bool) *SqlBuilder {
 	if b.db.getCtx().hasErr() {

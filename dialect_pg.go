@@ -25,6 +25,7 @@ func (d *PgDialect) copyContext() Dialecter {
 	return &PgDialect{
 		ctx: &ormContext{
 			ormConf:      d.ctx.ormConf,
+			convertCtx:   ConvertCtx{}.Init(),
 			query:        &strings.Builder{},
 			wb:           W(),
 			insertType:   insert_type.Err,

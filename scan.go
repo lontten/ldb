@@ -53,7 +53,7 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	}
 
 	if rows.Next() {
-		box, convert := createColBox(v, tP, cfm, rowColumnTypeMap)
+		box, convert := ctx.createColBox(v, tP, cfm, rowColumnTypeMap)
 		err = rows.Scan(box...)
 		if err != nil {
 			return
@@ -105,7 +105,7 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	}
 
 	for rows.Next() {
-		box, vp, v, convert := createColBoxNew(t, cfm, rowColumnTypeMap)
+		box, vp, v, convert := ctx.createColBoxNew(t, cfm, rowColumnTypeMap)
 
 		err = rows.Scan(box...)
 		if err != nil {

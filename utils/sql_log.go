@@ -52,7 +52,7 @@ func PrintSql(disableColor bool, originalSql, dialectSql string, args ...any) {
 
 		// 格式化打印每个参数，带索引
 		for i, arg := range args {
-			argStr := dbArg2String(disableColor, arg)
+			argStr := formatArg(arg)
 			fmt.Printf("  参数 #%d: %s\n", i, argStr)
 		}
 	}
@@ -120,40 +120,6 @@ func combineSqlArgs(sql string, args ...any) string {
 		}
 	}
 	return sb.String()
-}
-
-// dbArg2String 将数据库参数转换为字符串表示（内部函数，接收颜色开关参数）
-func dbArg2String(disableColor bool, arg any) string {
-	if arg == nil {
-		if disableColor {
-			return "nil"
-		}
-		return colorRed + "nil" + colorReset
-	}
-
-	// 处理driver.Valuer类型
-	if v, ok := arg.(driver.Valuer); ok {
-		value, err := v.Value()
-		if err != nil {
-			if disableColor {
-				return fmt.Sprintf("(错误: %v) %#v", err, arg)
-			}
-			return fmt.Sprintf("%s(错误: %v)%s %#v",
-				colorRed, err, colorReset, arg)
-		}
-
-		if disableColor {
-			return fmt.Sprintf("%v", value)
-		}
-		return fmt.Sprintf("%s%v%s", colorGreen, value, colorReset)
-	}
-
-	// 处理普通类型
-	if disableColor {
-		return fmt.Sprintf("%v", arg)
-	}
-	return fmt.Sprintf("%s%v%s", colorGreen, arg, colorReset)
-
 }
 
 func HighlightSQL(sql string) string {

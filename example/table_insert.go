@@ -6,6 +6,7 @@ import (
 	"example/dbinit"
 	"fmt"
 
+	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/ldb/v2"
 	return_type "github.com/lontten/ldb/v2/return-type"
@@ -79,7 +80,7 @@ func TableInsert3() {
 	}
 
 	fmt.Println(num)
-	Log(user)
+	logutil.Log(user)
 
 	var user2 = User{
 		Name: types.NewString("000"),
@@ -91,7 +92,7 @@ func TableInsert3() {
 		panic(err)
 	}
 	fmt.Println(num)
-	Log(user2)
+	logutil.Log(user2)
 	err = tx.Commit()
 	if err != nil {
 		panic(err)

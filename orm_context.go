@@ -87,13 +87,13 @@ type ormContext struct {
 	insertType     insert_type.InsertType
 	returnType     return_type.ReturnType
 	softDeleteType softdelete.SoftDelType
-	skipSoftDelete bool   // 跳过软删除
-	tableName      string //当前表名
-	checkParam     bool   // 是否检查参数
-	showSql        bool   // 打印sql
-	disableColor   bool   // 打印sql时，是否使用颜色
-	noRun          bool   // 不实际执行
-
+	skipSoftDelete bool       // 跳过软删除
+	tableName      string     //当前表名
+	checkParam     bool       // 是否检查参数
+	showSql        bool       // 打印sql
+	disableColor   bool       // 打印sql时，是否使用颜色
+	noRun          bool       // 不实际执行
+	convertCtx     ConvertCtx // 查询结果转换函数
 	// ------------------conf-end----------------------
 
 	// ------------------字段名：字段值----------------------
@@ -191,6 +191,7 @@ func (ctx *ormContext) initExtra(extra ...*ExtraContext) {
 		ctx.err = e.GetErr()
 		return
 	}
+	ctx.convertCtx = e.convertCtx
 	ctx.extra = e
 	ctx.insertType = e.insertType
 	ctx.returnType = e.returnType

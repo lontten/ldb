@@ -4,7 +4,7 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/lontten/lcore/v2/lcutils"
+	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/ldb/v2"
 )
 
@@ -24,7 +24,7 @@ func initMysql() {
 		Password: os.Getenv("LDB_MYSQL_PWD"),
 		Version:  ldb.MysqlVersion5,
 	}
-	lcutils.LogJson(conf)
+	logutil.Log(conf)
 	db, err := ldb.Connect(conf, nil)
 	if err != nil {
 		panic(err)
