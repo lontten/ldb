@@ -35,7 +35,7 @@ func TestQuery1_pg(t *testing.T) {
 			AddRow(12, "nil", nil, "2022-02-02"),
 		)
 
-	list, err := QueryList[Ka](engine, "select q1")
+	list, err := NativeQuery[Ka](engine, "select q1").List()
 	as.Nil(err)
 	as.NotNil(list)
 	as.Equal(1, len(list), "list length error")
@@ -78,7 +78,7 @@ func TestQuery2_pg(t *testing.T) {
 		WillReturnError(nil).
 		WillReturnRows(rows)
 
-	list, err := QueryList[UserNil2](engine, "select q1")
+	list, err := NativeQuery[UserNil2](engine, "select q1").List()
 	as.Nil(err)
 	as.NotNil(list)
 	as.Equal(1, len(list), "list length error")

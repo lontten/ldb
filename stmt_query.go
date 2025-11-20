@@ -2,27 +2,25 @@ package ldb
 
 import "reflect"
 
-type NativeQueryContext[T any] struct {
-	db    Engine
-	query string
-	args  []any
+type StmtQueryContext[T any] struct {
+	db   Stmter
+	args []any
 }
 
-func NativeQuery[T any](db Engine, query string, args ...any) *NativeQueryContext[T] {
-	return &NativeQueryContext[T]{
-		db:    db.init(),
-		query: query,
-		args:  args,
+func StmtQuery[T any](db Stmter, args ...any) *StmtQueryContext[T] {
+	return &StmtQueryContext[T]{
+		db:   db,
+		args: args,
 	}
 }
-func (q *NativeQueryContext[T]) Convert(c Convert) *NativeQueryContext[T] {
+
+func (q *StmtQueryContext[T]) Convert(c Convert) *StmtQueryContext[T] {
 	q.db.getCtx().convertCtx.Add(c)
 	return q
 }
 
-func (q *NativeQueryContext[T]) One() (t *T, err error) {
+func (q *StmtQueryContext[T]) One() (*T, error) {
 	db := q.db
-	query := q.query
 	args := q.args
 	ctx := db.getCtx()
 
@@ -33,7 +31,7 @@ func (q *NativeQueryContext[T]) One() (t *T, err error) {
 		return nil, ctx.err
 	}
 
-	rows, err := db.query(query, args...)
+	rows, err := db.query(args...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +45,8 @@ func (q *NativeQueryContext[T]) One() (t *T, err error) {
 	return dest, nil
 }
 
-func (q *NativeQueryContext[T]) List() ([]T, error) {
+func (q *StmtQueryContext[T]) List() ([]T, error) {
 	db := q.db
-	query := q.query
 	args := q.args
 	ctx := db.getCtx()
 
@@ -63,7 +60,7 @@ func (q *NativeQueryContext[T]) List() ([]T, error) {
 		return nil, ctx.err
 	}
 
-	rows, err := db.query(query, args...)
+	rows, err := db.query(args...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +74,8 @@ func (q *NativeQueryContext[T]) List() ([]T, error) {
 	return *dest, nil
 }
 
-func (q *NativeQueryContext[T]) ListP() ([]*T, error) {
+func (q *StmtQueryContext[T]) ListP() ([]*T, error) {
 	db := q.db
-	query := q.query
 	args := q.args
 	ctx := db.getCtx()
 
@@ -93,7 +89,7 @@ func (q *NativeQueryContext[T]) ListP() ([]*T, error) {
 		return nil, ctx.err
 	}
 
-	rows, err := db.query(query, args...)
+	rows, err := db.query(args...)
 	if err != nil {
 		return nil, err
 	}
