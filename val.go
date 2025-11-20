@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func FieldSetVal(f reflect.Value, val any) error {
+func FieldSetValNil(f reflect.Value, val any) error {
 	if val == nil {
 		f.SetZero()
 		return nil

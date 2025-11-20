@@ -17,12 +17,12 @@ func QueryBuild() {
 		Convert(ldb.ConvertRegister("age", func(v *int) any {
 			fmt.Println(v, v == nil)
 			if v == nil {
-				return 9
+				return "kk"
 			}
 			if *v == 1 {
-				return 99
+				return "one"
 			}
-			return 999
+			return "abc"
 		})).
 		ScanList(&list)
 	if err != nil {

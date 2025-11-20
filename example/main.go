@@ -7,7 +7,7 @@ import (
 type User struct {
 	Id   *int `db:"id"`
 	Name *string
-	Age  *int
+	Age  string
 }
 
 func (u User) TableConf() *ldb.TableConf {
