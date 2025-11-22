@@ -76,8 +76,12 @@ func (d PgDialect) escapeIdentifier(s string) string {
 	}
 	return s
 }
-func (d *PgDialect) getSql() {
-	d.ctx.originalSql = d.ctx.query.String()
+func (d *PgDialect) getSql(sql ...string) {
+	if len(sql) == 1 {
+		d.ctx.originalSql = sql[0]
+	} else {
+		d.ctx.originalSql = d.ctx.query.String()
+	}
 	d.ctx.dialectSql = toPgSql(d.ctx.originalSql)
 }
 

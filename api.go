@@ -142,7 +142,7 @@ type Dialecter interface {
 	tableDelGen()
 	tableUpdateGen()
 	tableSelectGen()
-	getSql()
+	getSql(sql ...string)
 
 	escapeIdentifier(s string) string // 转义 数据库保留字
 }

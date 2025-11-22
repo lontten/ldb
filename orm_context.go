@@ -112,9 +112,10 @@ type ormContext struct {
 
 	query       *strings.Builder // query sql
 	originalSql string           // 原始sql
-	dialectSql  string           // 适配不同数据库的sql
+	dialectSql  string           // 方言 sql
 	//参数
-	args []any
+	args         []any
+	originalArgs []any // 原始参数
 
 	started bool
 
@@ -396,7 +397,7 @@ func (ctx ormContext) Copy() ormContext {
 
 func (ctx ormContext) printSql() {
 	if ctx.showSql {
-		utils.PrintSql(ctx.disableColor, ctx.originalSql, ctx.dialectSql, ctx.args...)
+		utils.PrintSql(ctx.disableColor, ctx.originalSql, ctx.dialectSql, ctx.originalArgs...)
 	}
 }
 

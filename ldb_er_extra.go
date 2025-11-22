@@ -3,14 +3,13 @@ package ldb
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
 )
 
-// 自定义count字段
-func (b *SqlBuilder) CountField(field string, conditions ...bool) *SqlBuilder {
+// CountField 自定义count字段
+func (b *SqlBuilder[T]) CountField(field string, conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -20,8 +19,8 @@ func (b *SqlBuilder) CountField(field string, conditions ...bool) *SqlBuilder {
 	return b
 }
 
-// 分页时，直接使用 fakeTotalNum，不再查询实际总数
-func (b *SqlBuilder) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder {
+// FakerTotalNum 分页时，直接使用 fakeTotalNum，不再查询实际总数
+func (b *SqlBuilder[T]) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -31,8 +30,8 @@ func (b *SqlBuilder) FakerTotalNum(num int64, conditions ...bool) *SqlBuilder {
 	return b
 }
 
-// 分页时，只查询数量，不返回数据列表
-func (b *SqlBuilder) NoGetList(conditions ...bool) *SqlBuilder {
+// NoGetList 分页时，只查询数量，不返回数据列表
+func (b *SqlBuilder[T]) NoGetList(conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -42,47 +41,62 @@ func (b *SqlBuilder) NoGetList(conditions ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Page(current int64, pageSize int64) *SqlBuilder {
-	if pageSize < 1 || current < 1 {
-		b.db.getCtx().err = errors.New("pageSize,current must be greater than 0")
+func (b *SqlBuilder[T]) Page(pageIndex int64, pageSize int64) *SqlBuilder[T] {
+	if pageSize < 1 || pageIndex < 1 {
+		b.db.getCtx().err = errors.New("pageSize,pageIndex must be greater than 0")
 	}
-	b.other = PageConfig{
-		pageSize: pageSize,
-		current:  current,
+	b.pageConfig = &PageConfig{
+		pageSize:  pageSize,
+		pageIndex: pageIndex,
 	}
 	return b
 }
 
 type PageConfig struct {
-	pageSize int64
-	current  int64
+	pageSize  int64
+	pageIndex int64
 }
 
-type PageResult struct {
-	List     any   `json:"list"`      // 结果
-	PageSize int64 `json:"pageSize"`  // 每页大小
-	Current  int64 `json:"current"`   // 当前页码
-	Total    int64 `json:"total"`     // 总数
-	PageNum  int64 `json:"totalPage"` // 总页数
-	HasMore  bool  `json:"hasMore"`   // 是否有更多
+type PageResult[T any] struct {
+	List      []T   `json:"list"`      // 结果
+	PageSize  int64 `json:"pageSize"`  // 每页大小
+	PageIndex int64 `json:"pageIndex"` // 当前页码
+	Total     int64 `json:"total"`     // 总数
+	PageNum   int64 `json:"totalPage"` // 总页数
+	HasMore   bool  `json:"hasMore"`   // 是否有更多
+}
+
+type PageResultP[T any] struct {
+	List      []*T  `json:"list"`      // 结果
+	PageSize  int64 `json:"pageSize"`  // 每页大小
+	PageIndex int64 `json:"pageIndex"` // 当前页码
+	Total     int64 `json:"total"`     // 总数
+	PageNum   int64 `json:"totalPage"` // 总页数
+	HasMore   bool  `json:"hasMore"`   // 是否有更多
 }
 
 // ScanPage 查询分页
-func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err error) {
+func (b *SqlBuilder[T]) ScanPage() (dto PageResult[T], err error) {
 	db := b.db
-	ctx := db.getCtx()
+	dialect := db.getDialect()
+	ctx := dialect.getCtx()
 	if err = ctx.err; err != nil {
 		return
 	}
-	if b.other == nil {
+	if b.pageConfig == nil {
 		err = errors.New("no set pageConfig")
 		return
 	}
 	var total int64
-	var size = b.other.(PageConfig).pageSize
-	var current = b.other.(PageConfig).current
+	var pageSize = b.pageConfig.pageSize
+	var pageIndex = b.pageConfig.pageIndex
 
-	ctx.initScanDestList(dest)
+	var dest = &[]T{}
+	v := reflect.ValueOf(dest).Elem()
+	baseV := reflect.ValueOf(new(T)).Elem()
+	t := baseV.Type()
+
+	ctx.initScanDestListT(dest, v, baseV, t, false)
 	if err = ctx.err; err != nil {
 		return
 	}
@@ -96,17 +110,17 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 
 	countSql = "select count(" + countSql + ") " + b.otherSqlBuilder.String()
 
-	if ctx.showSql {
-		fmt.Println(countSql, b.otherSqlArgs)
-	}
+	dialect.getSql(countSql)
+	ctx.originalArgs = b.otherSqlArgs
+	ctx.printSql()
 
 	if !ctx.noRun {
 		if b.fakeTotalNum > 0 {
 			total = b.fakeTotalNum
 		} else {
-			rows, err := db.query(countSql, b.otherSqlArgs...)
+			rows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
 			if err != nil {
-				return 0, dto, err
+				return dto, err
 			}
 			defer func(rows *sql.Rows) {
 				utils.PanicErr(rows.Close())
@@ -115,61 +129,168 @@ func (b *SqlBuilder) ScanPage(dest any) (rowsNum int64, dto PageResult, err erro
 				box := reflect.ValueOf(&total).Interface()
 				err = rows.Scan(box)
 				if err != nil {
-					return 0, dto, err
+					return dto, err
 				}
 			}
 		}
 	}
 
 	// 计算总页数
-	var pageNum int64 = total / size
-	if total%size != 0 {
+	var pageNum = total / pageSize
+	if total%pageSize != 0 {
 		pageNum++
 	}
 
 	var selectSql = b.query + " limit ? offset ?"
-	var offset = (current - int64(1)) * size
-	args := append(b.args, size, offset)
+	var offset = (pageIndex - int64(1)) * pageSize
+	args := append(b.args, pageSize, offset)
 
-	if ctx.showSql {
-		fmt.Println(selectSql, args)
-	}
+	dialect.getSql(selectSql)
+	ctx.originalArgs = args
+	ctx.printSql()
+
 	if ctx.noRun {
-		return 0, dto, nil
+		return dto, nil
 	}
 	if b.noGetList {
-		dto = PageResult{
-			List:     make([]any, 0),
-			PageSize: size,
-			PageNum:  pageNum,
-			Current:  current,
-			Total:    total,
-			HasMore:  total > size*current,
+		dto = PageResult[T]{
+			List:      *dest,
+			PageSize:  pageSize,
+			PageNum:   pageNum,
+			PageIndex: pageIndex,
+			Total:     total,
+			HasMore:   total > pageSize*pageIndex,
 		}
-		return 0, dto, nil
+		return dto, nil
 	}
 
-	listRows, err := db.query(selectSql, args...)
+	listRows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
 	if err != nil {
 		return
 	}
 
-	num, err := ctx.Scan(listRows)
+	_, err = ctx.Scan(listRows)
 	if err != nil {
 		return
 	}
 
-	if num == 0 {
-		dest = make([]any, 0)
+	dto = PageResult[T]{
+		List:      *dest,
+		PageSize:  pageSize,
+		PageNum:   pageNum,
+		PageIndex: pageIndex,
+		Total:     total,
+		HasMore:   total > pageSize*pageIndex,
+	}
+	return dto, nil
+}
+
+// PageP 查询分页
+func (b *SqlBuilder[T]) PageP() (dto PageResultP[T], err error) {
+	db := b.db
+	dialect := db.getDialect()
+	ctx := dialect.getCtx()
+	if err = ctx.err; err != nil {
+		return
+	}
+	if b.pageConfig == nil {
+		err = errors.New("no set pageConfig")
+		return
+	}
+	var total int64
+	var pageSize = b.pageConfig.pageSize
+	var pageIndex = b.pageConfig.pageIndex
+
+	var dest = &[]*T{}
+	v := reflect.ValueOf(dest).Elem()
+	baseV := reflect.ValueOf(new(T)).Elem()
+	t := baseV.Type()
+
+	ctx.initScanDestListT(dest, v, baseV, t, true)
+	if err = ctx.err; err != nil {
+		return
 	}
 
-	dto = PageResult{
-		List:     dest,
-		PageSize: size,
-		PageNum:  pageNum,
-		Current:  current,
-		Total:    total,
-		HasMore:  total > size*current,
+	b.initSelectSql()
+
+	var countSql = b.countField
+	if countSql == "" {
+		countSql = "*"
 	}
-	return num, dto, nil
+
+	countSql = "select count(" + countSql + ") " + b.otherSqlBuilder.String()
+
+	dialect.getSql(countSql)
+	ctx.originalArgs = b.otherSqlArgs
+	ctx.printSql()
+
+	if !ctx.noRun {
+		if b.fakeTotalNum > 0 {
+			total = b.fakeTotalNum
+		} else {
+			rows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
+			if err != nil {
+				return dto, err
+			}
+			defer func(rows *sql.Rows) {
+				utils.PanicErr(rows.Close())
+			}(rows)
+			for rows.Next() {
+				box := reflect.ValueOf(&total).Interface()
+				err = rows.Scan(box)
+				if err != nil {
+					return dto, err
+				}
+			}
+		}
+	}
+
+	// 计算总页数
+	var pageNum = total / pageSize
+	if total%pageSize != 0 {
+		pageNum++
+	}
+
+	var selectSql = b.query + " limit ? offset ?"
+	var offset = (pageIndex - int64(1)) * pageSize
+	args := append(b.args, pageSize, offset)
+
+	dialect.getSql(selectSql)
+	ctx.originalArgs = args
+	ctx.printSql()
+
+	if ctx.noRun {
+		return dto, nil
+	}
+	if b.noGetList {
+		dto = PageResultP[T]{
+			List:      *dest,
+			PageSize:  pageSize,
+			PageNum:   pageNum,
+			PageIndex: pageIndex,
+			Total:     total,
+			HasMore:   total > pageSize*pageIndex,
+		}
+		return dto, nil
+	}
+
+	listRows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
+	if err != nil {
+		return
+	}
+
+	_, err = ctx.Scan(listRows)
+	if err != nil {
+		return
+	}
+
+	dto = PageResultP[T]{
+		List:      *dest,
+		PageSize:  pageSize,
+		PageNum:   pageNum,
+		PageIndex: pageIndex,
+		Total:     total,
+		HasMore:   total > pageSize*pageIndex,
+	}
+	return dto, nil
 }

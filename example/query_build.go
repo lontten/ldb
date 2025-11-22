@@ -9,9 +9,8 @@ import (
 )
 
 func QueryBuild() {
-	var list []User
 
-	_, err := ldb.QueryBuild(dbinit.DB).ShowSql().
+	list, err := ldb.QueryBuild[User](dbinit.DB).ShowSql().
 		Select("u.*").
 		From("t_user u").
 		Convert(ldb.ConvertRegister("age", func(v *int) any {
@@ -24,7 +23,7 @@ func QueryBuild() {
 			}
 			return "abc"
 		})).
-		ScanList(&list)
+		List()
 	if err != nil {
 		panic(err)
 	}

@@ -100,8 +100,12 @@ func (d MysqlDialect) escapeIdentifier(s string) string {
 // 中间服务
 // ===----------------------------------------------------------------------===//
 
-func (d *MysqlDialect) getSql() {
-	d.ctx.originalSql = d.ctx.query.String()
+func (d *MysqlDialect) getSql(sql ...string) {
+	if len(sql) == 1 {
+		d.ctx.originalSql = sql[0]
+	} else {
+		d.ctx.originalSql = d.ctx.query.String()
+	}
 	d.ctx.dialectSql = d.ctx.originalSql
 }
 

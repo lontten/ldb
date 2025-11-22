@@ -27,7 +27,6 @@ func (q *NativeQueryContext[T]) One() (t *T, err error) {
 	ctx := db.getCtx()
 
 	dest := new(T)
-
 	ctx.initScanDestOneT(dest)
 	if ctx.err != nil {
 		return nil, ctx.err
@@ -67,12 +66,9 @@ func (q *NativeQueryContext[T]) List() ([]T, error) {
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.Scan(rows)
+	_, err = ctx.Scan(rows)
 	if err != nil {
 		return nil, err
-	}
-	if num == 0 {
-		return nil, nil
 	}
 	return *dest, nil
 }
@@ -97,12 +93,9 @@ func (q *NativeQueryContext[T]) ListP() ([]*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	num, err := ctx.Scan(rows)
+	_, err = ctx.Scan(rows)
 	if err != nil {
 		return nil, err
-	}
-	if num == 0 {
-		return nil, nil
 	}
 	return *dest, nil
 }

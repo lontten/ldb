@@ -1,9 +1,8 @@
 package ldb
 
 import (
-	"database/sql"
 	"errors"
-	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -11,15 +10,15 @@ import (
 	"github.com/lontten/ldb/v2/utils"
 )
 
-func QueryBuild(db Engine) *SqlBuilder {
-	return &SqlBuilder{
+func QueryBuild[T any](db Engine) *SqlBuilder[T] {
+	return &SqlBuilder[T]{
 		db:              db.init(),
 		selectQuery:     &strings.Builder{},
 		otherSqlBuilder: &strings.Builder{},
 	}
 }
 
-type SqlBuilder struct {
+type SqlBuilder[T any] struct {
 	db Engine
 	// 最终执行sql
 	query string
@@ -46,8 +45,7 @@ type SqlBuilder struct {
 	// 用来判断是否需要添加 where
 	whereStatus int8
 
-	// page
-	other any
+	pageConfig *PageConfig
 }
 
 const (
@@ -63,7 +61,7 @@ const (
 	whereDone
 )
 
-func (b *SqlBuilder) initSelectSql() {
+func (b *SqlBuilder[T]) initSelectSql() {
 	dialect := b.db.getDialect()
 	if len(b.selectTokens) > 0 {
 		b.selectQuery.WriteString("SELECT ")
@@ -77,7 +75,7 @@ func (b *SqlBuilder) initSelectSql() {
 }
 
 // 显示sql
-func (b *SqlBuilder) ShowSql(conditions ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) ShowSql(conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -88,7 +86,7 @@ func (b *SqlBuilder) ShowSql(conditions ...bool) *SqlBuilder {
 }
 
 // 不执行
-func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) NoRun(conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -100,7 +98,7 @@ func (b *SqlBuilder) NoRun(conditions ...bool) *SqlBuilder {
 
 // Convert
 // 查询结果转换函数
-func (b *SqlBuilder) Convert(c Convert, conditions ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Convert(c Convert, conditions ...bool) *SqlBuilder[T] {
 	for _, c := range conditions {
 		if !c {
 			return b
@@ -111,7 +109,7 @@ func (b *SqlBuilder) Convert(c Convert, conditions ...bool) *SqlBuilder {
 }
 
 // 添加一个 arg，多个断言
-func (b *SqlBuilder) AppendArg(arg any, conditions ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) AppendArg(arg any, conditions ...bool) *SqlBuilder[T] {
 	if b.db.getCtx().hasErr() {
 		return b
 	}
@@ -129,13 +127,13 @@ func (b *SqlBuilder) AppendArg(arg any, conditions ...bool) *SqlBuilder {
 }
 
 // 添加sql语句
-func (b *SqlBuilder) AppendSql(sql string) *SqlBuilder {
+func (b *SqlBuilder[T]) AppendSql(sql string) *SqlBuilder[T] {
 	b.otherSqlBuilder.WriteString(sql)
 	return b
 }
 
 // 添加 多个参数
-func (b *SqlBuilder) AppendArgs(args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) AppendArgs(args ...any) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -149,7 +147,7 @@ func (b *SqlBuilder) AppendArgs(args ...any) *SqlBuilder {
 }
 
 // 添加一个 select 字段，多个断言
-func (b *SqlBuilder) Select(arg string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Select(arg string, condition ...bool) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if b.selectStatus == selectDone {
 		ctx.err = errors.New("Select 代码位置异常")
@@ -171,7 +169,7 @@ func (b *SqlBuilder) Select(arg string, condition ...bool) *SqlBuilder {
 }
 
 // 添加 多个 select 字段，从 model中
-func (b *SqlBuilder) SelectModel(v any) *SqlBuilder {
+func (b *SqlBuilder[T]) SelectModel(v any) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if b.selectStatus == selectDone {
 		ctx.err = errors.New("SelectModel 代码位置异常")
@@ -194,7 +192,7 @@ func (b *SqlBuilder) SelectModel(v any) *SqlBuilder {
 
 // from 表名
 // 状态从 selectNoSet 变成 selectSet
-func (b *SqlBuilder) From(name string) *SqlBuilder {
+func (b *SqlBuilder[T]) From(name string) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -205,7 +203,7 @@ func (b *SqlBuilder) From(name string) *SqlBuilder {
 }
 
 // join 联表
-func (b *SqlBuilder) Join(name string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Join(name string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -220,7 +218,7 @@ func (b *SqlBuilder) Join(name string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Arg(arg any, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Arg(arg any, condition ...bool) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -234,7 +232,7 @@ func (b *SqlBuilder) Arg(arg any, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Args(args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) Args(args ...any) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -243,7 +241,7 @@ func (b *SqlBuilder) Args(args ...any) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) LeftJoin(name string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) LeftJoin(name string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -261,7 +259,7 @@ func (b *SqlBuilder) LeftJoin(name string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) RightJoin(name string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) RightJoin(name string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -276,7 +274,7 @@ func (b *SqlBuilder) RightJoin(name string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) OrderBy(name string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -291,7 +289,7 @@ func (b *SqlBuilder) OrderBy(name string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) OrderDescBy(name string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) OrderDescBy(name string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -305,7 +303,7 @@ func (b *SqlBuilder) OrderDescBy(name string, condition ...bool) *SqlBuilder {
 	b.orderTokens = append(b.orderTokens, name+" DESC")
 	return b
 }
-func (b *SqlBuilder) Native(sql string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Native(sql string, condition ...bool) *SqlBuilder[T] {
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
@@ -321,7 +319,7 @@ func (b *SqlBuilder) Native(sql string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Limit(num int64, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Limit(num int64, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -336,7 +334,7 @@ func (b *SqlBuilder) Limit(num int64, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Offset(num int64, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Offset(num int64, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -352,7 +350,7 @@ func (b *SqlBuilder) Offset(num int64, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) WhereBuilder(w *WhereBuilder) *SqlBuilder {
+func (b *SqlBuilder[T]) WhereBuilder(w *WhereBuilder) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
@@ -387,7 +385,7 @@ func (b *SqlBuilder) WhereBuilder(w *WhereBuilder) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Where(whereStr string, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Where(whereStr string, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	for _, c := range condition {
 		if !c {
@@ -398,7 +396,7 @@ func (b *SqlBuilder) Where(whereStr string, condition ...bool) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) _whereArg(whereStr string, args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) _whereArg(whereStr string, args ...any) *SqlBuilder[T] {
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
@@ -420,7 +418,7 @@ func (b *SqlBuilder) _whereArg(whereStr string, args ...any) *SqlBuilder {
 
 	return b
 }
-func (b *SqlBuilder) BoolWhere(condition bool, whereStr string, args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) BoolWhere(condition bool, whereStr string, args ...any) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	if !condition {
 		return b
@@ -429,7 +427,7 @@ func (b *SqlBuilder) BoolWhere(condition bool, whereStr string, args ...any) *Sq
 	return b
 }
 
-func (b *SqlBuilder) WhereIn(whereStr string, args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
@@ -471,7 +469,7 @@ func (b *SqlBuilder) WhereIn(whereStr string, args ...any) *SqlBuilder {
 
 // WhereSqlIn
 // in ? 当参数列表长度为0时，跳过这个where
-func (b *SqlBuilder) WhereSqlIn(whereStr string, args ...any) *SqlBuilder {
+func (b *SqlBuilder[T]) WhereSqlIn(whereStr string, args ...any) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
@@ -511,7 +509,7 @@ func (b *SqlBuilder) WhereSqlIn(whereStr string, args ...any) *SqlBuilder {
 	return b
 }
 
-func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) Between(whereStr string, begin, end any, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
@@ -542,17 +540,17 @@ func (b *SqlBuilder) Between(whereStr string, begin, end any, condition ...bool)
 	return b
 }
 
-func (b *SqlBuilder) Like(key *string, fields ...string) *SqlBuilder {
+func (b *SqlBuilder[T]) Like(key *string, fields ...string) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	b._like(key, 1, fields...)
 	return b
 }
-func (b *SqlBuilder) LikeLeft(key *string, fields ...string) *SqlBuilder {
+func (b *SqlBuilder[T]) LikeLeft(key *string, fields ...string) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	b._like(key, 2, fields...)
 	return b
 }
-func (b *SqlBuilder) LikeRight(key *string, fields ...string) *SqlBuilder {
+func (b *SqlBuilder[T]) LikeRight(key *string, fields ...string) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	b._like(key, 3, fields...)
 	return b
@@ -562,7 +560,7 @@ func (b *SqlBuilder) LikeRight(key *string, fields ...string) *SqlBuilder {
 // 1 表示 like '%key%';
 // 2 表示 like '%key';
 // 3 表示 like 'key%';
-func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuilder {
+func (b *SqlBuilder[T]) _like(key *string, likeType int, fields ...string) *SqlBuilder[T] {
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
@@ -601,7 +599,7 @@ func (b *SqlBuilder) _like(key *string, likeType int, fields ...string) *SqlBuil
 
 // BetweenDateTimeOfDate
 // 用 Date类型，去查询 DateTime 字段
-func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *types.LocalDate, condition ...bool) *SqlBuilder {
+func (b *SqlBuilder[T]) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *types.LocalDate, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
@@ -635,82 +633,128 @@ func (b *SqlBuilder) BetweenDateTimeOfDate(whereStr string, dateBegin, dateEnd *
 	return b
 }
 
-func (b *SqlBuilder) ScanOne(dest any) (rowsNum int64, err error) {
+func (b *SqlBuilder[T]) ScanOne() (t *T, err error) {
 	b.selectStatus = selectDone
 	b.whereStatus = whereDone
 	db := b.db
-	ctx := db.getCtx()
-	if ctx.hasErr() {
-		return 0, ctx.err
-	}
-
-	ctx.initScanDestOne(dest)
-	if ctx.err != nil {
-		return 0, ctx.err
-	}
-
-	b.initSelectSql()
-	query := b.query
-	args := b.args
-	if ctx.showSql {
-		fmt.Println(query, args)
-	}
-	if ctx.noRun {
-		return 0, nil
-	}
-
-	rows, err := db.query(query, args...)
-	if err != nil {
-		return 0, err
-	}
-	return ctx.ScanLn(rows)
-}
-
-func (b *SqlBuilder) ScanList(dest any) (rowsNum int64, err error) {
-	b.selectStatus = selectDone
-	b.whereStatus = whereDone
-	db := b.db
-	ctx := db.getCtx()
-	if ctx.hasErr() {
-		return 0, ctx.err
-	}
-
-	ctx.initScanDestList(dest)
-	if ctx.err != nil {
-		return 0, ctx.err
-	}
-	b.initSelectSql()
-
-	query := b.query
-	args := b.args
-
-	if ctx.showSql {
-		fmt.Println(query, args)
-	}
-	if ctx.noRun {
-		return 0, nil
-	}
-	rows, err := db.query(query, args...)
-	if err != nil {
-		return 0, err
-	}
-	return ctx.Scan(rows)
-}
-
-func (b *SqlBuilder) Exec() (sql.Result, error) {
-	b.selectStatus = selectDone
-	b.whereStatus = whereDone
-	db := b.db
-	ctx := db.getCtx()
+	dialect := db.getDialect()
+	ctx := dialect.getCtx()
 	if ctx.hasErr() {
 		return nil, ctx.err
 	}
-	b.initSelectSql()
-	if ctx.showSql {
-		fmt.Println(b.query, b.args)
+
+	dest := new(T)
+	ctx.initScanDestOneT(dest)
+	if ctx.err != nil {
+		return nil, ctx.err
 	}
+
+	b.initSelectSql()
+
+	dialect.getSql(b.query)
+	ctx.originalArgs = b.args
+	ctx.printSql()
+
 	if ctx.noRun {
 		return nil, nil
 	}
-	return db.exec(b.query, b.args...)
+
+	rows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
+	if err != nil {
+		return nil, err
+	}
+	num, err := ctx.ScanLn(rows)
+	if err != nil {
+		return nil, err
+	}
+	if num == 0 {
+		return nil, nil
+	}
+	return dest, nil
+}
+
+func (b *SqlBuilder[T]) List() (list []T, err error) {
+	b.selectStatus = selectDone
+	b.whereStatus = whereDone
+	db := b.db
+	dialect := db.getDialect()
+	ctx := dialect.getCtx()
+	if ctx.hasErr() {
+		return nil, ctx.err
+	}
+
+	var dest = &[]T{}
+	v := reflect.ValueOf(dest).Elem()
+	baseV := reflect.ValueOf(new(T)).Elem()
+	t := baseV.Type()
+
+	ctx.initScanDestListT(dest, v, baseV, t, false)
+	if ctx.err != nil {
+		return nil, ctx.err
+	}
+
+	b.initSelectSql()
+
+	dialect.getSql(b.query)
+	ctx.originalArgs = b.args
+	ctx.printSql()
+
+	if ctx.noRun {
+		return nil, nil
+	}
+	rows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
+	if err != nil {
+		return nil, err
+	}
+	num, err := ctx.Scan(rows)
+	if err != nil {
+		return nil, err
+	}
+	if num == 0 {
+		return nil, nil
+	}
+	return *dest, nil
+}
+
+func (b *SqlBuilder[T]) ListP() (list []*T, err error) {
+	b.selectStatus = selectDone
+	b.whereStatus = whereDone
+	db := b.db
+	dialect := db.getDialect()
+	ctx := dialect.getCtx()
+	if ctx.hasErr() {
+		return nil, ctx.err
+	}
+
+	var dest = &[]*T{}
+	v := reflect.ValueOf(dest).Elem()
+	baseV := reflect.ValueOf(new(T)).Elem()
+	t := baseV.Type()
+
+	ctx.initScanDestListT(dest, v, baseV, t, true)
+	if ctx.err != nil {
+		return nil, ctx.err
+	}
+
+	b.initSelectSql()
+
+	dialect.getSql(b.query)
+	ctx.originalArgs = b.args
+	ctx.printSql()
+
+	if ctx.noRun {
+		return nil, nil
+	}
+	rows, err := db.query(ctx.dialectSql, ctx.originalArgs...)
+	if err != nil {
+		return nil, err
+	}
+	num, err := ctx.Scan(rows)
+	if err != nil {
+		return nil, err
+	}
+	if num == 0 {
+		return nil, nil
+	}
+	return *dest, nil
 }
