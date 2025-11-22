@@ -75,8 +75,8 @@ type PageResultP[T any] struct {
 	HasMore   bool  `json:"hasMore"`   // 是否有更多
 }
 
-// ScanPage 查询分页
-func (b *SqlBuilder[T]) ScanPage() (dto PageResult[T], err error) {
+// ListPage 查询分页
+func (b *SqlBuilder[T]) ListPage() (dto PageResult[T], err error) {
 	db := b.db
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
@@ -185,8 +185,8 @@ func (b *SqlBuilder[T]) ScanPage() (dto PageResult[T], err error) {
 	return dto, nil
 }
 
-// PageP 查询分页
-func (b *SqlBuilder[T]) PageP() (dto PageResultP[T], err error) {
+// ListPageP 查询分页
+func (b *SqlBuilder[T]) ListPageP() (dto PageResultP[T], err error) {
 	db := b.db
 	dialect := db.getDialect()
 	ctx := dialect.getCtx()
