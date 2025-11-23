@@ -34,9 +34,6 @@ type Stmter interface {
 
 	query(args ...any) (*sql.Rows, error)
 	exec(args ...any) (sql.Result, error)
-
-	Exec(args ...any) (int64, error)
-	QueryScan(args ...any) *NativePrepare
 }
 type Engine interface {
 	init() Engine
@@ -57,52 +54,6 @@ type Engine interface {
 
 	// 解析 WhereBuilder
 	ToWhereSQL(w *WhereBuilder, primaryKeyColumnNames ...string) (string, []any, error)
-}
-
-/*
-*
-直属lnDb
-
-Dialecter 的实现有两种
-
-	coreDb
-	coreTx
-
-内部属性为
-
-	ldb      *sql.DB
-	dialect Dialecter
-*/
-type corer interface {
-	//===----------------------------------------------------------------------===//
-	// 获取上下文
-	//===----------------------------------------------------------------------===//
-	// 获取 corer 下面的dialecter的coreDb,coreTx 里面的 ctx
-	getDB() *sql.DB
-	getCtx() *ormContext
-	hasErr() bool
-	getErr() error
-	getDialect() Dialecter
-
-	//===----------------------------------------------------------------------===//
-	// 具体执行
-	//===----------------------------------------------------------------------===//
-	//具体执行 创建事务
-	//具体执行 创建提交事务
-	doCommit() error
-	//具体执行 事务回滚
-	doRollback() error
-	//具体执行 query，返回 *sql.Rows
-	doQuery(query string, args ...any) (*sql.Rows, error)
-	//具体执行 exec，返回 sql.Result
-	doExec(query string, args ...any) (sql.Result, error)
-	//具体执行 预处理 返回 *sql.Stmt
-	doPrepare(query string) (Stmt, error)
-
-	//===----------------------------------------------------------------------===//
-	// 工具
-	//===----------------------------------------------------------------------===//
-	appendBaseToken(token baseToken)
 }
 
 /*

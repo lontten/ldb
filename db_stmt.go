@@ -28,18 +28,3 @@ func (db *coreDBStmt) query(args ...any) (*sql.Rows, error) {
 func (db *coreDBStmt) exec(args ...any) (sql.Result, error) {
 	return db.db.Exec(args...)
 }
-
-func (s coreDBStmt) Exec(args ...any) (int64, error) {
-	exec, err := s.exec(args...)
-	if err != nil {
-		return 0, err
-	}
-	return exec.RowsAffected()
-}
-
-func (s *coreDBStmt) QueryScan(args ...any) *NativePrepare {
-	return &NativePrepare{
-		db:   s,
-		args: args,
-	}
-}
