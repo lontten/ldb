@@ -37,13 +37,13 @@ type Index struct {
 	Comment   string   // 索引注释
 }
 
-// api
+// Table 设置表名
 func (c *TableConf) Table(name string) *TableConf {
 	c.tableName = &name
 	return c
 }
 
-// api
+// PrimaryKeys 设置主键字段，多个字段为复合主键
 func (c *TableConf) PrimaryKeys(name ...string) *TableConf {
 	c.primaryKeyColumnNames = name
 	return c
@@ -55,8 +55,7 @@ func (c *TableConf) AutoPrimaryKey(name string) *TableConf {
 	return c
 }
 
-// api
-// OtherAutoField 其他自动生成字段
+// OtherAutoColumn 其他自动生成字段
 // 例如：
 // 自增字段、虚拟列、计算列、默认值，等
 // 在insert时，可以设置返回这些字段
