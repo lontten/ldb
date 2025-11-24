@@ -348,9 +348,14 @@ func (d *MysqlDialect) parse(c Clause) (string, error) {
 	case NotLike:
 		sb.WriteString(c.query + " NOT LIKE ?")
 	case In:
-		sb.WriteString(c.query + " IN (")
-		sb.WriteString(gen(len(c.args)))
-		sb.WriteString(")")
+		length := len(c.args)
+		if length == 0 {
+			sb.WriteString("1=0")
+		} else {
+			sb.WriteString(c.query + " IN (")
+			sb.WriteString(gen(length))
+			sb.WriteString(")")
+		}
 	case NotIn:
 		sb.WriteString(c.query + " NOT IN (")
 		sb.WriteString(gen(len(c.args)))

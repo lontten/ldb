@@ -448,18 +448,16 @@ func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 		return b
 	}
 
-	if args == nil {
-		return b
-	}
 	length := len(args)
 	if length == 0 {
+		whereStr = "1=0"
 		return b
+	} else {
+		b.AppendArgs(args...)
+
+		var inArgStr = " (" + gen(length) + ")"
+		whereStr = whereStr + " IN" + inArgStr
 	}
-
-	b.AppendArgs(args...)
-
-	var inArgStr = " (" + gen(length) + ")"
-	whereStr = whereStr + " IN" + inArgStr
 
 	switch b.whereStatus {
 	case whereNoSet:
@@ -490,18 +488,16 @@ func (b *SqlBuilder[T]) WhereSqlIn(whereStr string, args ...any) *SqlBuilder[T] 
 		return b
 	}
 
-	if args == nil {
-		return b
-	}
 	length := len(args)
 	if length == 0 {
+		whereStr = "1=0"
 		return b
+	} else {
+		b.AppendArgs(args...)
+
+		var inArgStr = " (" + gen(length) + ")"
+		whereStr = strings.Replace(whereStr, "?", inArgStr, -1)
 	}
-
-	b.AppendArgs(args...)
-
-	var inArgStr = " (" + gen(length) + ")"
-	whereStr = strings.Replace(whereStr, "?", inArgStr, -1)
 
 	switch b.whereStatus {
 	case whereNoSet:

@@ -99,7 +99,7 @@ func (w *WhereBuilder) FilterPrimaryKey(args ...any) *WhereBuilder {
 
 // Eq
 // x = ?
-func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Eq(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -114,7 +114,7 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 		w.andWheres = append(w.andWheres, WhereBuilder{
 			clause: &Clause{
 				Type:  IsNull,
-				query: query,
+				query: field,
 			},
 		})
 		return w
@@ -123,7 +123,7 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  Eq,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -132,7 +132,7 @@ func (w *WhereBuilder) Eq(query string, arg any, condition ...bool) *WhereBuilde
 
 // NotEq
 // x <> ?
-func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) NotEq(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -147,7 +147,7 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 		w.andWheres = append(w.andWheres, WhereBuilder{
 			clause: &Clause{
 				Type:  IsNotNull,
-				query: query,
+				query: field,
 			},
 		})
 		return w
@@ -156,7 +156,7 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  Neq,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -165,21 +165,17 @@ func (w *WhereBuilder) NotEq(query string, arg any, condition ...bool) *WhereBui
 
 // BoolIn
 // IN (?)
-func (w *WhereBuilder) BoolIn(condition bool, query string, args ...any) *WhereBuilder {
+func (w *WhereBuilder) BoolIn(condition bool, field string, args ...any) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
 	if !condition {
 		return w
 	}
-	argsLen := len(args)
-	if argsLen == 0 {
-		return w
-	}
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  In,
-			query: query,
+			query: field,
 			args:  args,
 		},
 	})
@@ -188,18 +184,14 @@ func (w *WhereBuilder) BoolIn(condition bool, query string, args ...any) *WhereB
 
 // In
 // IN (?)
-func (w *WhereBuilder) In(query string, args ...any) *WhereBuilder {
+func (w *WhereBuilder) In(field string, args ...any) *WhereBuilder {
 	if w.err != nil {
-		return w
-	}
-	argsLen := len(args)
-	if argsLen == 0 {
 		return w
 	}
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  In,
-			query: query,
+			query: field,
 			args:  args,
 		},
 	})
@@ -208,7 +200,7 @@ func (w *WhereBuilder) In(query string, args ...any) *WhereBuilder {
 
 // BoolNotIn
 // NOT IN (?)
-func (w *WhereBuilder) BoolNotIn(condition bool, query string, args ...any) *WhereBuilder {
+func (w *WhereBuilder) BoolNotIn(condition bool, field string, args ...any) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -223,7 +215,7 @@ func (w *WhereBuilder) BoolNotIn(condition bool, query string, args ...any) *Whe
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  NotIn,
-			query: query,
+			query: field,
 			args:  args,
 		},
 	})
@@ -232,7 +224,7 @@ func (w *WhereBuilder) BoolNotIn(condition bool, query string, args ...any) *Whe
 
 // NotIn
 // NOT IN (?)
-func (w *WhereBuilder) NotIn(query string, args ...any) *WhereBuilder {
+func (w *WhereBuilder) NotIn(field string, args ...any) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -244,7 +236,7 @@ func (w *WhereBuilder) NotIn(query string, args ...any) *WhereBuilder {
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  NotIn,
-			query: query,
+			query: field,
 			args:  args,
 		},
 	})
@@ -254,7 +246,7 @@ func (w *WhereBuilder) NotIn(query string, args ...any) *WhereBuilder {
 // Contains
 // pg 独有
 // [1] @< [1,2]
-func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Contains(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -272,7 +264,7 @@ func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *Where
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  Contains,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -281,7 +273,7 @@ func (w *WhereBuilder) Contains(query string, arg any, condition ...bool) *Where
 
 // Lt
 // x < a
-func (w *WhereBuilder) Lt(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Lt(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -293,14 +285,14 @@ func (w *WhereBuilder) Lt(query string, arg any, condition ...bool) *WhereBuilde
 
 	isNil := utils.IsNil(arg)
 	if isNil {
-		w.err = fmt.Errorf("invalid use of Lt: argument for query '%s' is nil.", query)
+		w.err = fmt.Errorf("invalid use of Lt: argument for field '%s' is nil.", field)
 		return w
 	}
 
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  Less,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -309,7 +301,7 @@ func (w *WhereBuilder) Lt(query string, arg any, condition ...bool) *WhereBuilde
 
 // Lte
 // x <= a
-func (w *WhereBuilder) Lte(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Lte(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -321,14 +313,14 @@ func (w *WhereBuilder) Lte(query string, arg any, condition ...bool) *WhereBuild
 
 	isNil := utils.IsNil(arg)
 	if isNil {
-		w.err = fmt.Errorf("invalid use of Lte: argument for query '%s' is nil.", query)
+		w.err = fmt.Errorf("invalid use of Lte: argument for field '%s' is nil.", field)
 		return w
 	}
 
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  LessEq,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -337,7 +329,7 @@ func (w *WhereBuilder) Lte(query string, arg any, condition ...bool) *WhereBuild
 
 // Gt
 // x > a
-func (w *WhereBuilder) Gt(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Gt(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -349,14 +341,14 @@ func (w *WhereBuilder) Gt(query string, arg any, condition ...bool) *WhereBuilde
 
 	isNil := utils.IsNil(arg)
 	if isNil {
-		w.err = fmt.Errorf("invalid use of Gt: argument for query '%s' is nil.", query)
+		w.err = fmt.Errorf("invalid use of Gt: argument for field '%s' is nil.", field)
 		return w
 	}
 
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  Greater,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -365,7 +357,7 @@ func (w *WhereBuilder) Gt(query string, arg any, condition ...bool) *WhereBuilde
 
 // Gte
 // x >= a
-func (w *WhereBuilder) Gte(query string, arg any, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) Gte(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -376,13 +368,13 @@ func (w *WhereBuilder) Gte(query string, arg any, condition ...bool) *WhereBuild
 	}
 	isNil := utils.IsNil(arg)
 	if isNil {
-		w.err = fmt.Errorf("invalid use of Gte: argument for query '%s' is nil.", query)
+		w.err = fmt.Errorf("invalid use of Gte: argument for field '%s' is nil.", field)
 		return w
 	}
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  GreaterEq,
-			query: query,
+			query: field,
 			args:  []any{arg},
 		},
 	})
@@ -391,7 +383,7 @@ func (w *WhereBuilder) Gte(query string, arg any, condition ...bool) *WhereBuild
 
 // IsNull
 // x IS NULL
-func (w *WhereBuilder) IsNull(query string, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) IsNull(field string, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -404,7 +396,7 @@ func (w *WhereBuilder) IsNull(query string, condition ...bool) *WhereBuilder {
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  IsNull,
-			query: query,
+			query: field,
 		},
 	})
 	return w
@@ -412,7 +404,7 @@ func (w *WhereBuilder) IsNull(query string, condition ...bool) *WhereBuilder {
 
 // IsNotNull
 // x IS NOT NULL
-func (w *WhereBuilder) IsNotNull(query string, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) IsNotNull(field string, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -425,7 +417,7 @@ func (w *WhereBuilder) IsNotNull(query string, condition ...bool) *WhereBuilder 
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  IsNotNull,
-			query: query,
+			query: field,
 		},
 	})
 	return w
@@ -433,7 +425,7 @@ func (w *WhereBuilder) IsNotNull(query string, condition ...bool) *WhereBuilder 
 
 // IsFalse
 // x IS FALSE
-func (w *WhereBuilder) IsFalse(query string, condition ...bool) *WhereBuilder {
+func (w *WhereBuilder) IsFalse(field string, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
@@ -445,7 +437,7 @@ func (w *WhereBuilder) IsFalse(query string, condition ...bool) *WhereBuilder {
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  IsFalse,
-			query: query,
+			query: field,
 		},
 	})
 	return w

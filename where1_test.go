@@ -277,3 +277,27 @@ func TestWhereBuilder18(t *testing.T) {
 	as.Equal("a = ?", query)
 	as.Equal([]any{"a"}, args)
 }
+
+func TestWhereBuilder19(t *testing.T) {
+	as := assert.New(t)
+	engine := getMockDB(PgConf{})
+
+	w1 := W().In("id")
+
+	query, args, err := w1.toSql(engine.getDialect().parse)
+	as.Nil(err)
+	as.Equal("1=0", query)
+	as.Equal(0, len(args))
+}
+
+func TestWhereBuilder20(t *testing.T) {
+	as := assert.New(t)
+	engine := getMockDB(PgConf{})
+
+	w1 := W().NotIn("id")
+
+	query, args, err := w1.toSql(engine.getDialect().parse)
+	as.Nil(err)
+	as.Equal("", query)
+	as.Equal(0, len(args))
+}
