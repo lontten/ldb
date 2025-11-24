@@ -47,7 +47,7 @@ type returnAutoPrimaryKeyType int
 const (
 	pkNoReturn    returnAutoPrimaryKeyType = iota
 	pkQueryReturn                          // insert 时，可以直接 query 返回
-	pkFetchReturn                          // insert 时，不能直接返回，需要手动获取
+	pkFetchReturn                          // insert 时，不能直接返回，需要手动LastInsertId获取
 )
 
 type ormContext struct {
