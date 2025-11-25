@@ -31,3 +31,25 @@ func TableUpdate() {
 	}
 	fmt.Println(string(bytes))
 }
+
+func TableUpdate2() {
+	var user = User{
+		Name: types.NewString("abc"),
+	}
+	num, err := ldb.Update(dbinit.DB, &user, ldb.W().
+		Eq("id", 1).
+		In("id", 1, 2).
+		Gt("id", 1).
+		IsNull("name").
+		Like("name", "abc"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(num)
+	bytes, err := json.Marshal(user)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(bytes))
+}
