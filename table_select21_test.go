@@ -16,11 +16,10 @@ type User21 struct {
 	Id int64
 }
 
-func (User21) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User21) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 func TestFirst21_mysql(t *testing.T) {
 	as := assert.New(t)
@@ -46,11 +45,10 @@ type User22 struct {
 	Val string
 }
 
-func (User22) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User22) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 func TestFirst22_mysql(t *testing.T) {
 	as := assert.New(t)
@@ -77,11 +75,10 @@ type User23 struct {
 	Val time.Time
 }
 
-func (User23) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User23) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 func TestFirst23_mysql(t *testing.T) {
 	as := assert.New(t)
@@ -108,11 +105,10 @@ type User24 struct {
 	Val types.LocalDateTime
 }
 
-func (User24) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User24) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 func TestFirst24_mysql(t *testing.T) {
 	as := assert.New(t)
@@ -139,11 +135,10 @@ type User25 struct {
 	Val decimal.Decimal
 }
 
-func (User25) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User25) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 func TestFirst25_mysql(t *testing.T) {
 	as := assert.New(t)

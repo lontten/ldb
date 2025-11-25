@@ -17,10 +17,10 @@ type Ka struct {
 	Day2 types.LocalDate
 }
 
-func (k Ka) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_ka").
-		AutoPrimaryKey("id")
+func (k Ka) TableConf() *TableConfContext {
+	return TableConf("t_ka").
+		PrimaryKeys("id").
+		AutoColumn("id")
 }
 
 func TestQuery1_pg(t *testing.T) {
@@ -54,10 +54,10 @@ type UserNil2 struct {
 	Day2  time.Time
 }
 
-func (u UserNil2) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
-		AutoPrimaryKey("id")
+func (u UserNil2) TableConf() *TableConfContext {
+	return TableConf("t_user").
+		PrimaryKeys("id").
+		AutoColumn("id")
 }
 
 func TestQuery2_pg(t *testing.T) {

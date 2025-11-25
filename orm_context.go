@@ -83,8 +83,9 @@ type ormContext struct {
 	returnAutoPrimaryKey returnAutoPrimaryKeyType // 自增主键返回类型
 
 	// 在不支持 insertCanReturn 的数据库中，使用 LastInsertId 返回 自增主键
-	autoPrimaryKeyColumnName *string // 自增主键字段名
-	autoPrimaryKeyFieldName  *string // 自增主键字段名
+	// First时，用来当默认排序字段
+	autoPrimaryKeyColumnName string // 自增主键字段名
+	autoPrimaryKeyFieldName  string // 自增主键字段名
 	// 只能在 insert时，返回字段，只能支持 insertCanReturn 的数据库，可以返回
 	otherAutoColumnNames []string // 其他自动生成字段名列表
 	allAutoColumnNames   []string // 所有自动生成字段名列表
@@ -187,7 +188,7 @@ func (ctx *ormContext) setLastInsertId(lastInsertId int64) {
 		ctx.err = errors.New("last_insert_id field type error")
 		return
 	}
-	f := ctx.destBaseValue.FieldByName(*ctx.autoPrimaryKeyFieldName)
+	f := ctx.destBaseValue.FieldByName(ctx.autoPrimaryKeyFieldName)
 	if ctx.autoPrimaryKeyFieldIsPtr {
 		f.Set(vp)
 	} else {
@@ -273,18 +274,18 @@ func (ctx *ormContext) initColumnsValue() {
 	if ctx.scanIsPtr && ctx.returnType != return_type.None {
 		if ctx.ormConf.insertCanReturn {
 			ctx.returnAutoPrimaryKey = pkQueryReturn
-		} else if ctx.autoPrimaryKeyColumnName != nil {
+		} else if ctx.autoPrimaryKeyColumnName != "" {
 			ctx.returnAutoPrimaryKey = pkFetchReturn
 		}
 	}
 
 	if ctx.returnAutoPrimaryKey == pkFetchReturn {
-		fieldName, ok := cv.modelAllCFNameMap[*ctx.autoPrimaryKeyColumnName]
+		fieldName, ok := cv.modelAllCFNameMap[ctx.autoPrimaryKeyColumnName]
 		if !ok {
-			ctx.err = errors.New("auto_increment field not found")
+			ctx.err = errors.New("TableConfContext not set AutoPrimaryKey")
 			return
 		}
-		ctx.autoPrimaryKeyFieldName = &fieldName
+		ctx.autoPrimaryKeyFieldName = fieldName
 
 		structField, _ := ctx.destBaseType.FieldByName(fieldName)
 		isPtr, baseT := basePtrType(structField.Type)

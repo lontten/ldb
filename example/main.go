@@ -10,8 +10,8 @@ type User struct {
 	Age  string
 }
 
-func (u User) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("t_user").
+func (u User) TableConf() *ldb.TableConfContext {
+	return new(ldb.TableConfContext).Table("t_user").
 		PrimaryKeys("id").
 		AutoPrimaryKey("id")
 }

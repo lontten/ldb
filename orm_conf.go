@@ -90,8 +90,8 @@ func (c OrmConf) tableName(v reflect.Value, dest any) string {
 
 	// tableName
 	n := getTableName(v)
-	if n != nil {
-		return *n
+	if n != "" {
+		return n
 	}
 
 	// structName

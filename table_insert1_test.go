@@ -19,11 +19,10 @@ type User struct {
 	Birthday types.LocalDate
 }
 
-func (User) TableConf() *TableConf {
-	return new(TableConf).
-		Table("t_user").
+func (User) TableConf() *TableConfContext {
+	return TableConf("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 
 func TestInsert_mysql(t *testing.T) {

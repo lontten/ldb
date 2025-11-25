@@ -41,8 +41,8 @@ func First[T any](db Engine, wb *WhereBuilder, extra ...*ExtraContext) (t *T, er
 		return nil, ctx.err
 	}
 	if ctx.lastSql == "" {
-		if ctx.autoPrimaryKeyColumnName != nil {
-			ctx.lastSql = " ORDER BY " + *ctx.autoPrimaryKeyColumnName + " DESC"
+		if ctx.autoPrimaryKeyColumnName != "" {
+			ctx.lastSql = " ORDER BY " + ctx.autoPrimaryKeyColumnName + " DESC"
 		}
 	}
 

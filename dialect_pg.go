@@ -186,7 +186,7 @@ func (d *PgDialect) tableInsertGen() {
 			for _, s := range ctx.otherAutoColumnNames {
 				list = append(list, s)
 			}
-			list = append(list, *ctx.autoPrimaryKeyColumnName)
+			list = append(list, ctx.autoPrimaryKeyColumnName)
 			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, list, ","))
 		case return_type.ZeroField:
 			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelZeroColumnNames, ","))

@@ -13,10 +13,10 @@ type TestModel struct {
 	Name *string `db:"name"`
 }
 
-func (u TestModel) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("t_test").
+func (u TestModel) TableConf() *ldb.TableConfContext {
+	return new(ldb.TableConfContext).Table("t_test").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 
 type LN_MODEL_DEL struct {
@@ -33,8 +33,8 @@ type TestModelDel struct {
 	Name *string `db:"name"`
 }
 
-func (u TestModelDel) TableConf() *ldb.TableConf {
-	return new(ldb.TableConf).Table("t_test").
+func (u TestModelDel) TableConf() *ldb.TableConfContext {
+	return ldb.TableConf("t_test").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
