@@ -451,7 +451,6 @@ func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 	length := len(args)
 	if length == 0 {
 		whereStr = "1=0"
-		return b
 	} else {
 		b.AppendArgs(args...)
 
@@ -491,7 +490,6 @@ func (b *SqlBuilder[T]) WhereSqlIn(whereStr string, args ...any) *SqlBuilder[T] 
 	length := len(args)
 	if length == 0 {
 		whereStr = "1=0"
-		return b
 	} else {
 		b.AppendArgs(args...)
 
