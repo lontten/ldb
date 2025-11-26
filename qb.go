@@ -182,7 +182,12 @@ func (b *SqlBuilder[T]) Select(arg string, condition ...bool) *SqlBuilder[T] {
 }
 
 // 添加 多个 select 字段，从 model中
-func (b *SqlBuilder[T]) SelectModel(v any) *SqlBuilder[T] {
+func (b *SqlBuilder[T]) SelectModel(v any, condition ...bool) *SqlBuilder[T] {
+	for _, c := range condition {
+		if !c {
+			return b
+		}
+	}
 	ctx := b.db.getCtx()
 	if b.selectStatus == selectDone {
 		ctx.err = errors.New("SelectModel 代码位置异常")
@@ -440,6 +445,15 @@ func (b *SqlBuilder[T]) BoolWhere(condition bool, whereStr string, args ...any) 
 	return b
 }
 
+func (b *SqlBuilder[T]) BoolWhereIn(condition bool, whereStr string, args ...any) *SqlBuilder[T] {
+	b.selectStatus = selectDone
+	if !condition {
+		return b
+	}
+	b.WhereIn(whereStr, args...)
+	return b
+}
+
 func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
@@ -477,8 +491,19 @@ func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 	return b
 }
 
+// BoolWhereSqlIn
+// in ? 当参数列表长度为0时，为 1=0   false条件
+func (b *SqlBuilder[T]) BoolWhereSqlIn(condition bool, whereStr string, args ...any) *SqlBuilder[T] {
+	b.selectStatus = selectDone
+	if !condition {
+		return b
+	}
+	b.WhereSqlIn(whereStr, args...)
+	return b
+}
+
 // WhereSqlIn
-// in ? 当参数列表长度为0时，跳过这个where
+// in ? 当参数列表长度为0时，为 1=0   false条件
 func (b *SqlBuilder[T]) WhereSqlIn(whereStr string, args ...any) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
