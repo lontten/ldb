@@ -54,6 +54,8 @@ type ormContext struct {
 	ormConf *OrmConf
 	extra   *ExtraContext
 
+	allowFullTableOp bool // 是否允许全表操作，默认false不允许全表操作
+
 	// model 参数，用于校验字段类型是否合法
 	paramModelBaseV reflect.Value
 
@@ -207,6 +209,7 @@ func (ctx *ormContext) initExtra(extra ...*ExtraContext) {
 		ctx.err = e.GetErr()
 		return
 	}
+	ctx.allowFullTableOp = e.allowFullTableOp
 	ctx.convertCtx = e.convertCtx
 	ctx.extra = e
 	ctx.insertType = e.insertType

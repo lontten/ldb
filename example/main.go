@@ -13,7 +13,7 @@ type User struct {
 func (u User) TableConf() *ldb.TableConfContext {
 	return new(ldb.TableConfContext).Table("t_user").
 		PrimaryKeys("id").
-		AutoPrimaryKey("id")
+		AutoColumn("id")
 }
 
 func main() {

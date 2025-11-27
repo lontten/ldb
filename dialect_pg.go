@@ -212,6 +212,13 @@ func (d *PgDialect) tableDelGen() {
 		return
 	}
 
+	if !ctx.allowFullTableOp {
+		if whereStr == "" {
+			ctx.err = errors.New("禁止全表操作")
+			return
+		}
+	}
+
 	//  没有软删除 或者 跳过软删除 ，执行物理删除
 	if ctx.softDeleteType == softdelete.None || ctx.skipSoftDelete {
 		query.WriteString("DELETE FROM ")
@@ -242,6 +249,13 @@ func (d *PgDialect) tableUpdateGen() {
 	if err != nil {
 		ctx.err = err
 		return
+	}
+
+	if !ctx.allowFullTableOp {
+		if whereStr == "" {
+			ctx.err = errors.New("禁止全表操作")
+			return
+		}
 	}
 
 	query.WriteString("UPDATE ")

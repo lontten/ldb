@@ -23,16 +23,17 @@ import (
 
 // ExtraContext 扩展参数
 type ExtraContext struct {
-	insertType     insert_type.InsertType
-	returnType     return_type.ReturnType
-	showSql        bool
-	noRun          bool
-	skipSoftDelete bool
-	tableName      string
-	selectColumns  []string // select 的 字段名，空为返回所有字段
-	limit          *int64
-	offset         *int64
-	orderByTokens  []string // 排序
+	insertType       insert_type.InsertType
+	returnType       return_type.ReturnType
+	allowFullTableOp bool // 是否允许全表操作，默认false不允许全表操作
+	showSql          bool
+	noRun            bool
+	skipSoftDelete   bool
+	tableName        string
+	selectColumns    []string // select 的 字段名，空为返回所有字段
+	limit            *int64
+	offset           *int64
+	orderByTokens    []string // 排序
 
 	convertCtx ConvertCtx // 查询结果转换函数
 
@@ -64,6 +65,13 @@ func (e *ExtraContext) GetErr() error {
 
 func (e *ExtraContext) ShowSql() *ExtraContext {
 	e.showSql = true
+	return e
+}
+
+// AllowFullTableOp
+// 允许全表操作，默认false不允许全表操作
+func (e *ExtraContext) AllowFullTableOp() *ExtraContext {
+	e.allowFullTableOp = true
 	return e
 }
 
