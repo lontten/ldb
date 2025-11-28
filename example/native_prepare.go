@@ -12,7 +12,7 @@ func Prepare() {
 	if err != nil {
 		panic(err)
 	}
-	num, err := stmt.Exec(1)
+	num, err := ldb.StmtExec(stmt, 1)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func Prepare2() {
 		panic(err)
 	}
 	var n int64
-	num, err := stmt.QueryScan(2).ScanOne(&n)
+	num, err := ldb.StmtQuery[int64](stmt, 2).ScanOne(&n)
 	if err != nil {
 		panic(err)
 	}
@@ -38,8 +38,9 @@ func Prepare3() {
 	if err != nil {
 		panic(err)
 	}
+
 	var list []int64
-	num, err := stmt.QueryScan(2).ScanList(&list)
+	num, err := ldb.StmtQuery[int64](stmt, 2).ScanList(&list)
 	if err != nil {
 		panic(err)
 	}

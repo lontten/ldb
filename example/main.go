@@ -17,5 +17,6 @@ func (u User) TableConf() *ldb.TableConfContext {
 }
 
 func main() {
-	QueryBuild()
+	//QueryBuild()
+	TableInsert()
 }
