@@ -1,6 +1,19 @@
 # ldb
 
 
+### 下载
+
+```
+ // v1
+ go get -u github.com/lontten/ldb
+ // v2
+ go get -u github.com/lontten/ldb/v2
+ 
+```
+
+
+
+
 ### init ldb
 ```go
 
