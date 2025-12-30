@@ -16,11 +16,17 @@ package ldb
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"time"
 )
 
-func FieldSetValNil(f reflect.Value, val any) error {
+func FieldSetValNil(f reflect.Value, fieldName string, val any) error {
+	defer func() {
+		if r := recover(); r != nil {
+			panic(fmt.Sprintf("fieldName:%v,val:%v,FieldSetValNil fail:%v", fieldName, val, r))
+		}
+	}()
 	if val == nil {
 		f.SetZero()
 		return nil

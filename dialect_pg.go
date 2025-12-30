@@ -169,7 +169,7 @@ func (d *PgDialect) tableInsertGen() {
 				query.WriteString(", ")
 			}
 			query.WriteString(d.escapeIdentifier(column) + " = ?")
-			ctx.args = append(ctx.args, whenUpdateSet.columnValues[i].Value)
+			ctx.originalArgs = append(ctx.originalArgs, whenUpdateSet.columnValues[i].Value)
 		}
 		break
 	default:
@@ -182,12 +182,7 @@ func (d *PgDialect) tableInsertGen() {
 		case return_type.None:
 			break
 		case return_type.Auto:
-			var list []string
-			for _, s := range ctx.otherAutoColumnNames {
-				list = append(list, s)
-			}
-			list = append(list, ctx.autoPrimaryKeyColumnName)
-			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, list, ","))
+			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.allAutoColumnNames, ","))
 		case return_type.ZeroField:
 			query.WriteString(" RETURNING " + escapeJoin(d.escapeIdentifier, ctx.modelZeroColumnNames, ","))
 		case return_type.AllField:
@@ -230,9 +225,11 @@ func (d *PgDialect) tableDelGen() {
 		query.WriteString(" SET ")
 		ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
 	}
-	query.WriteString(" WHERE ")
-	query.WriteString(whereStr)
-	ctx.args = append(ctx.args, args...)
+	if len(whereStr) > 0 {
+		query.WriteString(" WHERE ")
+		query.WriteString(whereStr)
+	}
+	ctx.originalArgs = append(ctx.originalArgs, args...)
 
 	query.WriteString(";")
 }
@@ -262,10 +259,13 @@ func (d *PgDialect) tableUpdateGen() {
 	query.WriteString(d.escapeIdentifier(tableName))
 	query.WriteString(" SET ")
 	ctx.genSetSqlBycolumnValues(d.escapeIdentifier)
-	query.WriteString("WHERE ")
 
-	query.WriteString(whereStr)
-	ctx.args = append(ctx.args, args...)
+	if len(whereStr) > 0 {
+		query.WriteString(" WHERE ")
+		query.WriteString(whereStr)
+	}
+
+	ctx.originalArgs = append(ctx.originalArgs, args...)
 	query.WriteString(";")
 }
 
@@ -282,15 +282,24 @@ func (d *PgDialect) tableSelectGen() {
 		ctx.err = err
 		return
 	}
+	if !ctx.allowFullTableOp {
+		if whereStr == "" {
+			ctx.err = errors.New("禁止全表操作")
+			return
+		}
+	}
 
 	query.WriteString("SELECT ")
 	query.WriteString(escapeJoin(d.escapeIdentifier, ctx.modelSelectFieldNames, " ,"))
 	query.WriteString(" FROM ")
 	query.WriteString(tableName)
 
-	query.WriteString(" WHERE ")
-	query.WriteString(whereStr)
-	ctx.args = append(ctx.args, args...)
+	if len(whereStr) > 0 {
+		query.WriteString(" WHERE ")
+		query.WriteString(whereStr)
+	}
+
+	ctx.originalArgs = append(ctx.originalArgs, args...)
 	query.WriteString(ctx.lastSql)
 	if ctx.limit != nil {
 		query.WriteString(" LIMIT ")
