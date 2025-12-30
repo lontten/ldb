@@ -377,7 +377,7 @@ func (b *SqlBuilder[T]) WhereBuilder(w *WhereBuilder) *SqlBuilder[T] {
 	if w == nil {
 		return b
 	}
-	sqlStr, args, err := w.toSql(b.db.getDialect().parse)
+	sqlStr, args, err := w.toSql(b.db.getDialect().parse, ctx.primaryKeyColumnNames...)
 	if err != nil {
 		b.db.getCtx().err = err
 		return b
