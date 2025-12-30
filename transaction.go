@@ -27,7 +27,7 @@ func Rollback[T any](result T) {
 	panic(RollbackWithResult[T]{Result: result})
 }
 
-func Transaction[T any](db Engine, fn func(tx Engine) T) (res T, err error) {
+func TransactionResult[T any](db Engine, fn func(tx Engine) T) (res T, err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return res, err
@@ -65,7 +65,7 @@ func Transaction[T any](db Engine, fn func(tx Engine) T) (res T, err error) {
 	return res, nil
 }
 
-func TransactionPanic[T any](db Engine, fn func(tx Engine) T) (res T) {
+func TransactionResultPanic[T any](db Engine, fn func(tx Engine) T) (res T) {
 	tx, err := db.Begin()
 	if err != nil {
 		panic(err)
@@ -100,4 +100,67 @@ func TransactionPanic[T any](db Engine, fn func(tx Engine) T) (res T) {
 	}
 
 	return res
+}
+
+func Transaction(db Engine, fn func(tx Engine)) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			rbErr := tx.Rollback()
+			if rbErr != nil {
+				log.Printf("rollback failed: %v", rbErr)
+			}
+
+			switch v := r.(type) {
+			case error:
+				err = v
+			default:
+				err = fmt.Errorf("%v", err)
+			}
+			return
+		}
+	}()
+
+	fn(tx)
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("commit failed: %v", err)
+	}
+	return nil
+}
+
+func TransactionPanic(db Engine, fn func(tx Engine)) {
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			rbErr := tx.Rollback()
+			if rbErr != nil {
+				log.Printf("rollback failed: %v", rbErr)
+			}
+
+			switch v := r.(type) {
+			case error:
+				panic(v)
+			default:
+				panic(fmt.Errorf("%v", err))
+			}
+			return
+		}
+	}()
+
+	fn(tx)
+
+	if err = tx.Commit(); err != nil {
+		panic(fmt.Errorf("commit failed: %v", err))
+	}
 }
