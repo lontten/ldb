@@ -6,10 +6,10 @@ import (
 	"example/dbinit"
 	"fmt"
 
-	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/ldb/v2"
 	return_type "github.com/lontten/ldb/v2/return-type"
+	"github.com/lontten/lutil/logutil"
 )
 
 func TableInsert() {

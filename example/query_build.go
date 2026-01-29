@@ -4,8 +4,8 @@ import (
 	"example/dbinit"
 	"fmt"
 
-	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/ldb/v2"
+	"github.com/lontten/lutil/logutil"
 )
 
 func QueryBuild() {

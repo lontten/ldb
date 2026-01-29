@@ -4,8 +4,8 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/lontten/lcore/v2/logutil"
 	"github.com/lontten/ldb/v2"
+	"github.com/lontten/lutil/logutil"
 )
 
 //import _ "github.com/jackc/pgx/v5/stdlib"
