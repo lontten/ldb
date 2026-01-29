@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/lontten/lcore/v2/strutil"
+	"github.com/lontten/lutil/strutil"
 	"github.com/pkg/errors"
 )
 

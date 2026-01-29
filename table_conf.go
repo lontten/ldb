@@ -17,7 +17,7 @@ package ldb
 import (
 	"reflect"
 
-	"github.com/lontten/lcore/v2/lcutils"
+	"github.com/lontten/lutil/lcutils"
 )
 
 type TableConfContext struct {
