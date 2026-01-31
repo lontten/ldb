@@ -227,6 +227,12 @@ func (d *MysqlDialect) tableInsertGen() {
 			}
 			ctx.originalArgs = append(ctx.originalArgs, whenUpdateSet.columnValues[i].Value)
 		}
+
+		if ctx.returnAutoPrimaryKey == pkFetchReturn && ctx.autoPrimaryKeyColumnName != "" {
+			query.WriteString(", ")
+			query.WriteString(ctx.autoPrimaryKeyColumnName)
+			query.WriteString(" = LAST_INSERT_ID(" + ctx.autoPrimaryKeyColumnName + ")")
+		}
 		break
 	default:
 		break
