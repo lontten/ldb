@@ -153,58 +153,30 @@ func (w *WhereBuilder) NotEq(field string, arg any, condition ...bool) *WhereBui
 	return w
 }
 
-// BoolIn
-// IN (?)
-func (w *WhereBuilder) BoolIn(condition bool, field string, args ...any) *WhereBuilder {
-	if w.err != nil {
-		return w
-	}
-	if !condition {
-		return w
-	}
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  In,
-			query: field,
-			args:  args,
-		},
-	})
-	return w
-}
-
 // In
 // IN (?)
-func (w *WhereBuilder) In(field string, args ...any) *WhereBuilder {
+// arg 为数组；当arg不是数组时，自动封装成只有一个元素的数组。
+func (w *WhereBuilder) In(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
+	for _, b := range condition {
+		if !b {
+			return w
+		}
+	}
+
+	isNil := utils.IsNil(arg)
+	if isNil {
+		w.err = fmt.Errorf("invalid use of BoolIn: argument for field '%s' is nil", field)
+		return w
+	}
+
+	_, args := processArrArg(arg)
+
 	w.andWheres = append(w.andWheres, WhereBuilder{
 		clause: &Clause{
 			Type:  In,
-			query: field,
-			args:  args,
-		},
-	})
-	return w
-}
-
-// BoolNotIn
-// NOT IN (?)
-func (w *WhereBuilder) BoolNotIn(condition bool, field string, args ...any) *WhereBuilder {
-	if w.err != nil {
-		return w
-	}
-	if !condition {
-		return w
-	}
-	argsLen := len(args)
-	if argsLen == 0 {
-		return w
-	}
-
-	w.andWheres = append(w.andWheres, WhereBuilder{
-		clause: &Clause{
-			Type:  NotIn,
 			query: field,
 			args:  args,
 		},
@@ -214,10 +186,25 @@ func (w *WhereBuilder) BoolNotIn(condition bool, field string, args ...any) *Whe
 
 // NotIn
 // NOT IN (?)
-func (w *WhereBuilder) NotIn(field string, args ...any) *WhereBuilder {
+// arg 为数组；当arg不是数组时，自动封装成只有一个元素的数组。
+func (w *WhereBuilder) NotIn(field string, arg any, condition ...bool) *WhereBuilder {
 	if w.err != nil {
 		return w
 	}
+	for _, b := range condition {
+		if !b {
+			return w
+		}
+	}
+
+	isNil := utils.IsNil(arg)
+	if isNil {
+		w.err = fmt.Errorf("invalid use of BoolIn: argument for field '%s' is nil", field)
+		return w
+	}
+
+	_, args := processArrArg(arg)
+
 	argsLen := len(args)
 	if argsLen == 0 {
 		return w

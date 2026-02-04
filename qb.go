@@ -16,6 +16,7 @@ package ldb
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -445,22 +446,26 @@ func (b *SqlBuilder[T]) BoolWhere(condition bool, whereStr string, args ...any) 
 	return b
 }
 
-func (b *SqlBuilder[T]) BoolWhereIn(condition bool, whereStr string, args ...any) *SqlBuilder[T] {
-	b.selectStatus = selectDone
-	if !condition {
-		return b
-	}
-	b.WhereIn(whereStr, args...)
-	return b
-}
-
-func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
+func (b *SqlBuilder[T]) WhereIn(whereStr string, arg any, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
 		return b
 	}
+	for _, c := range condition {
+		if !c {
+			return b
+		}
+	}
+
+	isNil := utils.IsNil(arg)
+	if isNil {
+		ctx.err = fmt.Errorf("invalid use of WhereIn: argument for field '%s' is nil", whereStr)
+		return b
+	}
+
+	_, args := processArrArg(arg)
 
 	length := len(args)
 	if length == 0 {
@@ -491,26 +496,28 @@ func (b *SqlBuilder[T]) WhereIn(whereStr string, args ...any) *SqlBuilder[T] {
 	return b
 }
 
-// BoolWhereSqlIn
+// WhereSqlStrInArg
 // in ? 当参数列表长度为0时，为 1=0   false条件
-func (b *SqlBuilder[T]) BoolWhereSqlIn(condition bool, whereStr string, args ...any) *SqlBuilder[T] {
-	b.selectStatus = selectDone
-	if !condition {
-		return b
-	}
-	b.WhereSqlIn(whereStr, args...)
-	return b
-}
-
-// WhereSqlIn
-// in ? 当参数列表长度为0时，为 1=0   false条件
-func (b *SqlBuilder[T]) WhereSqlIn(whereStr string, args ...any) *SqlBuilder[T] {
+func (b *SqlBuilder[T]) WhereSqlStrInArg(whereStr string, arg any, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db
 	ctx := db.getCtx()
 	if ctx.hasErr() {
 		return b
 	}
+	for _, c := range condition {
+		if !c {
+			return b
+		}
+	}
+
+	isNil := utils.IsNil(arg)
+	if isNil {
+		ctx.err = fmt.Errorf("invalid use of WhereSqlStrInArg: argument for field '%s' is nil", whereStr)
+		return b
+	}
+
+	_, args := processArrArg(arg)
 
 	length := len(args)
 	if length == 0 {

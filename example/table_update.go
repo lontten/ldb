@@ -38,7 +38,7 @@ func TableUpdate2() {
 	}
 	num, err := ldb.Update(dbinit.DB, &user, ldb.W().
 		Eq("id", 1).
-		In("id", 1, 2).
+		In("id", []int{1, 2}).
 		Gt("id", 1).
 		IsNull("name").
 		Like("name", "abc"),

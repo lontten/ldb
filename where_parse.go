@@ -119,7 +119,7 @@ func (w *WhereBuilder) parsePkClause(not bool, primaryKeyColumnNames ...string) 
 		if len(primaryKeyColumnNames) != 1 {
 			return ErrNeedMultiPk
 		}
-		nw.In(primaryKeyColumnNames[0], args...)
+		nw.In(primaryKeyColumnNames[0], args)
 	}
 
 	w.clause = nil

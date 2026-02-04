@@ -282,7 +282,7 @@ func TestWhereBuilder19(t *testing.T) {
 	as := assert.New(t)
 	engine := getMockDB(PgConf{})
 
-	w1 := W().In("id")
+	w1 := W().In("id", []int{})
 
 	query, args, err := w1.toSql(engine.getDialect().parse)
 	as.Nil(err)
@@ -294,7 +294,7 @@ func TestWhereBuilder20(t *testing.T) {
 	as := assert.New(t)
 	engine := getMockDB(PgConf{})
 
-	w1 := W().NotIn("id")
+	w1 := W().NotIn("id", []int{})
 
 	query, args, err := w1.toSql(engine.getDialect().parse)
 	as.Nil(err)
