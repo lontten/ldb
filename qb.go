@@ -496,58 +496,6 @@ func (b *SqlBuilder[T]) WhereIn(whereStr string, arg any, condition ...bool) *Sq
 	return b
 }
 
-// WhereSqlStrInArg
-// in ? 当参数列表长度为0时，为 1=0   false条件
-func (b *SqlBuilder[T]) WhereSqlStrInArg(whereStr string, arg any, condition ...bool) *SqlBuilder[T] {
-	b.selectStatus = selectDone
-	db := b.db
-	ctx := db.getCtx()
-	if ctx.hasErr() {
-		return b
-	}
-	for _, c := range condition {
-		if !c {
-			return b
-		}
-	}
-
-	isNil := utils.IsNil(arg)
-	if isNil {
-		ctx.err = fmt.Errorf("invalid use of WhereSqlStrInArg: argument for field '%s' is nil", whereStr)
-		return b
-	}
-
-	_, args := processArrArg(arg)
-
-	length := len(args)
-	if length == 0 {
-		whereStr = "1=0"
-	} else {
-		b.AppendArgs(args...)
-
-		var inArgStr = " (" + gen(length) + ")"
-		whereStr = strings.Replace(whereStr, "?", inArgStr, -1)
-	}
-
-	switch b.whereStatus {
-	case whereNoSet:
-		b.whereStatus = whereSet
-		b.otherSqlBuilder.WriteString(" WHERE ")
-
-		b.otherSqlBuilder.WriteString(whereStr)
-
-	case whereSet:
-		b.otherSqlBuilder.WriteString(" AND ")
-
-		b.otherSqlBuilder.WriteString(whereStr)
-
-	case whereDone:
-		ctx.err = errors.New("where has been done")
-	}
-
-	return b
-}
-
 func (b *SqlBuilder[T]) Between(whereStr string, begin, end any, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	db := b.db

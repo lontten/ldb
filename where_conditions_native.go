@@ -14,32 +14,32 @@
 
 package ldb
 
-// 句子类型，用于whereBuilder
-type clauseType int
+// BoolNative
+func (w *WhereBuilder) BoolNative(condition bool, query string, args ...any) *WhereBuilder {
+	if !condition {
+		return w
+	}
+	return w.Native(query, args...)
+}
 
-const (
-	Native clauseType = iota
-	Eq
-	Neq
-	Less
-	LessEq
-	Greater
-	GreaterEq
-	Like
-	NotLike
-	In
-	NotIn
-	Between
-	NotBetween
-	IsNull
-	IsNotNull
-	IsFalse
-
-	PrimaryKeys       // 主键
-	FilterPrimaryKeys // 过滤主键
-
-	// Contains 包含
-	// pg 独有
-	// [1] @< [1,2]
-	Contains
-)
+// Native
+// in 需要用 in (?)
+// 其他 = >  直接用 ?
+func (w *WhereBuilder) Native(query string, args ...any) *WhereBuilder {
+	if w.err != nil {
+		return w
+	}
+	query, args, err := processNativeExIn(query, args...)
+	if err != nil {
+		w.err = err
+		return w
+	}
+	w.andWheres = append(w.andWheres, WhereBuilder{
+		clause: &Clause{
+			Type:  Native,
+			query: query,
+			args:  args,
+		},
+	})
+	return w
+}

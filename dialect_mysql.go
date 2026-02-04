@@ -367,6 +367,8 @@ func (d *MysqlDialect) tableSelectGen() {
 func (d *MysqlDialect) parse(c Clause) (string, error) {
 	sb := strings.Builder{}
 	switch c.Type {
+	case Native:
+		sb.WriteString(c.query)
 	case Eq:
 		sb.WriteString(c.query + " = ?")
 	case Neq:

@@ -36,6 +36,10 @@ func NativeQuery[T any](db Engine, query string, args ...any) *NativeQueryContex
 			db.getCtx().err = errors.New(fmt.Sprintf("args[%v] is nil", i))
 		}
 	}
+	query, args, err := processNativeExIn(query, args...)
+	if err != nil {
+		db.getCtx().err = err
+	}
 	return &NativeQueryContext[T]{
 		db:    db,
 		query: query,

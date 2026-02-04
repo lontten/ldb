@@ -1,6 +1,7 @@
 package ldb
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -278,4 +279,42 @@ func ToAnyList[T any](v []T) []any {
 		anyList[i] = item // 这里利用了Go的隐式类型转换，T类型会自动转为interface{}
 	}
 	return anyList
+}
+
+// SplitQueryByArgs 按照占位符(?, (?))分割字符串，保留所有部分
+func SplitQueryByArgs(query string) (int, []string) {
+	// 匹配 ? 或 (?)
+	re := regexp.MustCompile(`\(\?\)|\?`)
+
+	// 查找所有匹配项的位置
+	matches := re.FindAllStringIndex(query, -1)
+	num := len(matches)
+
+	// 如果没有匹配项，返回包含整个字符串的切片
+	if num == 0 {
+		return num, []string{query}
+	}
+
+	// 创建结果切片
+	result := make([]string, 0, num*2+1)
+	start := 0
+
+	// 遍历所有匹配
+	for _, match := range matches {
+		matchStart, matchEnd := match[0], match[1]
+
+		// 添加匹配前的部分（包括空字符串）
+		result = append(result, query[start:matchStart])
+
+		// 添加匹配的部分
+		result = append(result, query[matchStart:matchEnd])
+
+		// 更新起始位置
+		start = matchEnd
+	}
+
+	// 添加剩余部分（包括空字符串）
+	result = append(result, query[start:])
+
+	return num, result
 }

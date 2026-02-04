@@ -1,7 +1,11 @@
 package ldb
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
+
+	"github.com/lontten/ldb/v2/utils"
 )
 
 // processArrArg 通用数组参数处理函数
@@ -30,4 +34,52 @@ func processArrArg(arg any) (bool, []any) {
 	default:
 		return false, []any{arg}
 	}
+}
+
+// 处理query、args，
+// 扩展 in 参数
+func processNativeExIn(query string, args ...any) (string, []any, error) {
+	if len(args) == 0 {
+		return query, args, nil
+	}
+
+	num, matches := SplitQueryByArgs(query)
+
+	if num != len(args) {
+		return "", []any{}, ErrArgsLen
+	}
+
+	var newArgs = make([]any, 0, len(args))
+	var result strings.Builder
+
+	var index = 0
+	for _, match := range matches {
+		if match == "?" {
+			var arg = args[index]
+			index++
+			result.WriteString(match)
+			newArgs = append(newArgs, arg)
+		} else if match == "(?)" {
+			var arg = args[index]
+			isNil := utils.IsNil(arg)
+			if isNil {
+				return "", []any{}, fmt.Errorf("invalid use of Native: argument for field '%s' is nil", query)
+			}
+
+			index++
+			_, argsE := processArrArg(arg)
+			length := len(argsE)
+
+			if length == 0 {
+				result.WriteString(match)
+				newArgs = append(newArgs, nil)
+			} else {
+				result.WriteString("(" + gen(length) + ")")
+				newArgs = append(newArgs, argsE...)
+			}
+		} else {
+			result.WriteString(match)
+		}
+	}
+	return result.String(), newArgs, nil
 }

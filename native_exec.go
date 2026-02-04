@@ -28,6 +28,10 @@ func Exec(db Engine, query string, args ...any) (int64, error) {
 			return 0, errors.New(fmt.Sprintf("args[%v] is nil", i))
 		}
 	}
+	query, args, err := processNativeExIn(query, args...)
+	if err != nil {
+		return 0, err
+	}
 
 	db = db.init()
 	exec, err := db.exec(query, args...)

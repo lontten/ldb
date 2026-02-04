@@ -24,4 +24,5 @@ var (
 	ErrTypePkArgs   = errors.New("type of args is err")
 	ErrNeedMultiPk  = errors.New("need multi primary key")
 	ErrNoTableName  = errors.New("no set table name")
+	ErrArgsLen      = errors.New("args len no match")
 )

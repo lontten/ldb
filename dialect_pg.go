@@ -365,6 +365,8 @@ func (d *PgDialect) toSqlInsert() (string, []any) {
 func (d *PgDialect) parse(c Clause) (string, error) {
 	sb := strings.Builder{}
 	switch c.Type {
+	case Native:
+		sb.WriteString(c.query)
 	case Eq:
 		sb.WriteString(c.query + " = ?")
 	case Neq:
