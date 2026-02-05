@@ -8,7 +8,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgtype v1.14.4
 	github.com/lontten/lcore/v2 v2.21.0
-	github.com/lontten/lutil v0.1.4
+	github.com/lontten/lutil v0.1.8
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.11.1

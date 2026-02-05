@@ -304,6 +304,21 @@ func (b *SqlBuilder[T]) OrderBy(name string, condition ...bool) *SqlBuilder[T] {
 			return b
 		}
 	}
+	b.orderTokens = append(b.orderTokens, name)
+	return b
+}
+
+func (b *SqlBuilder[T]) OrderAscBy(name string, condition ...bool) *SqlBuilder[T] {
+	b.selectStatus = selectDone
+	ctx := b.db.getCtx()
+	if ctx.hasErr() {
+		return b
+	}
+	for _, c := range condition {
+		if !c {
+			return b
+		}
+	}
 	b.orderTokens = append(b.orderTokens, name+" ASC")
 	return b
 }

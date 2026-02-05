@@ -95,6 +95,8 @@ github.com/lontten/lcore/v2 v2.21.0 h1:qbIoyj4QXnSpKJdflkxmjizvwln88WoU0t+QEaTnt
 github.com/lontten/lcore/v2 v2.21.0/go.mod h1:DSO3hoRlgOctZK2eRlSFEr1I2LEY+lTBaDdR4+uRxkg=
 github.com/lontten/lutil v0.1.4 h1:MrzX8AnfXS+gB1dsVDfWnnD+yT0/KMCYsWcwgOrd/24=
 github.com/lontten/lutil v0.1.4/go.mod h1:oUdhuNf+5kAK7M1sk+AdPLbQYCC9Oui93gR9KL7rjcA=
+github.com/lontten/lutil v0.1.8 h1:4hVXgtGsH5QL7xlgzxXFTRuCwcpVDgAHRUXE16tDDyE=
+github.com/lontten/lutil v0.1.8/go.mod h1:oUdhuNf+5kAK7M1sk+AdPLbQYCC9Oui93gR9KL7rjcA=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-isatty v0.0.5/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
