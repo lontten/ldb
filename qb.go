@@ -384,11 +384,16 @@ func (b *SqlBuilder[T]) Offset(num int64, condition ...bool) *SqlBuilder[T] {
 	return b
 }
 
-func (b *SqlBuilder[T]) WhereBuilder(w *WhereBuilder) *SqlBuilder[T] {
+func (b *SqlBuilder[T]) WhereBuilder(w *WhereBuilder, condition ...bool) *SqlBuilder[T] {
 	b.selectStatus = selectDone
 	ctx := b.db.getCtx()
 	if ctx.hasErr() {
 		return b
+	}
+	for _, c := range condition {
+		if !c {
+			return b
+		}
 	}
 	if w == nil {
 		return b
