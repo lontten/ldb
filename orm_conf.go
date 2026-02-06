@@ -113,32 +113,24 @@ func (c OrmConf) primaryKeyColumnNames(v reflect.Value, dest any) []string {
 	return getPrimaryKeyColumnNames(v)
 }
 
-// 获取 rows 返回数据，每个字段index 对应 struct 的字段 名字
+// 获取 rows 返回数据，每个字段 名字对应的 compC信息
 func getColIndex2FieldNameMap(columns []string, t reflect.Type) map[string]compC {
 	r := make(map[string]compC)
 	if isValuerType(t) {
 		return r
 	}
 
-	colNum := len(columns)
 	cm := _getStructC_columnNameMap(t, "")
 
-	validNum := 0
 	for i, column := range columns {
 		c, ok := cm[column]
 		c.columnIndex = i
 		if !ok {
-			r[column] = compC{
+			c = compC{
 				columnIndex: i,
 			}
-			continue
 		}
 		r[column] = c
-		validNum++
-	}
-
-	if colNum == 1 && validNum == 0 {
-		return r
 	}
 	return r
 }
