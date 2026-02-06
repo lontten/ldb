@@ -51,153 +51,104 @@ func (w *WhereBuilder) _like(key *string, likeType likeType, noLike bool, column
 
 	likeW := W()
 	for _, field := range columns {
-		likeW.wheres = append(likeW.wheres, WhereBuilder{
-			clause: &Clause{
-				Type:  likeTokenType,
-				query: field,
-				args:  []any{k},
-			},
-		})
+		if noLike {
+			likeW.andWheres = append(likeW.andWheres, WhereBuilder{
+				clause: &Clause{
+					Type:  likeTokenType,
+					query: field,
+					args:  []any{k},
+				},
+			})
+		} else {
+			likeW.wheres = append(likeW.wheres, WhereBuilder{
+				clause: &Clause{
+					Type:  likeTokenType,
+					query: field,
+					args:  []any{k},
+				},
+			})
+		}
 	}
 	w.And(likeW)
 	return w
 }
 
-// LikeP
-// LIKE %?%
-func (w *WhereBuilder) LikeP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeAnywhere, false, query)
-	return w
-}
-
-// LikeLeftP
-// LIKE %?
-func (w *WhereBuilder) LikeLeftP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeEndsWith, false, query)
-	return w
-}
-
-// LikeRightP
-// LIKE ?%
-func (w *WhereBuilder) LikeRightP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeStartsWith, false, query)
-	return w
-}
-
 // Like
-// LIKE ?
-func (w *WhereBuilder) Like(query string, arg string, condition ...bool) *WhereBuilder {
-	w.LikeP(query, &arg, condition...)
+// LIKE %?%
+func (w *WhereBuilder) Like(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeAnywhere, false, field...)
 	return w
 }
 
-func (w *WhereBuilder) LikeLeft(query string, arg string, condition ...bool) *WhereBuilder {
-	w.LikeLeftP(query, &arg, condition...)
-	return w
-}
-func (w *WhereBuilder) LikeRight(query string, arg string, condition ...bool) *WhereBuilder {
-	w.LikeRightP(query, &arg, condition...)
-	return w
+func (w *WhereBuilder) BoolLike(condition bool, key *string, field ...string) *WhereBuilder {
+	if !condition {
+		return w
+	}
+	return w.Like(key, field...)
 }
 
-// NoLikeP
+// LikeLeft 左匹配
+// LIKE %?
+func (w *WhereBuilder) LikeLeft(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeStartsWith, false, field...)
+	return w
+}
+func (w *WhereBuilder) BoolLikeLeft(condition bool, key *string, field ...string) *WhereBuilder {
+	if !condition {
+		return w
+	}
+	return w.LikeLeft(key, field...)
+}
+
+// LikeRight 右匹配
+// LIKE ?%
+func (w *WhereBuilder) LikeRight(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeEndsWith, false, field...)
+	return w
+}
+func (w *WhereBuilder) BoolLikeRight(condition bool, key *string, field ...string) *WhereBuilder {
+	if !condition {
+		return w
+	}
+	return w.LikeLeft(key, field...)
+}
+
+// NoLike
 // NOT LIKE %?%
-func (w *WhereBuilder) NoLikeP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeAnywhere, true, query)
-	return w
-}
-func (w *WhereBuilder) NoLikeLeftP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeEndsWith, true, query)
-	return w
-}
-func (w *WhereBuilder) NoLikeRightP(query string, arg *string, condition ...bool) *WhereBuilder {
-	for _, b := range condition {
-		if !b {
-			return w
-		}
-	}
-	w._like(arg, LikeStartsWith, true, query)
-	return w
-}
-func (w *WhereBuilder) NoLike(query string, arg string, condition ...bool) *WhereBuilder {
-	w.NoLikeP(query, &arg, condition...)
-	return w
-}
-func (w *WhereBuilder) NoLikeLeft(query string, arg string, condition ...bool) *WhereBuilder {
-	w.NoLikeLeftP(query, &arg, condition...)
-	return w
-}
-func (w *WhereBuilder) NoLikeRight(query string, arg string, condition ...bool) *WhereBuilder {
-	w.NoLikeRightP(query, &arg, condition...)
+func (w *WhereBuilder) NoLike(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeAnywhere, true, field...)
 	return w
 }
 
-// LikeAny
-// 多个字段，任意一个字段满足 LIKE ?
-func (w *WhereBuilder) LikeAny(key *string, columns ...string) *WhereBuilder {
-	w._like(key, LikeAnywhere, false, columns...)
-	return w
-}
-
-// BoolLikeAny
-// 多个字段，任意一个字段满足 LIKE ?
-func (w *WhereBuilder) BoolLikeAny(condition bool, key *string, columns ...string) *WhereBuilder {
+func (w *WhereBuilder) BoolNoLike(condition bool, key *string, field ...string) *WhereBuilder {
 	if !condition {
 		return w
 	}
-	w.LikeAny(key, columns...)
-	return w
+	return w.NoLike(key, field...)
 }
 
-// LikeLeftAny
-// 多个字段，任意一个字段满足 LIKE ?
-func (w *WhereBuilder) LikeLeftAny(key *string, columns ...string) *WhereBuilder {
-	w._like(key, LikeEndsWith, false, columns...)
+// NoLikeLeft 左匹配
+// NOT LIKE %?
+func (w *WhereBuilder) NoLikeLeft(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeStartsWith, true, field...)
 	return w
 }
-func (w *WhereBuilder) BoolLikeLeftAny(condition bool, key *string, columns ...string) *WhereBuilder {
+func (w *WhereBuilder) BoolNoLikeLeft(condition bool, key *string, field ...string) *WhereBuilder {
 	if !condition {
 		return w
 	}
-	w.LikeLeftAny(key, columns...)
-	return w
+	return w.NoLikeLeft(key, field...)
 }
 
-// LikeRightAny
-// 多个字段，任意一个字段满足 LIKE ?
-func (w *WhereBuilder) LikeRightAny(key *string, columns ...string) *WhereBuilder {
-	w._like(key, LikeStartsWith, false, columns...)
+// NoLikeRight 右匹配
+// NOT LIKE ?%
+func (w *WhereBuilder) NoLikeRight(key *string, field ...string) *WhereBuilder {
+	w._like(key, LikeEndsWith, true, field...)
 	return w
 }
-func (w *WhereBuilder) BoolLikeRightAny(condition bool, key *string, columns ...string) *WhereBuilder {
+func (w *WhereBuilder) BoolNoLikeRight(condition bool, key *string, field ...string) *WhereBuilder {
 	if !condition {
 		return w
 	}
-	w.LikeRightAny(key, columns...)
-	return w
+	return w.NoLikeLeft(key, field...)
 }

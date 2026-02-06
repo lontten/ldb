@@ -179,9 +179,7 @@ func (d *MysqlDialect) tableInsertGen() {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
-				// mysql不需要设置冲突字段，这里不会有值
-				//find := utils.Find(extra.duplicateKeyNames, name)
-				find := utils.Find([]string{ctx.autoPrimaryKeyColumnName}, name)
+				find := utils.Find(extra.duplicateKeyNames, name)
 				if find < 0 { // 排除 冲突主键 字段
 					find = utils.Find(whenUpdateSet.excludeFieldNames, name)
 					if find < 0 { // 主动 排除 字段
