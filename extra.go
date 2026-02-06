@@ -40,7 +40,7 @@ type ExtraContext struct {
 	columns      []string
 	columnValues []field.Value
 
-	// 唯一索引字段名列表
+	// 唯一索引冲突 字段列表，mysql不可设置为空
 	duplicateKeyNames []string
 
 	whenUpdateSet *SetContext
@@ -209,7 +209,7 @@ type DuplicateKey struct {
 // WhenDuplicateKey
 // 唯一索引冲突,设置索引字段列表；
 // Mysql 不用设置，如果设置了也会直接忽略
-// Postgresql 必须设置,如果没有设置，则为主键字段
+// Postgresql 必须设置,必须和数据库中定义的唯一索引一致；如果没有设置，ldb则会默认为主键字段
 func (e *ExtraContext) WhenDuplicateKey(name ...string) *DuplicateKey {
 	e.duplicateKeyNames = name
 	return &DuplicateKey{

@@ -173,14 +173,16 @@ func (d *MysqlDialect) tableInsertGen() {
 		}
 
 		query.WriteString("ON DUPLICATE KEY UPDATE ")
-		// 当未设置更新字段时，默认为所有效有字段（排除索引）
+		// 当未设置更新字段时，默认为所有 insert 有效字段（排除索引）
 		columnLen := len(whenUpdateSet.columns)
 		if columnLen == 0 && len(whenUpdateSet.fieldNames) == 0 {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
-				find := utils.Find(extra.duplicateKeyNames, name)
-				if find < 0 { // 排除 主键 字段
+				// mysql不需要设置冲突字段，这里不会有值
+				//find := utils.Find(extra.duplicateKeyNames, name)
+				find := utils.Find([]string{ctx.autoPrimaryKeyColumnName}, name)
+				if find < 0 { // 排除 冲突主键 字段
 					whenUpdateSet.fieldNames = append(whenUpdateSet.fieldNames, name)
 				}
 			}
@@ -207,6 +209,7 @@ func (d *MysqlDialect) tableInsertGen() {
 		// 从上面分析可知，DUPLICATE KEY UPDATE 时，软删除字段不进行更新是最差方案，会出现 不符合预期情况。
 		// 软删除字段进行更新 时，如果 唯一索引设置正确，是完美执行；如果 唯一索引 错误，也可以达到 基本复合预期的效果。
 
+		// 1. 插入时model的 需要更新字段
 		for i, name := range whenUpdateSet.fieldNames {
 			if i > 0 {
 				query.WriteString(", ")
@@ -220,6 +223,7 @@ func (d *MysqlDialect) tableInsertGen() {
 			}
 		}
 
+		// 2. 额外附加的更新字段
 		for i, column := range whenUpdateSet.columns {
 			query.WriteString(d.escapeIdentifier(column) + " = ?")
 			if i < columnLen-1 {

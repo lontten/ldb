@@ -20,6 +20,8 @@ import (
 	"github.com/lontten/ldb/v2/field"
 )
 
+// 专门用在 INSERT ... ON DUPLICATE KEY UPDATE 语法中
+// 用来设置 update 字段
 type SetContext struct {
 	// model中需要直接更新的字段
 	fieldNames []string
