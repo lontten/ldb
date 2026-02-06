@@ -183,7 +183,10 @@ func (d *MysqlDialect) tableInsertGen() {
 				//find := utils.Find(extra.duplicateKeyNames, name)
 				find := utils.Find([]string{ctx.autoPrimaryKeyColumnName}, name)
 				if find < 0 { // 排除 冲突主键 字段
-					whenUpdateSet.fieldNames = append(whenUpdateSet.fieldNames, name)
+					find = utils.Find(whenUpdateSet.excludeFieldNames, name)
+					if find < 0 { // 主动 排除 字段
+						whenUpdateSet.fieldNames = append(whenUpdateSet.fieldNames, name)
+					}
 				}
 			}
 		}

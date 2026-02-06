@@ -25,6 +25,8 @@ import (
 type SetContext struct {
 	// model中需要直接更新的字段
 	fieldNames []string
+	// model中需要排除的字段（与fieldNames对应）
+	excludeFieldNames []string
 
 	// 附加的更新字段；model 需要通过 ormContext 解析，最后追加到 下面的 columns，columnValues
 	model    any
@@ -43,6 +45,11 @@ func Set() *SetContext {
 
 func (s *SetContext) Field(name ...string) *SetContext {
 	s.fieldNames = append(s.fieldNames, name...)
+	return s
+}
+
+func (s *SetContext) ExcludeField(name ...string) *SetContext {
+	s.excludeFieldNames = append(s.excludeFieldNames, name...)
 	return s
 }
 
