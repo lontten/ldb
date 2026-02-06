@@ -238,7 +238,12 @@ func (d *MysqlDialect) tableInsertGen() {
 		if ctx.returnAutoPrimaryKey == pkFetchReturn && ctx.autoPrimaryKeyColumnName != "" {
 			query.WriteString(", ")
 			query.WriteString(ctx.autoPrimaryKeyColumnName)
-			query.WriteString(" = LAST_INSERT_ID(" + ctx.autoPrimaryKeyColumnName + ")")
+			query.WriteString(" = LAST_INSERT_ID(")
+			if d.dbVersion >= MysqlVersion8_0_19 {
+				query.WriteString("new.")
+			}
+			query.WriteString(ctx.autoPrimaryKeyColumnName)
+			query.WriteString(")")
 		}
 		break
 	default:
