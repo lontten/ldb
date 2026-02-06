@@ -50,7 +50,10 @@ func (q *NativeQueryContext[T]) Convert(c Convert) *NativeQueryContext[T] {
 	q.db.getCtx().convertCtx.Add(c)
 	return q
 }
-
+func (q *NativeQueryContext[T]) Extra(e ExtraContext) *NativeQueryContext[T] {
+	q.db.getCtx().extra = &e
+	return q
+}
 func (q *NativeQueryContext[T]) One() (t *T, err error) {
 	db := q.db
 	query := q.query
