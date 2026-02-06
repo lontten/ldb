@@ -14,10 +14,6 @@
 
 package ldb
 
-import (
-	"fmt"
-)
-
 type likeType int
 
 const (
@@ -32,7 +28,6 @@ func (w *WhereBuilder) _like(key *string, likeType likeType, noLike bool, column
 		return w
 	}
 	if key == nil {
-		w.err = fmt.Errorf("invalid use of like: key  is nil.")
 		return w
 	}
 	if *key == "" {
