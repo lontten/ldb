@@ -46,6 +46,9 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	if err != nil {
 		return
 	}
+	if utils.HasDuplicate(columns) {
+		return 0, errors.New("columns has duplicate")
+	}
 
 	cfm := make(map[string]compC)
 	if ctx.destBaseTypeIsComp {
@@ -100,6 +103,9 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return 0, err
+	}
+	if utils.HasDuplicate(columns) {
+		return 0, errors.New("columns has duplicate")
 	}
 	cfm := getColIndex2FieldNameMap(columns, t)
 
