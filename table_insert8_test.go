@@ -15,7 +15,7 @@ func TestInsert8_mysql(t *testing.T) {
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
 	engine := MustConnectMock(db, &MysqlConf{})
 
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name, age) VALUES (?, ?) AS new ON DUPLICATE KEY UPDATE name = new.name, age = new.age, id = LAST_INSERT_ID(new.id);")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name, age) VALUES (?, ?) AS new ON DUPLICATE KEY UPDATE name = new.name, age = new.age, id = LAST_INSERT_ID(id);")).
 		WithArgs("tom", 22).
 		WillReturnResult(sqlmock.NewResult(10, 1))
 
@@ -36,7 +36,7 @@ func TestInsert8_mysql2(t *testing.T) {
 	as.Nil(err, fmt.Sprintf("failed to open sqlmock database: %s", err))
 	engine := MustConnectMock(db, &MysqlConf{})
 
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name) VALUES (?) AS new ON DUPLICATE KEY UPDATE name = new.name, id = LAST_INSERT_ID(new.id);")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO t_user (name) VALUES (?) AS new ON DUPLICATE KEY UPDATE name = new.name, id = LAST_INSERT_ID(id);")).
 		WithArgs("tom").
 		WillReturnResult(sqlmock.NewResult(10, 1))
 

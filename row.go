@@ -47,7 +47,7 @@ func (ctx *ormContext) createColBox(v reflect.Value, tP any, cfLink map[string]c
 		return
 	}
 
-	box = make([]any, length)
+	box = make([]any, len(rowColumnTypeMap))
 	var converters []func() error
 	fun = func() error {
 		for _, f := range converters {
