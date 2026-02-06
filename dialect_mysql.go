@@ -171,6 +171,7 @@ func (d *MysqlDialect) tableInsertGen() {
 		if d.dbVersion >= MysqlVersion8_0_19 {
 			query.WriteString(" AS new ")
 		}
+		var fieldHasPk = false
 
 		query.WriteString("ON DUPLICATE KEY UPDATE ")
 		// 当未设置更新字段时，默认为所有 insert 有效字段（排除索引）
@@ -179,6 +180,10 @@ func (d *MysqlDialect) tableInsertGen() {
 			list := append(ctx.columns, extra.columns...)
 
 			for _, name := range list {
+				if name == ctx.autoPrimaryKeyColumnName {
+					fieldHasPk = true
+				}
+
 				find := utils.Find(extra.duplicateKeyNames, name)
 				if find < 0 { // 排除 冲突主键 字段
 					find = utils.Find(whenUpdateSet.excludeFieldNames, name)
@@ -237,7 +242,7 @@ func (d *MysqlDialect) tableInsertGen() {
 			query.WriteString(", ")
 			query.WriteString(ctx.autoPrimaryKeyColumnName)
 			query.WriteString(" = LAST_INSERT_ID(")
-			if d.dbVersion >= MysqlVersion8_0_19 {
+			if d.dbVersion >= MysqlVersion8_0_19 && fieldHasPk {
 				query.WriteString("new.")
 			}
 			query.WriteString(ctx.autoPrimaryKeyColumnName)
