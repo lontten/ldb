@@ -16,6 +16,7 @@ package ldb
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 
 	"github.com/lontten/ldb/v2/utils"
@@ -45,8 +46,9 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	if err != nil {
 		return
 	}
-	if utils.HasDuplicate(columns) {
-		return 0, errors.New("columns has duplicate")
+	has, s := utils.HasDuplicate(columns)
+	if has {
+		return 0, fmt.Errorf("columns %v has duplicate", s)
 	}
 
 	cfm := make(map[string]compC)
@@ -102,8 +104,9 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if utils.HasDuplicate(columns) {
-		return 0, errors.New("columns has duplicate")
+	has, s := utils.HasDuplicate(columns)
+	if has {
+		return 0, fmt.Errorf("columns %v has duplicate", s)
 	}
 	cfm := getColIndex2FieldNameMap(columns, t)
 
