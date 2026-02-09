@@ -16,7 +16,6 @@ package ldb
 
 import (
 	"reflect"
-	"strings"
 )
 
 // 创建 row 返回数据，字段 对应的 struct 字段的box
@@ -59,14 +58,6 @@ func (ctx *ormContext) createColBox(v reflect.Value, tP any, cfLink map[string]c
 		return nil
 	}
 
-	// 当用bool接收int类型时，默认认为是mysql(mysql没有专门的bool类型，返回值是int)
-	var mysqlBoolField = make(map[int]bool)
-	for _, c := range cfLink {
-		if c.kind == reflect.Bool {
-			mysqlBoolField[c.columnIndex] = true
-		}
-	}
-
 	for _, f := range cfLink {
 		if f.columnName == "" { // "" 表示此列不接收
 			box[f.columnIndex] = new(any)
@@ -96,20 +87,15 @@ func (ctx *ormContext) createColBox(v reflect.Value, tP any, cfLink map[string]c
 			continue
 		}
 
+		// 返回值为null,但是 字段不可以接收null，需要创建临时变量接收，如果返回null，则字段设置为零值
 		var tmpVal any
 		if f.isScanner {
+			// 如果字段是 scanner，让 scanner 处理 null默认值问题
 			tmpVal = new(any)
 		} else {
-			var typeName = columnType.databaseTypeName
-			if strings.ToLower(typeName) == "int" && mysqlBoolField[columnType.index] {
-				typeName = "bool"
-			}
-			tmpVal = allocDatabaseType(typeName)
+			tmpVal = allocType(field.Type())
 			if tmpVal == nil {
-				tmpVal = allocType(field.Type())
-				if tmpVal == nil {
-					panic("field not support")
-				}
+				panic("field not support")
 			}
 		}
 		box[f.columnIndex] = tmpVal

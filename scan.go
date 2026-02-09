@@ -23,9 +23,8 @@ import (
 )
 
 type rowColumnType struct {
-	index            int    // 字段再row中的位置
-	noNull           bool   // true 字段必定不为null
-	databaseTypeName string // 字段-数据库数据类型
+	index  int  // 字段再row中的位置
+	noNull bool // true 字段必定不为null
 }
 
 // ScanLn
@@ -63,9 +62,8 @@ func (ctx ormContext) ScanLn(rows *sql.Rows) (num int64, err error) {
 	for i, columnType := range columnTypes {
 		nullable, ok := columnType.Nullable()
 		rowColumnTypeMap[i] = rowColumnType{
-			index:            i,
-			databaseTypeName: columnType.DatabaseTypeName(),
-			noNull:           ok && !nullable,
+			index:  i,
+			noNull: ok && !nullable,
 		}
 	}
 
@@ -118,9 +116,8 @@ func (ctx ormContext) Scan(rows *sql.Rows) (int64, error) {
 	for i, columnType := range columnTypes {
 		nullable, ok := columnType.Nullable()
 		rowColumnTypeMap[i] = rowColumnType{
-			index:            i,
-			databaseTypeName: columnType.DatabaseTypeName(),
-			noNull:           ok && !nullable,
+			index:  i,
+			noNull: ok && !nullable,
 		}
 	}
 

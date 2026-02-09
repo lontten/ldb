@@ -17,8 +17,9 @@ package ldb
 import (
 	"database/sql"
 	"reflect"
-	"strings"
 	"time"
+
+	"github.com/lontten/lcore/v2/types"
 )
 
 // allocKindType 根据reflect.Kind分配对应的SQL数据类型
@@ -29,11 +30,14 @@ func allocKindType(kind reflect.Kind) any {
 	case reflect.String:
 		return &sql.NullString{}
 
-	// 整数类型
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Uintptr:
+	// 整数类型 int
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return &sql.NullInt64{}
+
+	// 整数类型 uint
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Uintptr:
+		return &types.NullUint64{}
 
 	// 浮点数类型
 	case reflect.Float32, reflect.Float64:
@@ -79,61 +83,4 @@ func allocType(t reflect.Type) any {
 	}
 	// 其他类型通过Kind处理
 	return allocKindType(t.Kind())
-}
-
-func allocDatabaseType(databaseType string) any {
-	// 统一转换为大写并去除前后空格
-	dbType := strings.ToUpper(strings.TrimSpace(databaseType))
-
-	switch dbType {
-	// 字符串类型
-	case "VARCHAR", "TEXT", "CHAR", "CLOB", "NCLOB", "NVARCHAR", "NVARCHAR2",
-		"LONGTEXT", "MEDIUMTEXT", "TINYTEXT", "NCHAR", "CHARACTER VARYING",
-		"CHARACTER", "VARCHAR2", "STRING":
-		return &sql.NullString{}
-
-	// 整数类型
-	case "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "MEDIUMINT",
-		"SERIAL", "BIGSERIAL", "SMALLSERIAL":
-		return &sql.NullInt64{}
-
-	// 精确数值类型（金额等）- 使用字符串避免精度损失
-	case "NUMERIC", "DECIMAL", "NUMBER", "MONEY":
-		return &sql.NullString{}
-
-	// 浮点数类型（适合科学计算，不适合金额）
-	case "FLOAT", "DOUBLE", "REAL", "BINARY_FLOAT",
-		"BINARY_DOUBLE", "DOUBLE PRECISION", "FLOAT4", "FLOAT8":
-		return &sql.NullFloat64{}
-
-	// 布尔类型
-	case "BOOLEAN", "BOOL", "BIT":
-		return &sql.NullBool{}
-
-	// 日期时间类型
-	case "DATE", "DATETIME", "TIMESTAMP", "TIME", "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE",
-		"TIMESTAMP WITHOUT TIME ZONE", "TIME WITH TIME ZONE", "TIME WITHOUT TIME ZONE",
-		"DATETIME2", "SMALLDATETIME", "YEAR", "INTERVAL":
-		return &sql.NullTime{}
-
-	// 二进制类型
-	case "BLOB", "BYTEA", "BINARY", "VARBINARY", "LONGBLOB", "MEDIUMBLOB",
-		"TINYBLOB", "RAW", "LONG RAW", "BFILE":
-		return &sql.RawBytes{}
-
-	// JSON类型
-	case "JSON", "JSONB":
-		return &sql.NullString{}
-
-	// UUID类型
-	case "UUID":
-		return &sql.NullString{}
-
-	// 枚举类型（通常作为字符串处理）
-	case "ENUM":
-		return &sql.NullString{}
-
-	default:
-		return nil
-	}
 }
