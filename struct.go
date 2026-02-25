@@ -218,6 +218,7 @@ func _getStructC(t reflect.Type, ldbName string) (list []compC) {
 		delType, has := softdelete.SoftDelTypeMap[t]
 		if has {
 			cc.fieldName = name
+			cc.isSoftDel = true
 			if ldbName == "" {
 				value := softdelete.SoftDelTypeYesFVMap[delType]
 				cc.columnName = value.Name
