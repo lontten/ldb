@@ -42,13 +42,11 @@ func (w *WhereBuilder) BetweenDateTimeOfDate(query string, dateBegin, dateEnd *t
 		}
 		dateTimeBegin := dateBegin.ToDateTime()
 		w.Gte(query, dateTimeBegin)
-		return w
 	}
 
 	if dateEnd != nil {
 		dateTimeEnd := dateEnd.Add(types.Duration().Day(1)).ToDateTime()
 		w.Lt(query, dateTimeEnd)
-		return w
 	}
 
 	return w
